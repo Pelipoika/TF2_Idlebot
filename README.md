@@ -22,7 +22,7 @@ Currently can only play MvM
 | CTFBotGetHealth | Find and get health                                | Done |
 | CTFBotGetAmmo | Find and get ammo                                    | Done |
 | CTFBotGoToUpgradeStation | Find and walk to upgrade station          | Done |
-| CTFBotMarkGiant | Marks a random giant                               | Done |
+| CTFBotMarkGiant | Marks a random giant if the player has the F.O.W   | Done |
 | CTFBotMedicHeal | Search and heal players W.I.P                      | W.I.P |
 | CTFBotMoveToFront | Move to frontline and then press F4              | W.I.P |
 | CTFBotPreWave | N/A                                                  | N/A |
