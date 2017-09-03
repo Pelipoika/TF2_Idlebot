@@ -1,0 +1,1261 @@
+enum
+{
+	TF_AMMO_DUMMY = 0,
+	TF_AMMO_PRIMARY,
+	TF_AMMO_SECONDARY,
+	TF_AMMO_METAL,
+	TF_AMMO_GRENADES1,
+	TF_AMMO_GRENADES2,
+	TF_AMMO_COUNT,
+};
+
+enum
+{
+	TF_LOADOUT_SLOT_PRIMARY   =  0,
+	TF_LOADOUT_SLOT_SECONDARY =  1,
+	TF_LOADOUT_SLOT_MELEE     =  2,
+	TF_LOADOUT_SLOT_UTILITY   =  3,
+	TF_LOADOUT_SLOT_BUILDING  =  4,
+	TF_LOADOUT_SLOT_PDA       =  5,
+	TF_LOADOUT_SLOT_PDA2      =  6,
+	TF_LOADOUT_SLOT_HEAD      =  7,
+	TF_LOADOUT_SLOT_MISC      =  8,
+	TF_LOADOUT_SLOT_ACTION    =  9,
+	TF_LOADOUT_SLOT_MISC2     = 10,
+	TF_LOADOUT_SLOT_TAUNT     = 11,
+	TF_LOADOUT_SLOT_TAUNT2    = 12,
+	TF_LOADOUT_SLOT_TAUNT3    = 13,
+	TF_LOADOUT_SLOT_TAUNT4    = 14,
+	TF_LOADOUT_SLOT_TAUNT5    = 15,
+	TF_LOADOUT_SLOT_TAUNT6    = 16,
+	TF_LOADOUT_SLOT_TAUNT7    = 17,
+	TF_LOADOUT_SLOT_TAUNT8    = 18,
+};
+
+#define MAX_WEAPONS 48
+
+Handle g_hSnapEyeAngles;
+
+Handle g_hHasAmmo;
+Handle g_hGetWeaponID;
+Handle g_hGetProjectileSpeed;
+Handle g_hGetProjectileGravity;
+
+Handle g_hWorldSpaceCenter;
+Handle g_hGetNextThink;
+
+Handle g_hGetMaxAmmo;
+Handle g_hGetAmmoCount;
+
+Handle g_hGetItemSchema;
+Handle g_hGetAttributeDefinitionByName;
+
+//CTFGameRules
+Handle g_hCanUpgradeWithAttrib;
+Handle g_hGetCostForUpgrade;
+Handle g_hGetUpgradeTier;
+Handle g_hIsUpgradeTierEnabled;
+
+Address g_MannVsMachineUpgrades;
+Address g_pGameRules;
+
+void InitGamedata()
+{
+	Handle hConf = LoadGameConfigFile("tf2.pets");
+
+	//CTFGameRules
+	StartPrepSDKCall(SDKCall_GameRules);
+	PrepSDKCall_SetFromConf(hConf, SDKConf_Signature, "CTFGameRules::CanUpgradeWithAttrib");
+	PrepSDKCall_AddParameter(SDKType_CBasePlayer, SDKPass_Pointer);		//CTFPlayer
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);		//Slot
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);		//Attribute index
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);		//CMannVsMachineUpgrades*
+	PrepSDKCall_SetReturnInfo(SDKType_Bool, SDKPass_ByValue);			// return yes/no
+	if ((g_hCanUpgradeWithAttrib = EndPrepSDKCall()) == null) SetFailState("Failed to create SDKCall for CTFGameRules::CanUpgradeWithAttrib!");
+	
+	StartPrepSDKCall(SDKCall_GameRules);
+	PrepSDKCall_SetFromConf(hConf, SDKConf_Signature, "CTFGameRules::GetCostForUpgrade");
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);		//CMannVsMachineUpgrades*
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);		//Slot
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);		//Class
+	PrepSDKCall_AddParameter(SDKType_CBasePlayer, SDKPass_Pointer);		//CTFPlayer
+	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);		// return cost
+	if ((g_hGetCostForUpgrade = EndPrepSDKCall()) == null) SetFailState("Failed to create SDKCall for CTFGameRules::GetCostForUpgrade!");
+	
+	StartPrepSDKCall(SDKCall_GameRules);
+	PrepSDKCall_SetFromConf(hConf, SDKConf_Signature, "CTFGameRules::GetUpgradeTier");
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);		//index
+	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);		// return tier
+	if ((g_hGetUpgradeTier = EndPrepSDKCall()) == null) SetFailState("Failed to create SDKCall for CTFGameRules::GetUpgradeTier!");
+	
+	StartPrepSDKCall(SDKCall_GameRules);
+	PrepSDKCall_SetFromConf(hConf, SDKConf_Signature, "CTFGameRules::IsUpgradeTierEnabled");
+	PrepSDKCall_AddParameter(SDKType_CBasePlayer, SDKPass_Pointer);		//CTFPlayer
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);		//Slot
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);		//Tier
+	PrepSDKCall_SetReturnInfo(SDKType_Bool, SDKPass_ByValue);			// return yes/no
+	if ((g_hIsUpgradeTierEnabled = EndPrepSDKCall()) == null) SetFailState("Failed to create SDKCall for CTFGameRules::IsUpgradeTierEnabled!");
+
+
+	//CBasePlayer
+	StartPrepSDKCall(SDKCall_Player);
+	PrepSDKCall_SetFromConf(hConf, SDKConf_Signature, "CBasePlayer::SnapEyeAngles");
+	PrepSDKCall_AddParameter(SDKType_QAngle, SDKPass_ByRef);
+	if ((g_hSnapEyeAngles = EndPrepSDKCall()) == null) SetFailState("Failed to create SDKCall for CBasePlayer::SnapEyeAngles!");
+
+
+	//CTFPlayer
+	StartPrepSDKCall(SDKCall_Player);
+	PrepSDKCall_SetFromConf(hConf, SDKConf_Signature, "CTFPlayer::GetMaxAmmo");
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
+	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
+	if ((g_hGetMaxAmmo = EndPrepSDKCall()) == null) SetFailState("Failed to create SDKCall for CTFPlayer::GetMaxAmmo!");
+	
+	//CTFPlayer
+	StartPrepSDKCall(SDKCall_Player);
+	PrepSDKCall_SetFromConf(hConf, SDKConf_Virtual, "CTFPlayer::GetAmmoCount");
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
+	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
+	if ((g_hGetAmmoCount = EndPrepSDKCall()) == null) SetFailState("Failed to create SDKCall for CTFPlayer::GetAmmoCount offset!");
+
+
+
+	//CTFWeaponBaseGun::GetWeaponID()
+	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetFromConf(hConf, SDKConf_Virtual, "CTFWeaponBaseGun::GetWeaponID");
+	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);	//Returns WeaponID
+	if ((g_hGetWeaponID = EndPrepSDKCall()) == null) SetFailState("Failed to create SDKCall for GetWeaponID offset!");
+	
+	//CTFWeaponBaseGun::HasAmmo()
+	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetFromConf(hConf, SDKConf_Virtual, "CTFWeaponBaseGun::HasAmmo");
+	PrepSDKCall_SetReturnInfo(SDKType_Bool, SDKPass_ByValue);	//Returns true/false
+	if ((g_hHasAmmo = EndPrepSDKCall()) == null) SetFailState("Failed to create SDKCall for HasAmmo offset!");
+	
+	//CTFWeaponBaseGun::GetProjectileSpeed()
+	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetFromConf(hConf, SDKConf_Virtual, "CTFWeaponBaseGun::GetProjectileSpeed");
+	PrepSDKCall_SetReturnInfo(SDKType_Float, SDKPass_Plain);	//Returns SPEED
+	if ((g_hGetProjectileSpeed = EndPrepSDKCall()) == null) SetFailState("Failed to create SDKCall for GetProjectileSpeed offset!");
+	
+	//CTFWeaponBaseGun::GetProjectileGravity()
+	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetFromConf(hConf, SDKConf_Virtual, "CTFWeaponBaseGun::GetProjectileGravity");
+	PrepSDKCall_SetReturnInfo(SDKType_Float, SDKPass_Plain);	//Returns GRAVITY
+	if ((g_hGetProjectileGravity = EndPrepSDKCall()) == null) SetFailState("Failed to create SDKCall for GetProjectileGravity offset!");
+	
+	
+	
+	
+	//This call is used to get an entitys center position
+	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetFromConf(hConf, SDKConf_Virtual, "CBaseEntity::WorldSpaceCenter");
+	PrepSDKCall_SetReturnInfo(SDKType_Vector, SDKPass_ByRef);
+	if ((g_hWorldSpaceCenter = EndPrepSDKCall()) == null) SetFailState("Failed to create SDKCall for CBaseEntity::WorldSpaceCenter offset!");
+	
+	//Get entitys next think tick.
+	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetFromConf(hConf, SDKConf_Signature, "CBaseEntity::GetNextThink");
+	PrepSDKCall_AddParameter(SDKType_String, SDKPass_Pointer);
+	PrepSDKCall_SetReturnInfo(SDKType_Float, SDKPass_Plain);
+	if ((g_hGetNextThink = EndPrepSDKCall()) == null) SetFailState("Failed to create SDKCall for CBaseEntity::GetNextThink signature!");
+	
+	
+	
+	
+	//GetItemSchema()
+	StartPrepSDKCall(SDKCall_Static);
+	PrepSDKCall_SetFromConf(hConf, SDKConf_Signature, "GetItemSchema");
+	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);	//Returns address of CEconItemSchema
+	if ((g_hGetItemSchema = EndPrepSDKCall()) == null) SetFailState("Failed to create SDKCall for GetItemSchema signature!"); 
+	
+	//CEconItemSchema::GetAttributeDefinitionByName(const char* name)
+	StartPrepSDKCall(SDKCall_Raw);
+	PrepSDKCall_SetFromConf(hConf, SDKConf_Signature, "CEconItemSchema::GetAttributeDefinitionByName");
+	PrepSDKCall_AddParameter(SDKType_String, SDKPass_Pointer);
+	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);	//Returns address of CEconItemAttributeDefinition
+	if ((g_hGetAttributeDefinitionByName = EndPrepSDKCall()) == null) SetFailState("Failed to create SDKCall for CEconItemSchema::GetAttributeDefinitionByName signature!"); 
+	
+	g_MannVsMachineUpgrades = GameConfGetAddress(hConf, "MannVsMachineUpgrades");
+	g_pGameRules = GameConfGetAddress(hConf, "GameRules");
+	
+	PrintToServer("g_MannVsMachineUpgrades 0x%x\ng_pGameRules 0x%x", g_MannVsMachineUpgrades, g_pGameRules);
+
+	delete hConf;
+}
+
+stock void SnapEyeAngles(int client, float viewAngles[3])
+{
+	SDKCall(g_hSnapEyeAngles, client, viewAngles);
+}
+
+//Attribute stuff
+
+methodmap CEconItemAttributeDefinition
+{
+	property Address Address {
+		public get() { 
+			return view_as<Address>(this); 
+		}
+	}
+
+	public int GetIndex() {
+		int iAttribIndex = LoadFromAddress(this.Address + view_as<Address>(4), NumberType_Int32);
+		
+		if(iAttribIndex > 3018 || iAttribIndex < 0)
+			iAttribIndex = LoadFromAddress(this.Address - view_as<Address>(4), NumberType_Int32); 
+	
+		return iAttribIndex
+	}
+}
+
+public CEconItemAttributeDefinition GetAttributeDefinitionByName(const char[] szAttribute) 
+{
+	Address CEconItemSchema = SDKCall(g_hGetItemSchema);
+	if(CEconItemSchema == Address_Null)
+		return view_as<CEconItemAttributeDefinition>(Address_Null);
+		
+	return view_as<CEconItemAttributeDefinition>(SDKCall(g_hGetAttributeDefinitionByName, CEconItemSchema, szAttribute));
+}
+
+// MvM stuff
+
+enum //CMannVsMachineUpgradeManager
+{
+	m_Upgrades = 12, //0x000C
+	
+	CMannVsMachineUpgradeManager_Size = 28
+}; //Size=0x001C
+
+#define MAX_UPGRADES 59	//FAKE NEWS
+
+enum //CMannVsMachineUpgrades
+{
+	m_szAttribute = 0,   //0x0000
+	m_szIcon = 128,      //0x0080
+	m_flIncrement = 388, //0x0184
+	m_flCap = 392,       //0x0188
+	m_nCost = 396,       //0x018C
+	m_iUIGroup = 400,    //0x0190
+	m_iQuality = 404,    //0x0194
+	m_iTier = 408,       //0x0198
+	
+	CMannVsMachineUpgrades_Size = 412
+}; //Size=0x019C
+
+methodmap CMannVsMachineUpgrades
+{
+	property Address Address 
+	{
+		public get() 
+		{
+			return view_as<Address>(this);
+		}
+	}
+	
+	public char m_szAttribute()
+	{
+		char attribute[128];
+		
+		for (int i = 0; i < sizeof(attribute); i++)	{
+			attribute[i] = (LoadFromAddress(this.Address + view_as<Address>(i), NumberType_Int32));
+		}
+		
+		return attribute;
+	}
+	
+	public float m_flCap()
+	{
+		return float(LoadFromAddress(this.Address + view_as<Address>(m_flCap), NumberType_Int32));
+	}
+	
+	public int m_iUIGroup()
+	{
+		return (LoadFromAddress(this.Address + view_as<Address>(m_iUIGroup), NumberType_Int32));
+	}
+}
+
+methodmap CMannVsMachineUpgradeManager < CMannVsMachineUpgrades
+{
+	public CMannVsMachineUpgradeManager() 
+	{
+		return view_as<CMannVsMachineUpgradeManager>(g_MannVsMachineUpgrades);
+	}
+	
+	public CMannVsMachineUpgrades GetUpgradeByIndex(int index)
+	{
+		Address Upgrades = ((this.Address) + view_as<Address>(m_Upgrades));
+		Address pUpgrades = view_as<Address>(LoadFromAddress(Upgrades, NumberType_Int32));
+		
+		return view_as<CMannVsMachineUpgrades>(pUpgrades + view_as<Address>(index * CMannVsMachineUpgrades_Size));
+	}
+}
+
+stock bool HasDemoShieldEquipped(int client)
+{
+/*	int iEnt = -1;
+	while ((iEnt = FindEntityByClassname(iEnt, "tf_wearable_demoshield")) != -1)
+	{
+		//Not ours.
+		if(GetEntProp(iEnt, Prop_Send, "m_hOwnerEntity") != client)
+			continue;
+		
+		//Disguise wearables don't count.
+		if(GetEntProp(iEnt, Prop_Send, "m_bDisguiseWearable"))
+			continue;
+		
+		return true;
+	}*/
+	
+	return !!GetEntProp(client, Prop_Send, "m_bShieldEquipped");
+}
+
+stock bool IsStealthed(int client)
+{
+	if(TF2_IsPlayerInCondition(client, TFCond_Cloaked))
+		return true;
+	
+	if(TF2_IsPlayerInCondition(client, TFCond_Stealthed))
+		return true;
+		
+	return TF2_IsPlayerInCondition(client, TFCond_StealthedUserBuffFade);
+}
+
+stock float GetNextThink(int entity, const char[] szContext)
+{
+	return SDKCall(g_hGetNextThink, entity, szContext);
+}
+
+stock void TF2_MoveTo(int client, float flGoal[3], float fVel[3], float fAng[3])
+{
+	float flPos[3];
+	GetClientAbsOrigin(client, flPos);
+
+	float newmove[3];
+	SubtractVectors(flGoal, flPos, newmove);
+	
+	newmove[1] = -newmove[1];
+	
+	float sin = Sine(fAng[1] * FLOAT_PI / 180.0);
+	float cos = Cosine(fAng[1] * FLOAT_PI / 180.0);						
+	
+	fVel[0] = cos * newmove[0] - sin * newmove[1];
+	fVel[1] = sin * newmove[0] + cos * newmove[1];
+	
+	NormalizeVector(fVel, fVel);
+	ScaleVector(fVel, 450.0);
+}
+
+stock float[] PredictSubjectPosition(int bot, int subject)
+{
+	float subjectPos[3]; subjectPos = GetAbsOrigin(subject);
+	float subjectVel[3]; subjectVel = GetAbsVelocity(subject);
+	float botPos[3];         botPos = GetAbsOrigin(bot);
+	
+	float to[3]; SubtractVectors(subjectPos, botPos, to);
+	to[2] = 0.0;
+	
+	float flRangeSq = GetVectorLength(to, true);
+
+	// don't lead if subject is very far away
+	float flLeadRadiusSq = 1000.0;
+	flLeadRadiusSq *= flLeadRadiusSq;
+	if ( flRangeSq > flLeadRadiusSq )
+		return subjectPos;
+
+	// Normalize in place
+	float range = SquareRoot(flRangeSq);
+	to[0] /= (range + 0.0001);	// avoid divide by zero
+	to[1] /= (range + 0.0001);	// avoid divide by zero
+	to[2] /= (range + 0.0001);	// avoid divide by zero
+
+	// estimate time to reach subject, assuming maximum speed
+	float leadTime = 0.5 + ( range / ( GetEntPropFloat(bot, Prop_Send, "m_flMaxspeed") + 0.0001 ) );
+	
+	// estimate amount to lead the subject
+	float lead[3];
+	lead[0] = leadTime * subjectVel[0];
+	lead[1] = leadTime * subjectVel[1];
+	lead[2] = 0.0;
+
+	if (GetVectorDotProduct(to, lead) < 0.0)
+	{
+		// the subject is moving towards us - only pay attention 
+		// to his perpendicular velocity for leading
+		
+		float to2D[3];
+		to2D[0] = to[0];
+		to2D[1] = to[1];
+		
+		NormalizeVector(to2D, to2D);
+
+		float perp[2];
+		perp[0] = -to2D[1];
+		perp[1] = to2D[0];
+
+		float enemyGroundSpeed = lead[0] * perp[0] + lead[1] * perp[1];
+
+		lead[0] = enemyGroundSpeed * perp[0];
+		lead[1] = enemyGroundSpeed * perp[1];
+	}
+
+	// compute our desired destination
+	float pathTarget[3]; AddVectors(subjectPos, lead, pathTarget);
+	
+	// validate this destination
+
+	// don't lead through walls
+	if (GetVectorLength(lead, true) > 36.0)
+	{
+		float fraction;
+		if (!PF_IsPotentiallyTraversable(bot, subjectPos, pathTarget, IMMEDIATELY, fraction))
+		{
+			// tried to lead through an unwalkable area - clip to walkable space
+			pathTarget[0] = subjectPos[0] + fraction * ( pathTarget[0] - subjectPos[0] );
+			pathTarget[1] = subjectPos[1] + fraction * ( pathTarget[1] - subjectPos[1] );
+			pathTarget[2] = subjectPos[2] + fraction * ( pathTarget[2] - subjectPos[2] );
+			
+			//PrintToServer("tried to lead through an unwalkable area - clip to walkable space | fraction %f", fraction); 
+		}
+	}
+
+	// don't lead over cliffs
+	NavArea leadArea = TheNavMesh.GetNearestNavArea_Vec( pathTarget );
+
+	if (leadArea == NavArea_Null || leadArea.GetZ(pathTarget[0], pathTarget[1]) < (pathTarget[2] - 72.0))
+	{
+		// would fall off a cliff
+		return subjectPos;
+	}
+	
+	return pathTarget;
+}
+
+stock int GetBomb()
+{
+	int iBomb = -1;
+	while ((iBomb = FindEntityByClassname(iBomb, "item_teamflag")) != -1)
+	{
+		//Ignore bombs not in play
+		if(GetEntProp(iBomb, Prop_Send, "m_nFlagStatus") == 0)
+			continue;
+		
+		//Ignore bombs not on our team
+		if (GetEntProp(iBomb, Prop_Send, "m_iTeamNum") != view_as<int>(TFTeam_Blue))
+			continue;
+		
+		break;
+	}
+	
+	return iBomb;
+}
+
+stock int TF2_FindBotNearestToBombNearestToHatch(int client)
+{
+	int iBomb = TF2_FindBombNearestToHatch();
+	if(iBomb == -1)
+		return -1;
+	
+	float flOrigin[3]; flOrigin = WorldSpaceCenter(iBomb);
+	
+	float flBestDistance = 999999.0;
+	int iBestEntity = 0;
+	
+	for(int i = 1; i <= MaxClients; i++)
+	{
+		if(i == client)
+			continue;
+		
+		if(i <= 0 || i > MaxClients)
+			continue;
+		
+		if(!IsClientInGame(i))
+			continue;
+		
+		if(!IsPlayerAlive(i))
+			continue;
+		
+		if(TF2_GetClientTeam(i) != GetEnemyTeam(client))
+			continue;
+		
+		if(IsInvulnerable(i))
+			continue;
+		
+		float flDistance = GetVectorDistance(WorldSpaceCenter(i), WorldSpaceCenter(iBomb));
+		if(flDistance <= flBestDistance)
+		{
+			flBestDistance = flDistance;
+			iBestEntity = i;
+		}
+	}
+	
+	return iBestEntity;
+}
+
+stock int TF2_FindBombNearestToHatch()
+{
+	float flOrigin[3]; flOrigin = TF2_GetBombHatchPosition();
+	
+	float flBestDistance = 999999.0;
+	int iBestEntity = -1;
+	
+	int iEnt = -1;
+	while ((iEnt = FindEntityByClassname(iEnt, "item_teamflag")) != -1)
+	{
+		//Ignore bombs not in play
+		if(GetEntProp(iEnt, Prop_Send, "m_nFlagStatus") == 0)
+			continue;
+		
+		//Ignore bombs not on blue team.
+		if (GetEntProp(iEnt, Prop_Send, "m_iTeamNum") != view_as<int>(TFTeam_Blue))
+			continue;
+	
+		float flDistance = GetVectorDistance(flOrigin, WorldSpaceCenter(iEnt));
+		if(flDistance <= flBestDistance)
+		{
+			flBestDistance = flDistance;
+			iBestEntity = iEnt;
+		}
+	}
+	
+	return iBestEntity;
+}
+
+stock float[] TF2_GetBombHatchPosition()
+{
+	float flOrigin[3];
+
+	int iHole = FindEntityByClassname(-1, "func_capturezone");
+	if(IsValidEntity(iHole))
+	{
+		flOrigin = WorldSpaceCenter(iHole);
+	}
+	
+	return flOrigin;
+}
+
+public int EquipRequiredWeapon(int client)
+{
+	int iSlot = TFWeaponSlot_Primary;
+
+//	if(IsMeleeOnly)
+//	{
+//		iSlot = TFWeaponSlot_Melee;
+//	}
+	
+	return iSlot;
+}
+
+stock int GetMaxHealth(int client)
+{
+	return GetEntProp(client, Prop_Data, "m_iMaxHealth");
+}
+
+stock int GetMaxHealthForBuffing(int client)
+{
+	return GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iMaxHealth", _, client);
+}
+
+float VMX_VectorNormalize(float a1[3])
+{
+	float flLength = GetVectorLength(a1, true) + 0.0000000001;
+	float v4 = (1.0 / SquareRoot(flLength)); 
+	float den = v4 * ((3.0 - ((v4 * v4) * flLength)) * 0.5);
+	
+	ScaleVector(a1, den);
+	
+	return den * flLength;
+}
+
+stock bool IsInvulnerable(int client)
+{
+	if(TF2_IsPlayerInCondition(client, TFCond_Ubercharged)
+	|| TF2_IsPlayerInCondition(client, TFCond_UberchargedHidden)
+	|| TF2_IsPlayerInCondition(client, TFCond_UberchargedCanteen)
+	|| TF2_IsPlayerInCondition(client, TFCond_PreventDeath))
+	{
+		return true;
+	}
+	
+	return false;
+}
+
+stock bool IsWeapon(int client, int iWeaponID)
+{
+	int iWeapon = GetActiveWeapon(client);
+	if(IsValidEntity(iWeapon))
+	{
+		return SDKCall(g_hGetWeaponID, iWeapon) == iWeaponID;
+	}
+	
+	return false;
+}
+
+stock bool HasAmmo(int weapon)
+{
+	return SDKCall(g_hHasAmmo, weapon);
+}
+
+stock char EntityNetClass(int entity)
+{
+	char class[64];
+	GetEntityNetClass(entity, class, sizeof(class));
+	
+	return class;
+}
+
+stock float GetTimeSinceWeaponFired(int client)
+{
+	int iWeapon = GetActiveWeapon(client);
+	if(!IsValidEntity(iWeapon))
+		return 99999.0;
+		
+	float flLastFireTime = GetEntPropFloat(iWeapon, Prop_Send, "m_flLastFireTime");
+	if(flLastFireTime <= 0.0)
+		return 99999.0;
+		
+	return GetGameTime() - flLastFireTime;
+}
+
+stock float GetProjectileSpeed(int client)
+{
+	int iWeapon = GetActiveWeapon(client);
+	if(IsValidEntity(iWeapon))
+	{
+		return SDKCall(g_hGetProjectileSpeed, iWeapon);
+	}
+	
+	return 0.0;
+}
+
+stock float GetProjectileGravity(int client)
+{
+	int iWeapon = GetActiveWeapon(client);
+	if(IsValidEntity(iWeapon))
+	{
+		return SDKCall(g_hGetProjectileGravity, iWeapon);
+	}
+	
+	return 0.0;
+}
+
+stock float GetCurrentCharge(int iWeapon)
+{
+	if(!HasEntProp(iWeapon, Prop_Send, "m_flChargeBeginTime"))
+		return 0.0;
+	
+	float flCharge = 0.0;
+	
+	float flChargeBeginTime = GetEntPropFloat(iWeapon, Prop_Send, "m_flChargeBeginTime");
+	if(flChargeBeginTime != 0.0)
+	{
+		flCharge = Min(1.0, GetGameTime() - flChargeBeginTime);
+	}
+	
+	return flCharge;
+}
+
+stock float GetDesiredAttackRange(int client)
+{
+	int weapon = GetActiveWeapon(client);
+	if (!IsValidEntity(weapon))
+		return 0.0;
+	
+	if(IsWeapon(client, TF_WEAPON_KNIFE))
+		return 70.0;
+	
+	if (IsMeleeWeapon(client))
+	{
+		if(TF2_IsPlayerInCondition(client, TFCond_Charging))
+			return 80.0;
+			
+		return 100.0;
+	}
+	
+	if (!IsWeapon(client, TF_WEAPON_FLAMETHROWER))
+	{
+		float flRange = 99999.0;
+		
+		if (!IsSniperRifle(client))
+		{
+			if(IsWeapon(client, TF_WEAPON_ROCKETLAUNCHER) || TF2_IsMvM())
+				flRange = 500.0;
+			else
+				flRange = 1250.0;
+		}
+		
+		return flRange;
+	}
+	
+	if(IsExplosiveProjectileWeapon(client))
+		return 500.0;
+	
+	return 100.0;
+}
+
+stock float GetMaxAttackRange(int client)
+{
+	int weapon = GetActiveWeapon(client);
+	if (!IsValidEntity(weapon))
+		return 0.0;
+	
+	if(IsWeapon(client, TF_WEAPON_KNIFE))
+		return 70.0;
+	
+	if (IsMeleeWeapon(client))
+	{
+		if(TF2_IsPlayerInCondition(client, TFCond_Charging))
+			return 80.0;
+			
+		return 100.0;
+	}
+	
+	if (IsSniperRifle(client))
+		return 9999999.0;
+	
+	if (IsWeapon(client, TF_WEAPON_FLAMETHROWER)) 
+	{
+		if (TF2_IsMvM()) 
+		{
+			if(IsMiniBoss(client)) 
+			{
+				return 875.0;
+			} 
+			else 
+			{
+				return 350.0;
+			}
+		} 
+		else 
+		{
+			return 250.0;
+		}
+	}
+	
+	if (IsWeapon(client, TF_WEAPON_ROCKETLAUNCHER))
+		return 3000.0;
+	
+	return 9999999.0;
+}
+
+stock bool IsAmmoLow(int client)
+{
+	int Primary = GetPlayerWeaponSlot(client, TFWeaponSlot_Primary);
+
+	if(IsValidEntity(Primary) && !HasAmmo(Primary))
+	{
+		return true;
+	}
+
+	if(!IsWeapon(client, TF_WEAPON_WRENCH))
+	{
+		if(!IsMeleeWeapon(client))
+		{
+			float flAmmoRation = float(GetAmmoCount(client, TF_AMMO_PRIMARY)) / float(GetMaxAmmo(client, TF_AMMO_PRIMARY));
+			return flAmmoRation < 0.2;
+		}
+		
+		return false;
+	}
+	
+	return GetAmmoCount(client, TF_AMMO_METAL) <= 0;
+}
+
+stock int GetMaxAmmo(int client, int iAmmoType, int iClassNumber = -1)
+{
+	return SDKCall(g_hGetMaxAmmo, client, iAmmoType, iClassNumber);
+}
+
+stock int GetAmmoCount(int client, int iAmmoType)
+{
+	return SDKCall(g_hGetAmmoCount, client, iAmmoType);
+}
+
+stock bool IsContinuousFireWeapon(int client) 
+{
+	int iWeapon = GetActiveWeapon(client);
+	if(!IsValidEntity(iWeapon))
+		return false;
+	
+	if(IsSniperRifle(client))
+		return false;
+	
+	if (!IsCombatWeapon(client))
+		return false;
+
+	switch(SDKCall(g_hGetWeaponID, iWeapon))
+	{
+		case TF_WEAPON_PIPEBOMBLAUNCHER: return false;
+		case TF_WEAPON_GRENADELAUNCHER: return false;
+		case TF_WEAPON_ROCKETLAUNCHER: return false;
+		case TF_WEAPON_PISTOL_SCOUT: return false;
+		case TF_WEAPON_COMPOUND_BOW: return false;
+		case TF_WEAPON_DIRECTHIT: return false;
+		case TF_WEAPON_FLAREGUN: return false;
+		case TF_WEAPON_PISTOL: return false;
+		case TF_WEAPON_JAR: return false;
+    }
+    
+	return true;
+}
+
+stock bool IsCombatWeapon(int client)
+{
+	int iWeapon = GetActiveWeapon(client);
+	if(!IsValidEntity(iWeapon))
+		return false;
+
+	switch(SDKCall(g_hGetWeaponID, iWeapon))
+	{
+		case TF_WEAPON_PDA:                  return false;
+		case TF_WEAPON_PDA_ENGINEER_BUILD:   return false;
+		case TF_WEAPON_PDA_ENGINEER_DESTROY: return false;
+		case TF_WEAPON_PDA_SPY:              return false;
+		case TF_WEAPON_BUILDER:              return false;
+		case TF_WEAPON_MEDIGUN:              return false;
+		case TF_WEAPON_DISPENSER:            return false;
+		case TF_WEAPON_INVIS:                return false;
+		case TF_WEAPON_LUNCHBOX:             return false;
+		case TF_WEAPON_BUFF_ITEM:            return false;
+		case TF_WEAPON_PUMPKIN_BOMB:         return false;
+    }
+    
+	return true;
+}
+
+stock bool IsHitScanWeapon(int client)
+{
+	int iWeapon = GetActiveWeapon(client);
+	if(!IsValidEntity(iWeapon))
+		return false;
+
+	switch(SDKCall(g_hGetWeaponID, iWeapon))
+	{
+		case TF_WEAPON_SHOTGUN_PRIMARY: return true;
+		case TF_WEAPON_SHOTGUN_SOLDIER: return true;
+		case TF_WEAPON_SHOTGUN_HWG: return true;
+		case TF_WEAPON_SHOTGUN_PYRO: return true;
+		case TF_WEAPON_SCATTERGUN: return true;
+		case TF_WEAPON_SNIPERRIFLE: return true;
+		case TF_WEAPON_MINIGUN: return true;
+		case TF_WEAPON_SMG: return true;
+		case TF_WEAPON_PISTOL: return true;
+		case TF_WEAPON_PISTOL_SCOUT: return true;
+		case TF_WEAPON_REVOLVER: return true;
+		case TF_WEAPON_SENTRY_BULLET: return true;
+		case TF_WEAPON_SENTRY_ROCKET: return true;
+		case TF_WEAPON_SENTRY_REVENGE: return true;
+		case TF_WEAPON_HANDGUN_SCOUT_PRIMARY: return true;
+		case TF_WEAPON_HANDGUN_SCOUT_SEC: return true;
+		case TF_WEAPON_SODA_POPPER: return true;
+		case TF_WEAPON_SNIPERRIFLE_DECAP: return true;
+		case TF_WEAPON_PEP_BRAWLER_BLASTER: return true;
+		case TF_WEAPON_SNIPERRIFLE_CLASSIC: return true;
+		case TF_WEAPON_CHARGED_SMG: return true;
+    }
+    
+	return false;
+}
+
+stock bool IsSniperRifle(int client)
+{
+	int iWeapon = GetActiveWeapon(client);
+	if(!IsValidEntity(iWeapon))
+		return false;
+	
+	switch(SDKCall(g_hGetWeaponID, iWeapon))
+	{
+		case TF_WEAPON_SNIPERRIFLE:         return true;
+		case TF_WEAPON_SNIPERRIFLE_DECAP:   return true;
+		case TF_WEAPON_SNIPERRIFLE_CLASSIC: return true;
+	}
+	
+	return false;
+}
+
+stock int GetWeaponID(int weapon)
+{
+	return SDKCall(g_hGetWeaponID, weapon);
+}
+
+stock bool IsExplosiveProjectileWeapon(int client)
+{
+	int iWeapon = GetActiveWeapon(client);
+	if(!IsValidEntity(iWeapon))
+		return false;
+	
+	switch(SDKCall(g_hGetWeaponID, iWeapon))
+	{
+		case TF_WEAPON_PIPEBOMBLAUNCHER: return true;
+		case TF_WEAPON_GRENADELAUNCHER:  return true;
+		case TF_WEAPON_PARTICLE_CANNON:  return true;
+		case TF_WEAPON_ROCKETLAUNCHER:   return true;
+		case TF_WEAPON_DIRECTHIT:        return true;
+		case TF_WEAPON_CANNON:           return true;
+		case TF_WEAPON_JAR:              return true;
+	}
+	
+	return false;
+}
+
+stock bool IsMeleeWeapon(int client)
+{
+	int iWeapon = GetActiveWeapon(client);
+	if(!IsValidEntity(iWeapon))
+		return false;
+	
+	switch(SDKCall(g_hGetWeaponID, iWeapon))
+	{
+		case TF_WEAPON_BAT:           return true;
+		case TF_WEAPON_CLUB:          return true;
+		case TF_WEAPON_KNIFE:         return true;
+		case TF_WEAPON_FISTS:         return true;
+		case TF_WEAPON_SWORD:         return true;
+		case TF_WEAPON_SHOVEL:        return true;
+		case TF_WEAPON_BOTTLE:        return true;
+		case TF_WEAPON_WRENCH:        return true;
+		case TF_WEAPON_BONESAW:       return true;
+		case TF_WEAPON_CROWBAR:       return true;
+		case TF_WEAPON_FIREAXE:       return true;
+		case TF_WEAPON_BAT_WOOD:      return true;
+		case TF_WEAPON_BAT_FISH:      return true;
+		case TF_WEAPON_BAT_GIFTWRAP:  return true;
+		case TF_WEAPON_HARVESTER_SAW: return true;
+	}
+	
+	return false;
+}
+
+bool IsLineOfFireClear(float from[3], float to[3])
+{
+	Handle trace = TR_TraceRayFilterEx(from, to, MASK_SOLID_BRUSHONLY, RayType_EndPoint, NextBotTraceFilterIgnoreActors);
+	
+	float flFraction = TR_GetFraction(trace);
+	
+	delete trace;
+	
+	if (flFraction >= 1.0/* && !trace.allsolid*/) 
+	{
+		return !(flFraction == 0.0);	//allsolid
+	}
+	
+	return false;
+}
+
+public bool NextBotTraceFilterIgnoreActors(int entity, int contentsMask, any iPumpking)
+{
+	return !PF_IsEntityACombatCharacter(entity);
+}
+
+stock float AngleDiff( float destAngle, float srcAngle )
+{
+	return AngleNormalize(destAngle - srcAngle);
+}
+
+stock float AngleNormalize( float angle )
+{
+	angle = angle - 360.0 * RoundToFloor(angle / 360.0);
+	while (angle > 180.0) angle -= 360.0;
+	while (angle < -180.0) angle += 360.0;
+	return angle;
+}
+
+stock float ApproachAngle( float target, float value, float speed )
+{
+	float delta = AngleDiff(target, value);
+	
+	if (speed < 0.0) 
+		speed = -speed;
+	
+	if (delta > speed) 
+		value += speed;
+	else if (delta < -speed) 
+		value -= speed;
+	else
+		value = target;
+	
+	return AngleNormalize(value);
+}
+
+stock float[] WorldSpaceCenter(int entity)
+{
+	float vecPos[3];
+	SDKCall(g_hWorldSpaceCenter, entity, vecPos);
+	return vecPos;
+}
+
+stock float[] GetAbsVelocity(int client)
+{
+	float v[3];
+	GetEntPropVector(client, Prop_Data, "m_vecAbsVelocity", v);
+	return v;
+}
+
+stock float[] GetAbsOrigin(int client)
+{
+	float v[3];
+	GetEntPropVector(client, Prop_Data, "m_vecAbsOrigin", v);
+	return v;
+}
+
+stock float[] GetEyePosition(int client)
+{
+	float v[3];
+	GetClientEyePosition(client, v);
+	return v;
+}
+
+stock float[] GetEyeAngles(int client)
+{
+	float v[3];
+	GetClientEyeAngles(client, v);
+	return v;
+}
+
+stock int GetActiveWeapon(int client)
+{
+	return GetEntPropEnt(client, Prop_Data, "m_hActiveWeapon");
+}
+
+stock void EyeVectors(int client, float fw[3] = NULL_VECTOR, float right[3] = NULL_VECTOR, float up[3] = NULL_VECTOR)
+{
+	GetAngleVectors(GetEyeAngles(client), fw, right, up);
+}
+
+stock TFTeam GetEnemyTeam(int ent)
+{
+	TFTeam enemy_team = TF2_GetClientTeam(ent);
+	switch(enemy_team)
+	{
+		case TFTeam_Red:  enemy_team = TFTeam_Blue;
+		case TFTeam_Blue: enemy_team = TFTeam_Red;
+	}
+	
+	return enemy_team;
+}
+
+stock float Max(float one, float two)
+{
+	if(one > two)
+		return one;
+	else if(two > one)
+		return two;
+		
+	return two;
+}
+
+stock float Min(float one, float two)
+{
+	if(one < two)
+		return one;
+	else if(two < one)
+		return two;
+		
+	return two;
+}
+
+stock float[] TF2_GetLookAheadPosition(int client)
+{
+	int iMaxSegments = TF2_IsPlayerInCondition(client, TFCond_Charging) ? 1 : 6;
+	int iSegmentsLookedAt = 0;
+	
+	float vecOut[3];
+	for (int i = 0; i < iMaxSegments; i++)
+	{
+		float vecSegment[3];
+		
+		bool bSegMentExists = PF_GetFutureSegment(client, i, vecSegment);
+		if(bSegMentExists)
+		{
+			iSegmentsLookedAt++;
+			
+			AddVectors(vecSegment, vecOut, vecOut);
+		}
+	}
+	
+	if(iSegmentsLookedAt > 0)
+	{
+		vecOut[0] /= iSegmentsLookedAt;
+		vecOut[1] /= iSegmentsLookedAt;
+		vecOut[2] /= iSegmentsLookedAt;
+		
+		vecOut[2] += 50.0;
+	}
+	
+	return vecOut;
+}
+
+stock int Entity_GetClosestClient(int iEnt)
+{
+	float flPos1[3];
+	GetEntPropVector(iEnt, Prop_Send, "m_vecOrigin", flPos1);
+	
+	int iBestTarget = -1;
+	float flBestLength = 50000.0;
+	
+	for(int i = 1; i <= MaxClients; i++)
+	{
+		if(i != iEnt && IsClientInGame(i) && Entity_Cansee(iEnt, i) && IsPlayerAlive(i) && GetClientTeam(i) != GetClientTeam(iEnt))
+		{
+			float flPos2[3];
+			GetClientEyePosition(i, flPos2);
+			
+			float flDistance = GetVectorDistance(flPos1, flPos2);
+
+			if(flDistance < flBestLength)
+			{
+				iBestTarget = i;
+				flBestLength = flDistance;
+			}
+		}
+	}
+	
+	if(iBestTarget > 0 && iBestTarget <= MaxClients && IsClientInGame(iBestTarget))
+	{
+		return iBestTarget;
+	}
+	
+	return iBestTarget;
+}
+
+stock bool Entity_Cansee(int iLooker, int iTarget)
+{
+	if(TF2_IsPlayerInCondition(iTarget, TFCond_Disguised) || TF2_IsPlayerInCondition(iTarget, TFCond_Cloaked)
+	|| TF2_IsPlayerInCondition(iTarget, TFCond_Stealthed) || TF2_IsPlayerInCondition(iTarget, TFCond_CloakFlicker)
+	|| TF2_IsPlayerInCondition(iTarget, TFCond_DeadRingered) || TF2_GetClientTeam(iTarget) != GetEnemyTeam(iLooker))
+		return false;
+		
+	TR_TraceRayFilter(GetEyePosition(iLooker), WorldSpaceCenter(iTarget), MASK_SHOT|CONTENTS_GRATE, RayType_EndPoint, TraceFilterSelf, iLooker);
+	if(TR_DidHit() && TR_GetEntityIndex() == iTarget)
+	{
+		return true;
+	}
+	
+	return false;
+}
+
+public bool TraceFilterSelf(int entity, int contentsMask, any iExclude)
+{
+	char class[64];
+	GetEntityClassname(entity, class, sizeof(class));
+	
+	if(StrEqual(class, "player"))
+	{
+		if(GetClientTeam(entity) == GetClientTeam(iExclude))
+		{
+			return false;
+		}
+	}
+	else if(StrEqual(class, "entity_medigun_shield"))
+	{
+		if(GetEntProp(entity, Prop_Send, "m_iTeamNum") == GetClientTeam(iExclude))
+		{
+			return false;
+		}
+	}
+	else if(StrEqual(class, "func_respawnroomvisualizer"))
+	{
+		return false;
+	}
+	else if(StrContains(class, "tf_projectile_", false) != -1)
+	{
+		return false;
+	}
+	else if(StrContains(class, "obj_", false) != -1)
+	{
+		return false;
+	}
+	else if(StrEqual(class, "entity_revive_marker"))
+	{
+		return false;
+	}
+	
+	return !(entity == iExclude);
+}
+
+stock bool IsValidClientIndex(int client)
+{
+	if(client > 0 && client <= MaxClients && IsClientInGame(client))
+		return true;
+		
+	return false;
+}
+
+stock bool TF2_IsMvM()
+{
+	return view_as<bool>(GameRules_GetProp("m_bPlayingMannVsMachine"));
+}
+
+stock bool IsMiniBoss(int client)
+{
+	return !!GetEntProp(client, Prop_Send, "m_bIsMiniBoss");
+}
+
+stock int GetTeamNumber(int entity)
+{
+	return GetEntProp(entity, Prop_Send, "m_iTeamNum");
+}
+
+stock void EquipWeaponSlot(int client, int slot)
+{
+	int iWeapon = GetPlayerWeaponSlot(client, slot);
+	if(IsValidEntity(iWeapon))
+		EquipWeapon(client, iWeapon);
+}
+
+stock void EquipWeapon(int client, int weapon)
+{
+	char class[64];
+	GetEntityClassname(weapon, class, sizeof(class));
+
+	FakeClientCommand(client, "use %s", class);
+//	SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", weapon);
+}
+
+bool IsStandingAtUpgradeStation(int client)
+{
+	return !!GetEntProp(client, Prop_Send, "m_bInUpgradeZone");
+}
+
+public float clamp(float a, float b, float c) { return (a > c ? c : (a < b ? b : a)); }
+
+char g_strHealthAndAmmoEntities[][] = 
+{
+	"func_regenerate",
+	"item_ammopack*",
+	"item_health*",
+	"obj_dispenser",
+	"tf_ammo_pack"
+}
+
+void ComputeHealthAndAmmoVectors(int client, JSONArray array, float max_range)
+{
+	for (int i = 0; i < sizeof(g_strHealthAndAmmoEntities); i++)
+	{
+		int ammo = -1;
+		while ((ammo = FindEntityByClassname(ammo, g_strHealthAndAmmoEntities[i])) != -1)
+		{
+			if(GetTeamNumber(ammo) == view_as<int>(GetEnemyTeam(client)))
+				continue;
+		
+			if(GetVectorDistance(WorldSpaceCenter(client), WorldSpaceCenter(ammo)) > max_range)
+				continue;
+			
+			float length;
+			if(!PF_IsPathToVectorPossible(client, WorldSpaceCenter(ammo), length))
+				continue;
+			
+			if(length < max_range)
+			{
+				JSONObject entity = new JSONObject();
+				entity.SetFloat("path_length", length);
+				entity.SetInt("entity_index", ammo);
+				
+				array.Push(entity);
+				
+				delete entity;
+			}
+		}
+	}
+}

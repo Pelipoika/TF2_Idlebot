@@ -1,0 +1,417 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"backg",
+				"background-image"
+			],
+			[
+				"mar",
+				"marker-end"
+			],
+			[
+				"margi",
+				"margin-bottom"
+			],
+			[
+				"text",
+				"text-uppercase"
+			],
+			[
+				"pro",
+				"pointer"
+			],
+			[
+				"font",
+				"font-family"
+			],
+			[
+				"border",
+				"border-left"
+			],
+			[
+				"border-right",
+				"border-right-color"
+			],
+			[
+				"border-right-",
+				"border-right-width"
+			],
+			[
+				"borde",
+				"border-radius"
+			],
+			[
+				"paddi",
+				"padding"
+			],
+			[
+				"bac",
+				"background-color"
+			],
+			[
+				"background",
+				"background-color"
+			],
+			[
+				"back",
+				"background-color"
+			],
+			[
+				"process",
+				"process.abort();"
+			],
+			[
+				"padding",
+				"padding-left"
+			],
+			[
+				"TF2",
+				"TF2secondary"
+			],
+			[
+				"marg",
+				"margin-bottom"
+			],
+			[
+				"inline",
+				"inline-grid"
+			],
+			[
+				"inlin",
+				"inline-block"
+			],
+			[
+				"ba",
+				"background-repeat"
+			]
+		]
+	},
+	"buffers":
+	[
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 392.0,
+		"last_filter": "Package Control: ",
+		"selected_items":
+		[
+			[
+				"Package Control: ",
+				"Package Control: Install Package"
+			],
+			[
+				"Package Control: inst\t",
+				"Package Control: Install Package"
+			],
+			[
+				"Package Control: install",
+				"Package Control: Install Package"
+			],
+			[
+				"Package Control: remove",
+				"Package Control: Remove Package"
+			],
+			[
+				"package cont",
+				"Package Control: Install Package"
+			],
+			[
+				"install p",
+				"Package Control: Install Package"
+			],
+			[
+				"Snippet: ",
+				"Snippet: Lorem ipsum"
+			],
+			[
+				"package control ",
+				"Package Control: Install Package"
+			]
+		],
+		"width": 416.0
+	},
+	"console":
+	{
+		"height": 463.0,
+		"history":
+		[
+			"sublime.log_input(True)",
+			"sublime.log_commands(True)",
+			"import urllib.request,os,hashlib; h = 'df21e130d211cfc94d9b0905775a7c0f' + '1e3d39e33b79698005270310898eea76'; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); by = urllib.request.urlopen( 'http://packagecontrol.io/' + pf.replace(' ', '%20')).read(); dh = hashlib.sha256(by).hexdigest(); print('Error validating download (got %s instead of %s), please try manual install' % (dh, h)) if dh != h else open(os.path.join( ipp, pf), 'wb' ).write(by)"
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/C/Users/Pelipoika/Dropbox/Private/1.7/scripting/idlebot/TFBotAim.sublime-workspace",
+		"/C/Users/Pelipoika/Documents/GitHub/pathfollower/PluginBot/PluginBotPathCost.h",
+		"/C/Users/Pelipoika/Documents/GitHub/pathfollower/sp_callbacks.cpp",
+		"/C/Users/Pelipoika/Documents/GitHub/pathfollower/scripting/include/PathFollower.inc",
+		"/C/Users/Pelipoika/Documents/GitHub/pathfollower/sp_natives.cpp",
+		"/C/Users/Pelipoika/Documents/GitHub/pathfollower/PluginBot/PluginBotLocomotion.h",
+		"/C/Users/Pelipoika/Documents/GitHub/pathfollower/Nav/nav_pathfind.h",
+		"/C/Users/Pelipoika/Documents/GitHub/pathfollower/Nav/nav_area.h",
+		"/C/Users/Pelipoika/Documents/GitHub/pathfollower/Nav/nav.h",
+		"/C/Users/Pelipoika/Documents/GitHub/pathfollower/NextBot/NextBotPath.h",
+		"/C/Users/Pelipoika/Documents/GitHub/pathfollower/NextBot/NextBotContextualQueryInterface.h",
+		"/C/Users/Pelipoika/Documents/GitHub/pathfollower/PluginBot/PluginBot.h",
+		"/C/Users/Pelipoika/Documents/GitHub/pathfollower/NextBot/NextBotInterface.h",
+		"/C/Users/Pelipoika/Documents/GitHub/pathfollower/NextBot/NextBotPathFollow.h",
+		"/C/Users/Pelipoika/Documents/GitHub/pathfollower/thunks.h",
+		"/C/Users/Pelipoika/Documents/GitHub/pathfollower/scripting/include/PathFollower_Nav.inc",
+		"/C/Users/Pelipoika/Documents/GitHub/pathfollower/sdk/smsdk_config.h",
+		"/C/Users/Pelipoika/Documents/GitHub/pathfollower/PackageScript",
+		"/C/Users/Pelipoika/Documents/GitHub/pathfollower/AMBuilder",
+		"/C/Users/Pelipoika/Documents/GitHub/pathfollower/Nav/util_shared.h",
+		"/C/Users/Pelipoika/Documents/GitHub/pathfollower/configure.py",
+		"/C/Users/Pelipoika/Documents/GitHub/pathfollower/context.cpp",
+		"/C/Users/Pelipoika/Documents/GitHub/pathfollower/PluginBot/PluginBotCommon.h",
+		"/C/Users/Pelipoika/Documents/GitHub/pathfollower/context.h",
+		"/C/Users/Pelipoika/Documents/GitHub/pathfollower/thunks.cpp",
+		"/C/Users/Pelipoika/Documents/GitHub/pathfollower/find_stuff.h",
+		"/C/Users/Pelipoika/Documents/GitHub/pathfollower/.gitignore",
+		"/C/NodeJS/scripts/Beat/beatdetect/robot.js",
+		"/C/NodeJS/scripts/ServerMonitor/index.js",
+		"/C/Users/Pelipoika/Dropbox/Public/Koulu/Verkkosovelluksen käyttöliittymät/Oppimistehtävä 5/Viikko 12/index.html",
+		"/C/Users/Pelipoika/Dropbox/Public/Koulu/Verkkosovelluksen käyttöliittymät/Oppimistehtävä 5/Viikko 12/galleria.html",
+		"/C/Users/Pelipoika/Dropbox/Public/Koulu/Verkkosovelluksen käyttöliittymät/Oppimistehtävä 5/Viikko 12/faniposti.html",
+		"/C/Users/Pelipoika/AppData/Roaming/Sublime Text 3/Packages/User/Node.sublime-build",
+		"/C/NodeJS/scripts/ServerMonitor/package.json",
+		"/C/Users/Pelipoika/AppData/Roaming/Sublime Text 3/Packages/User/ANSIescape/test/ansi_test_build.py",
+		"/C/Users/Pelipoika/AppData/Roaming/Sublime Text 3/Packages/User/ANSIescape/Main.sublime-menu",
+		"/C/Users/Pelipoika/AppData/Roaming/Sublime Text 3/Packages/User/ANSIescape/test/ansi_test_setup.py",
+		"/C/Users/Pelipoika/AppData/Roaming/Sublime Text 3/Packages/User/ANSIescape/test/ansi_test_file.txt",
+		"/C/Users/Pelipoika/AppData/Roaming/Sublime Text 3/Packages/User/ANSIescape/ANSI.tmLanguage",
+		"/C/Users/Pelipoika/AppData/Roaming/Sublime Text 3/Packages/User/ANSIescape/ansi.py",
+		"/C/Users/Pelipoika/AppData/Roaming/Sublime Text 3/Packages/User/ANSIescape/.gitignore",
+		"/C/Users/Pelipoika/AppData/Roaming/Sublime Text 3/Packages/User/ANSIescape/ansi.tmTheme",
+		"/C/Users/Pelipoika/AppData/Roaming/Sublime Text 3/Packages/User/ANSIescape/ansi.sublime-settings",
+		"/C/Users/Pelipoika/AppData/Roaming/Sublime Text 3/Installed Packages/ANSIescape.sublime-package",
+		"/C/Users/Pelipoika/AppData/Roaming/Sublime Text 3/Packages/User/colors.rspec",
+		"/C/Users/Pelipoika/AppData/Roaming/Sublime Text 3/Packages/User/Preferences.sublime-settings",
+		"/C/Users/Pelipoika/%APPDATA%/Sublime Text 3/Packages/Nodejs/Nodejs.sublime-settings",
+		"/C/Users/Pelipoika/AppData/Roaming/Sublime Text 3/Packages/User/Package Control.sublime-settings",
+		"/C/Program Files/Sublime Text 3/Packages/Theme - Default.sublime-package",
+		"/C/NodeJS/scripts/ServerMonitor/public/index.html",
+		"/C/NodeJS/scripts/ServerMonitor/app.js",
+		"/C/Users/Pelipoika/Dropbox/Public/Koulu/Verkkosovelluksen käyttöliittymät/Oppimistehtävä 5/2/blog.css",
+		"/C/Users/Pelipoika/Dropbox/Public/Koulu/Verkkosovelluksen käyttöliittymät/Oppimistehtävä 5/2/index.html",
+		"/C/Users/Pelipoika/Dropbox/Public/Koulu/Verkkosovelluksen käyttöliittymät/Oppimistehtävä 5/index.html",
+		"/C/NodeJS/scripts/ServerMonitor/index.html",
+		"/C/Users/Pelipoika/AppData/Roaming/Sublime Text 3/Packages/View In Browser/View In Browser.sublime-settings",
+		"/C/Users/Pelipoika/AppData/Roaming/Sublime Text 3/Packages/User/View In Browser.sublime-settings",
+		"/C/Users/Pelipoika/vtable_dump.py",
+		"/C/NodeJS/scripts/ServerMonitor/js/init.js",
+		"/C/NodeJS/scripts/ServerMonitor/css/style.css",
+		"/C/Users/Pelipoika/AppData/Roaming/Sublime Text 3/Packages/User/Default (Windows).sublime-keymap"
+	],
+	"find":
+	{
+		"height": 34.0
+	},
+	"find_in_files":
+	{
+		"height": 90.0,
+		"where_history":
+		[
+			""
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"IsCombatCharacter",
+			"CombatChara",
+			"IsEntity",
+			"IsEntityACom",
+			"combatchara",
+			"IsRangeLess",
+			"IsEntityTraversable",
+			"ShortestPathCost",
+			"shortestpath",
+			"InheritAttributes",
+			"attributes",
+			"getlocomotioninterface",
+			"NO_SPAWNING",
+			"invasion",
+			"invasionm",
+			"ComputeInvasionAreaVectors",
+			"GetBot",
+			"GetPrimaryKnownThreat",
+			"getfuturesegment",
+			"isclimb",
+			"isclimbpossible",
+			"climbuptoledge",
+			"ishindrance",
+			"ABLE_TO_GAP_JUMP",
+			"ABLE_TO_CLIMB",
+			"PATHFOLLOWER",
+			"PathFollower",
+			"Update",
+			"IsDiscontinuityAhead",
+			"GetHindrance",
+			"SEG_CLIMBJUMP",
+			"IsDiscontinuity",
+			"isdisc",
+			"GetCurrentPath",
+			"ShortestPathCost",
+			"NavArea_GetAttributes",
+			"sigsegv",
+			"NAV_MESH_HAS_ELEVATOR",
+			"m_attributeFlags",
+			"NavArea_GetID",
+			"NavArea_GetAttributes",
+			"ambuild2",
+			"AMBuild",
+			"NavArea_GetAttributes",
+			"},\n",
+			"NavArea_GetID",
+			"static cell_t NavArea_GetID(IPluginContext *pCtx, const cell_t *params)\n{\n\tauto area = (const CNavArea *)params[1];\n\t\n\tif (area == nullptr) {\n\t\tpCtx->ReportError(\"NavArea (this) is null!\");\n\t\treturn 0;\n\t}\n\t\n\treturn area->GetID();\n}",
+			"NAV_MESH_HAS_ELEVATOR",
+			"NAV_MESH_HAS_ELEVATOR ",
+			"NAV_MESH_HAS_ELEVATOR",
+			"m_clearedTimestamp",
+			"static cell_t NavArea_GetID(IPluginContext *pCtx, const cell_t *params)\n{\n\tauto area = (const CNavArea *)params[1];\n\t\n\tif (area == nullptr) {\n\t\tpCtx->ReportError(\"NavArea (this) is null!\");\n\t\treturn 0;\n\t}\n\t\n\treturn area->GetID();\n}",
+			"NavArea_GetID",
+			"GetFlags",
+			"flag",
+			"RefreshPath",
+			"New_PathFollower",
+			";\n",
+			"md-3",
+			"'",
+			"md-3",
+			"body > div",
+			"ready",
+			"display",
+			"in",
+			"class",
+			"code",
+			"pre",
+			"font",
+			"337ab7",
+			"\">",
+			">\n"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"sheets":
+			[
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 26.0
+	},
+	"input":
+	{
+		"height": 31.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.find_results":
+	{
+		"height": 118.0
+	},
+	"pinned_build_system": "Packages/User/Node.sublime-build",
+	"project": "TFBotAim.sublime-project",
+	"replace":
+	{
+		"height": 48.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 217.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
