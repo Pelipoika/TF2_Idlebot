@@ -2,7 +2,7 @@
 An idle bot that will take over once you go AFK
 Currently can only play MvM
 
-##Classes it can play
+## Classes it can play
 - [x] Scout
 - [x] Soldier
 - [x] Pyro
@@ -13,7 +13,7 @@ Currently can only play MvM
 - [x] Sniper
 - [ ] Spy
 
-##Actions 
+## Actions 
 | Action | Description | Status |
 | --- | --- | --- |
 | CTFBotAim | Controls the bots aim and buttons                        | Done |
