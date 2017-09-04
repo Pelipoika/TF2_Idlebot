@@ -24,8 +24,8 @@ Currently can only play MvM
 | CTFBotGoToUpgradeStation | Find and walk to upgrade station          | Done |
 | CTFBotUpgrade | Upgrade between waves                                | Done |
 | CTFBotMarkGiant | Marks a random giant if the player has the F.O.W   | Done |
+| CTFBotMoveToFront | Move to frontline and then press F4              | Done |
 | CTFBotMedicHeal | Search and heal players W.I.P                      | W.I.P |
-| CTFBotMoveToFront | Move to frontline and then press F4              | W.I.P |
 | CTFBotSniperLurk | Hang around sniper advantage positions            | W.I.P |
 | CTFBotSpyInfiltrate | Disguise, Sap, Stab, Hide                      | W.I.P |
 | CTFBotUseItem | Use an item (Sandvich, Banners, Crit-a-Cola)         | W.I.P |
