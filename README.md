@@ -17,17 +17,17 @@ Currently can only play MvM
 | Action | Description | Status |
 | --- | --- | --- |
 | CTFBotAim | Controls the bots aim and buttons                        | Done |
-| CTFBotAttack | The primary attack function                           | Done |
-| CTFBotCollectMoney | Will make the bot collect dropped currencypacks | Done |
-| CTFBotGetHealth | Find and get health                                | Done |
+| CTFBotAttack | The primary attack function, goes after the bomb carrier                           | Done |
+| CTFBotCollectMoney | Will make the bot collect dropped currencypacks, in order of oldest to newest | Done |
+| CTFBotGetHealth | Find and get health, max distance based on current hp | Done |
 | CTFBotGetAmmo | Find and get ammo                                    | Done |
 | CTFBotGoToUpgradeStation | Find and walk to upgrade station          | Done |
+| CTFBotUpgrade | Upgrade between waves                                | Done |
 | CTFBotMarkGiant | Marks a random giant if the player has the F.O.W   | Done |
 | CTFBotMedicHeal | Search and heal players W.I.P                      | W.I.P |
 | CTFBotMoveToFront | Move to frontline and then press F4              | W.I.P |
-| CTFBotPreWave | N/A                                                  | N/A |
-| CTFBotSeekAndDestroye | N/A                                          | N/A |
 | CTFBotSniperLurk | Hang around sniper advantage positions            | W.I.P |
 | CTFBotSpyInfiltrate | Disguise, Sap, Stab, Hide                      | W.I.P |
-| CTFBotUpgrade | Upgrade between waves                                | Done |
 | CTFBotUseItem | Use an item (Sandvich, Banners, Crit-a-Cola)         | W.I.P |
+| CTFBotPreWave | N/A                                                  | N/A |
+| CTFBotSeekAndDestroye | N/A                                          | N/A |
