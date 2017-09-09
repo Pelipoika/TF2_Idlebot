@@ -43,6 +43,8 @@ Handle g_hGetProjectileGravity;
 
 Handle g_hWorldSpaceCenter;
 Handle g_hGetNextThink;
+Handle g_hLookupBone;
+Handle g_hGetBonePosition;
 
 Handle g_hGetMaxAmmo;
 Handle g_hGetAmmoCount;
@@ -161,7 +163,20 @@ void InitGamedata()
 	PrepSDKCall_SetReturnInfo(SDKType_Float, SDKPass_Plain);
 	if ((g_hGetNextThink = EndPrepSDKCall()) == null) SetFailState("Failed to create SDKCall for CBaseEntity::GetNextThink signature!");
 	
+	//int CBaseAnimating::LookupBone( const char *szName )
+	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetSignature(SDKLibrary_Server, "\x55\x8B\xEC\x56\x8B\xF1\x80\xBE\x41\x03\x00\x00\x00\x75\x2A\x83\xBE\x6C\x04\x00\x00\x00\x75\x2A\xE8\x2A\x2A\x2A\x2A\x85\xC0\x74\x2A\x8B\xCE\xE8\x2A\x2A\x2A\x2A\x8B\x86\x6C\x04\x00\x00\x85\xC0\x74\x2A\x83\x38\x00\x74\x2A\xFF\x75\x08\x50\xE8\x2A\x2A\x2A\x2A\x83\xC4\x08\x5E", 68);
+	PrepSDKCall_AddParameter(SDKType_String, SDKPass_Pointer);
+	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
+	if ((g_hLookupBone = EndPrepSDKCall()) == INVALID_HANDLE) SetFailState("Failed to create SDKCall for CBaseAnimating::LookupBone signature!");
 	
+	//void CBaseAnimating::GetBonePosition ( int iBone, Vector &origin, QAngle &angles )
+	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetSignature(SDKLibrary_Server, "\x55\x8B\xEC\x83\xEC\x30\x56\x8B\xF1\x80\xBE\x41\x03\x00\x00\x00", 16);
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
+	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_ByRef, _, VENCODE_FLAG_COPYBACK);
+	PrepSDKCall_AddParameter(SDKType_QAngle, SDKPass_ByRef, _, VENCODE_FLAG_COPYBACK);
+	if ((g_hGetBonePosition = EndPrepSDKCall()) == INVALID_HANDLE) SetFailState("Failed to create SDKCall for CBaseAnimating::GetBonePosition signature!");
 	
 	
 	//GetItemSchema()
@@ -189,6 +204,17 @@ stock void SnapEyeAngles(int client, float viewAngles[3])
 {
 	SDKCall(g_hSnapEyeAngles, client, viewAngles);
 }
+
+stock int LookupBone(int iEntity, const char[] szName)
+{
+	return SDKCall(g_hLookupBone, iEntity, szName);
+}
+
+stock void GetBonePosition(int iEntity, int iBone, float origin[3], float angles[3])
+{
+	SDKCall(g_hGetBonePosition, iEntity, iBone, origin, angles);
+}
+
 
 //Attribute stuff
 

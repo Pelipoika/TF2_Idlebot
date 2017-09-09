@@ -268,8 +268,17 @@ methodmap BotAim
 				//Aim at head with sniper-rifles.
 				else if(IsSniperRifle(this.index))
 				{
-					target_point = GetEyePosition(target_ent);
-				//	target_point[2] -= 5.0;
+					int iBone = LookupBone(target_ent, "bip_head");
+					if(iBone != -1)
+					{
+						float vNothing[3];
+						GetBonePosition(target_ent, iBone, target_point, vNothing);
+						target_point[2] += 3.0;
+					}
+					else
+					{
+						target_point = GetEyePosition(target_ent);
+					}
 				}
 				//Aim ahead with rocket-launchers.
 				else if(IsWeapon(this.index, TF_WEAPON_ROCKETLAUNCHER)
@@ -300,10 +309,6 @@ methodmap BotAim
 				else
 				{
 					target_point = WorldSpaceCenter(target_ent);
-					
-					target_point[0] -= (target_velocity[0] * (1.0 + GetTickInterval()) * GetClientLatency(this.index, NetFlow_Outgoing));
-					target_point[1] -= (target_velocity[1] * (1.0 + GetTickInterval()) * GetClientLatency(this.index, NetFlow_Outgoing));
-				
 				}
 				
 				if (m_ctAimTracking[this] <= GetGameTime()) 
@@ -532,7 +537,7 @@ methodmap BotAim
 			m_hAimTarget[this] = -1;
 			
 			//Unscope because target isnt valid.
-			if (IsSniperRifle(this.index) && TF2_IsPlayerInCondition(this.index, TFCond_Zoomed) && !GetEntProp(this.index, Prop_Send, "m_bRageDraining"))
+			if (IsSniperRifle(this.index) && TF2_IsPlayerInCondition(this.index, TFCond_Zoomed)/* && !GetEntProp(this.index, Prop_Send, "m_bRageDraining")*/)
 			{
 				this.PressAltFireButton(0.1);
 			}

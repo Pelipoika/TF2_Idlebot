@@ -4,8 +4,8 @@
  * used in MvM: TODO
  */
 
-https://github.com/sigsegv-mvm/mvm-reversed/blob/master/server/tf/bot/behavior/sniper/tf_bot_sniper_lurk.h
-https://github.com/sigsegv-mvm/mvm-reversed/blob/master/server/tf/bot/behavior/sniper/tf_bot_sniper_lurk.cpp
+//https://github.com/sigsegv-mvm/mvm-reversed/blob/master/server/tf/bot/behavior/sniper/tf_bot_sniper_lurk.h
+//https://github.com/sigsegv-mvm/mvm-reversed/blob/master/server/tf/bot/behavior/sniper/tf_bot_sniper_lurk.cpp
 
 ConVar tf_bot_sniper_patience_duration("tf_bot_sniper_patience_duration", "10", FCVAR_CHEAT,
 	"How long a Sniper bot will wait without seeing an enemy before picking a new spot");

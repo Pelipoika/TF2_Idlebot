@@ -166,6 +166,9 @@ stock bool SetDefender(int client, bool bEnabled)
 		PrintCenterText(client, "");
 		
 		SendConVarValue(client, FindConVar("sv_client_predict"), "-1");
+		SetEntProp(client, Prop_Data, "m_bLagCompensation", true);
+		SetEntProp(client, Prop_Data, "m_bPredictWeapons", true);
+		
 		g_bEmulate[client] = false;
 		
 		if(PF_Exists(client))
@@ -178,6 +181,8 @@ stock bool SetDefender(int client, bool bEnabled)
 		SetEntProp(client, Prop_Send, "m_bUseClassAnimations", 1);
 	
 		SendConVarValue(client, FindConVar("sv_client_predict"), "0");
+		SetEntProp(client, Prop_Data, "m_bLagCompensation", false);
+		SetEntProp(client, Prop_Data, "m_bPredictWeapons", false);
 		
 		if(!PF_Exists(client))
 		{
@@ -340,7 +345,12 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 		
 		bool bCanCheck = g_flNextUpdate[client] < GetGameTime();
 		if(bCanCheck)
+		{
 			g_flNextUpdate[client] = GetGameTime() + 1.0;
+			
+			SetEntProp(client, Prop_Data, "m_bLagCompensation", false);
+			SetEntProp(client, Prop_Data, "m_bPredictWeapons", false);
+		}
 		
 		if ((g_iCurrentAction[client] == ACTION_GET_HEALTH || bCanCheck) && low_health && CTFBotGetHealth_IsPossible(client)) 
 		{
@@ -410,6 +420,8 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 		{
 			if(TF2_GetPlayerClass(client) == TFClass_Sniper && IsSniperRifle(client))
 			{
+				m_iRouteType[client] = SAFEST_ROUTE;
+				
 				if(!TF2_IsPlayerInCondition(client, TFCond_Slowed))
 					TF2_MoveTo(client, g_vecCurrentGoal[client], fVel, fAng);
 			}

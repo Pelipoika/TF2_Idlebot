@@ -48,21 +48,16 @@ bool CTFBotMoveToFront_OnStart(int actor)
 	}
 	
 	if(iBestEnt == -1)
+	{
+		ChangeAction(actor, ACTION_IDLE);
+		FakeClientCommand(actor, "tournament_player_readystate 1");
 		return false;
+	}
 	
 	NavArea area = TheNavMesh.GetNearestNavArea_Vec(WorldSpaceCenter(iBestEnt), true, 1000.0, true, true, GetClientTeam(actor));
 	if(area == NavArea_Null)
 		return false;
 	
-/*	float vecCenter[3];
-	area.GetCenter(vecCenter);
-	if(!PF_IsPathToVectorPossible(actor, vecCenter))
-	{
-		g_bPath[actor] = false;
-		FakeClientCommand(actor, "tournament_player_readystate 1");
-		return false;
-	}*/
-
 	area.GetRandomPoint(m_vecGoalArea[actor]);
 	
 	EquipWeaponSlot(actor, TFWeaponSlot_Melee);
@@ -101,11 +96,11 @@ bool CTFBotMoveToFront_IsPossible(int actor)
 	if (!TF2_IsMvM()) 
 		return false;
 	
-	if (TF2_GetPlayerClass(actor) == TFClass_Engineer)
+/*	if (TF2_GetPlayerClass(actor) == TFClass_Engineer)
 		return false;
 
 	if(TF2_GetPlayerClass(actor) == TFClass_Medic)
-		return false;
+		return false;*/
 
 	return true;
 }

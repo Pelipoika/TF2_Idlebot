@@ -3,7 +3,7 @@ int g_iStation[MAXPLAYERS + 1];
 
 bool CTFBotGoToUpgradeStation_OnStart(int actor)
 {
-	g_iStation[actor] = FindClosestUpgradeStation();
+	g_iStation[actor] = FindClosestUpgradeStation(actor);
 
 	if(g_iStation[actor] == -1)
 	{
@@ -70,7 +70,7 @@ void CTFBotGoToUpgradeStation_OnEnd(int actor)
 	g_iStation[actor] = -1;
 }
 
-int FindClosestUpgradeStation()
+int FindClosestUpgradeStation(int actor)
 {
 	int stations[MAXPLAYERS+1];
 	int stationcount;
@@ -80,7 +80,22 @@ int FindClosestUpgradeStation()
 	{
 		if(GetEntProp(i, Prop_Data, "m_bDisabled"))
 			continue;
-	
+		
+		NavArea area = TheNavMesh.GetNearestNavArea_Vec(WorldSpaceCenter(i), true, 8000.0, false, false, TEAM_ANY);
+		if(area == NavArea_Null)
+			return false;
+		
+		float center[3];
+		area.GetCenter(center);
+		
+		center[2] += 50.0;
+		
+		TR_TraceRay(center, WorldSpaceCenter(i), MASK_ALL, RayType_EndPoint);
+		TR_GetEndPosition(center);
+		
+		if(!PF_IsPathToVectorPossible(actor, center, NULL_FLOAT))
+			continue;
+		
 		stations[stationcount] = i;
 		stationcount++;
 	}
