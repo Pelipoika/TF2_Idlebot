@@ -457,7 +457,7 @@ stock bool OpportunisticallyUseWeaponAbilities(int client)
 		return false;
 	}
 	
-	m_ctUseWeaponAbilities[client] = GetGameTime() + GetRandomFloat(2.0, 8.0);
+	m_ctUseWeaponAbilities[client] = GetGameTime() + GetRandomFloat(0.1, 0.2);
 	
 	if (TF2_GetPlayerClass(client) == TFClass_DemoMan && HasDemoShieldEquipped(client)) 
 	{
@@ -475,12 +475,46 @@ stock bool OpportunisticallyUseWeaponAbilities(int client)
 			BotAim(client).PressAltFireButton();
 		}
 	}
+	else if(HasParachuteEquipped(client))
+	{
+		bool burning = TF2_IsPlayerInCondition(client, TFCond_OnFire);
+		float health_ratio = view_as<float>(GetClientHealth(client)) / view_as<float>(GetMaxHealth(client));
+		
+		if (TF2_IsPlayerInCondition(client, TFCond_Parachute)) 
+		{
+			if (health_ratio >= 0.5 && !burning && !l_is_above_ground(client, 150.0)) 
+			{
+				g_iAdditionalButtons[client] |= IN_JUMP;
+			} 
+		} 
+		else 
+		{
+			float velocity[3]; 
+			velocity = GetAbsVelocity(client);
+		
+			if (health_ratio >= 0.5 && !burning && velocity[2] < 0.0 && !l_is_above_ground(client, 300.0)) 
+			{
+				g_iAdditionalButtons[client] |= IN_JUMP;
+			} 
+		}
+	}
 	
+	//The Hitmans Heatmaker
 	if (IsSniperRifle(client) && TF2_IsPlayerInCondition(client, TFCond_Slowed))
 	{
 		if(GetEntPropFloat(client, Prop_Send, "m_flRageMeter") >= 0.0 && !GetEntProp(client, Prop_Send, "m_bRageDraining"))
 		{
 			BotAim(client).PressReloadButton();
+			return true;
+		}
+	}
+	
+	//Phlogistinator
+	if(IsWeapon(client, TF_WEAPON_FLAMETHROWER))
+	{
+		if(GetEntPropFloat(client, Prop_Send, "m_flRageMeter") >= 100.0 && !GetEntProp(client, Prop_Send, "m_bRageDraining"))
+		{
+			BotAim(client).PressAltFireButton();
 			return true;
 		}
 	}
@@ -532,6 +566,15 @@ stock bool OpportunisticallyUseWeaponAbilities(int client)
 	return false;
 }
 
+bool l_is_above_ground(int actor, float min_height)
+{
+	float from[3]; from = GetAbsOrigin(actor);
+	float to[3]; to = GetAbsOrigin(actor);
+	to[2] -= min_height;
+	
+	return !PF_IsPotentiallyTraversable(actor, from, to, IMMEDIATELY, NULL_FLOAT);
+}
+
 stock char CurrentRouteTypeToName(int client)
 {
 	char name[PLATFORM_MAX_PATH];
@@ -578,7 +621,7 @@ stock bool ChangeAction(int client, int new_action)
 	if(new_action == g_iCurrentAction[client])
 		return false;
 	
-	PrintToServer("Change Action \"%s\" -> \"%s\"", CurrentActionToName(g_iCurrentAction[client]), CurrentActionToName(new_action));
+	PrintToServer("\"%N\" Change Action \"%s\" -> \"%s\"", client, CurrentActionToName(g_iCurrentAction[client]), CurrentActionToName(new_action));
 	
 	g_bPath[client] = false;
 	g_bStartedAction[client] = false;

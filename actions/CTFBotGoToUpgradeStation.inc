@@ -1,6 +1,8 @@
 
 int g_iStation[MAXPLAYERS + 1];
 
+float m_ctUpgradeTimeout[MAXPLAYERS + 1];
+
 bool CTFBotGoToUpgradeStation_OnStart(int actor)
 {
 	g_iStation[actor] = FindClosestUpgradeStation(actor);
@@ -11,6 +13,8 @@ bool CTFBotGoToUpgradeStation_OnStart(int actor)
 		return false;
 	}
 	
+	m_ctUpgradeTimeout[actor] = GetGameTime() + 30.0;
+	
 	EquipWeaponSlot(actor, TFWeaponSlot_Melee);
 	
 	char map[PLATFORM_MAX_PATH];
@@ -19,17 +23,22 @@ bool CTFBotGoToUpgradeStation_OnStart(int actor)
 	if(StrContains(map, "mvm_mannworks") != -1)
 	{
 		PF_SetGoalVector(actor, view_as<float>({-643.9, -2635.2, 384.0}));
-	
+		g_bPath[actor] = true;
+		return true;
+	}
+	else if(StrContains(map, "mvm_teien") != -1)
+	{
+		PF_SetGoalVector(actor, view_as<float>({4613.1, -6561.9, 260.0}));
 		g_bPath[actor] = true;
 		return true;
 	}
 	
-	NavArea area = TheNavMesh.GetNearestNavArea_Vec(WorldSpaceCenter(g_iStation[actor]), true, 8000.0, false, false, TEAM_ANY);
+	NavArea area = TheNavMesh.GetNearestNavArea_Vec(WorldSpaceCenter(g_iStation[actor]), true, 1000.0, false, false, TEAM_ANY);
 	if(area == NavArea_Null)
 		return false;
 	
 	float center[3];
-	area.GetCenter(center);
+	area.GetRandomPoint(center);
 	
 	center[2] += 50.0;
 	
@@ -44,10 +53,32 @@ bool CTFBotGoToUpgradeStation_OnStart(int actor)
 
 bool CTFBotGoToUpgradeStation_Update(int actor)
 {
+	if (m_ctUpgradeTimeout[actor] < GetGameTime())
+	{
+		PrintToServer("[%8.3f] CTFBotGoToUpgradeStation(#%d): Timeout elapsed!", GetGameTime(), actor);
+		
+		NavArea area = TheNavMesh.GetNearestNavArea_Vec(WorldSpaceCenter(actor), true, 4000.0, false, false, GetClientTeam(actor));
+		if(area == NavArea_Null)
+		{
+			ChangeAction(actor, ACTION_IDLE);
+		}
+		else
+		{
+			float center[3];
+			area.GetCenter(center);
+			
+			TeleportEntity(actor, center, NULL_VECTOR, NULL_VECTOR);
+		}
+		
+		m_ctUpgradeTimeout[actor] = GetGameTime() + 30.0;
+		
+		return false;
+	}
+
 	int station = g_iStation[actor];
 	if (!IsValidEntity(station))
 	{
-		PrintToServer("Upgrade station is invalid.");
+		PrintToServer("[%8.3f] CTFBotGoToUpgradeStation(#%d): Upgrade station is invalid.", GetGameTime(), actor);
 		g_bPath[actor] = false;
 		return false;
 	}

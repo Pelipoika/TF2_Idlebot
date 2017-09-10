@@ -319,22 +319,13 @@ methodmap CMannVsMachineUpgradeManager < CMannVsMachineUpgrades
 }
 
 stock bool HasDemoShieldEquipped(int client)
-{
-/*	int iEnt = -1;
-	while ((iEnt = FindEntityByClassname(iEnt, "tf_wearable_demoshield")) != -1)
-	{
-		//Not ours.
-		if(GetEntProp(iEnt, Prop_Send, "m_hOwnerEntity") != client)
-			continue;
-		
-		//Disguise wearables don't count.
-		if(GetEntProp(iEnt, Prop_Send, "m_bDisguiseWearable"))
-			continue;
-		
-		return true;
-	}*/
-	
+{	
 	return !!GetEntProp(client, Prop_Send, "m_bShieldEquipped");
+}
+
+stock bool HasParachuteEquipped(int client)
+{
+	return !!GetEntProp(client, Prop_Send, "m_bParachuteEquipped");
 }
 
 stock bool IsStealthed(int client)

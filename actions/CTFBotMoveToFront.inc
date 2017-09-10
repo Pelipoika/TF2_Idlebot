@@ -1,5 +1,7 @@
 float m_vecGoalArea[MAXPLAYERS + 1][3];
 
+float m_ctMoveTimeout[MAXPLAYERS + 1];
+
 bool CTFBotMoveToFront_OnStart(int actor)
 {
 	int spawn = -1;
@@ -62,12 +64,21 @@ bool CTFBotMoveToFront_OnStart(int actor)
 	
 	EquipWeaponSlot(actor, TFWeaponSlot_Melee);
 	
+	m_ctMoveTimeout[actor] = GetGameTime() + 30.0;
+	
 	return true;
 }
 
 bool CTFBotMoveToFront_Update(int actor)
 {
 //	PrintToServer("%f %f %f", m_vecGoalArea[actor][0], m_vecGoalArea[actor][1], m_vecGoalArea[actor][2]);
+	
+	if (m_ctMoveTimeout[actor] < GetGameTime())
+	{
+		PrintToServer("[%8.3f] CTFBotMoveToFront(#%d): Timeout elapsed!", GetGameTime(), actor);
+		ChangeAction(actor, ACTION_IDLE);
+		return false;
+	}
 	
 	//Reached goal
 	if (GetVectorDistance(m_vecGoalArea[actor], WorldSpaceCenter(actor)) < 80.0)

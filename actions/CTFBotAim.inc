@@ -663,7 +663,7 @@ methodmap BotAim
 				return;
 			}
 		
-		/*	float aim_vec[3];
+			float aim_vec[3];
 			EyeVectors(this.index, aim_vec, NULL_VECTOR, NULL_VECTOR);
 			ScaleVector(aim_vec, (1.1 * dist_to_threat));
 			
@@ -679,7 +679,7 @@ methodmap BotAim
 				return;
 			}
 			
-			delete trace;*/
+			delete trace;
 		}
 		
 		this.PressFireButton();
