@@ -69,7 +69,7 @@ bool CTFBotMoveToFront_OnStart(int actor)
 	
 	area.GetRandomPoint(m_vecGoalArea[actor]);
 	EquipWeaponSlot(actor, TFWeaponSlot_Melee);
-	m_ctMoveTimeout[actor] = GetGameTime() + 30.0;
+	m_ctMoveTimeout[actor] = GetGameTime() + 50.0;
 	
 	return true;
 }

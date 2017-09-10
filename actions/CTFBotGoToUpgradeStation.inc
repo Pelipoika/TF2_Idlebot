@@ -13,7 +13,7 @@ bool CTFBotGoToUpgradeStation_OnStart(int actor)
 		return false;
 	}
 	
-	m_ctUpgradeTimeout[actor] = GetGameTime() + 30.0;
+	m_ctUpgradeTimeout[actor] = GetGameTime() + 50.0;
 	
 	EquipWeaponSlot(actor, TFWeaponSlot_Melee);
 	
@@ -32,7 +32,6 @@ bool CTFBotGoToUpgradeStation_OnStart(int actor)
 		g_bPath[actor] = true;
 		return true;
 	}
-	
 	else if(StrContains(map, "mvm_sequoia") != -1)
 	{
 		PF_SetGoalVector(actor, view_as<float>({-5117.0, -377.3, 4.5}));
@@ -73,6 +72,8 @@ bool CTFBotGoToUpgradeStation_Update(int actor)
 		{
 			float center[3];
 			area.GetCenter(center);
+			
+			center[2] += GetEntPropFloat(actor, Prop_Send, "m_flStepSize");
 			
 			TeleportEntity(actor, center, NULL_VECTOR, NULL_VECTOR);
 		}
