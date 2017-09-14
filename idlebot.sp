@@ -284,21 +284,9 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 		bChanged = true;
 	}
 	
-	if(m_ctReload[client] > GetGameTime())
-	{
-		iButtons |= IN_RELOAD;
-		bChanged = true;
-	}
-	if(m_ctFire[client] > GetGameTime())
-	{
-		iButtons |= IN_ATTACK;
-		bChanged = true;
-	}
-	if(m_ctAltFire[client] > GetGameTime())
-	{
-		iButtons |= IN_ATTACK2;
-		bChanged = true;
-	}
+	if(m_ctReload[client]  > GetGameTime()) { iButtons |= IN_RELOAD;  bChanged = true; }
+	if(m_ctFire[client]    > GetGameTime()) { iButtons |= IN_ATTACK;  bChanged = true; }
+	if(m_ctAltFire[client] > GetGameTime()) { iButtons |= IN_ATTACK2; bChanged = true; }
 	
 //	EquipRequiredWeapon();
 //	UpdateLookingAroundForEnemies();
@@ -436,14 +424,11 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 		PF_StopPathing(client);
 	}
 	
-	if(m_ctVelocityLeft[client] > GetGameTime())
-	{
+	if(m_ctVelocityLeft[client] > GetGameTime()) {
 		fVel[1] += g_flAdditionalVelocity[client][1];
 		bChanged = true;
-	}
-	
-	if(m_ctVelocityRight[client] > GetGameTime())
-	{
+	}	
+	if(m_ctVelocityRight[client] > GetGameTime()) {
 		fVel[1] += g_flAdditionalVelocity[client][1];
 		bChanged = true;
 	}

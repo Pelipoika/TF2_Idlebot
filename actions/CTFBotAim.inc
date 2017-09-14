@@ -130,6 +130,10 @@ methodmap BotAim
 		if(frametime < 0.00001)
 			return;
 		
+		//Don't aim while taunting.
+		if(TF2_IsPlayerInCondition(this.index, TFCond_Taunting))
+			return;
+		
 		float eye_ang[3], punch_angle[3];
 		GetClientEyeAngles(this.index, eye_ang);
 		GetEntPropVector(this.index, Prop_Send, "m_vecPunchAngle", punch_angle);
