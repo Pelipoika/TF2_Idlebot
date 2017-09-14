@@ -484,9 +484,6 @@ stock int TF2_FindBotNearestToBombNearestToHatch(int client)
 		if(i == client)
 			continue;
 		
-		if(i <= 0 || i > MaxClients)
-			continue;
-		
 		if(!IsClientInGame(i))
 			continue;
 		
@@ -496,7 +493,8 @@ stock int TF2_FindBotNearestToBombNearestToHatch(int client)
 		if(TF2_GetClientTeam(i) != GetEnemyTeam(client))
 			continue;
 		
-		if(IsInvulnerable(i))
+		//Always ignore Sentry Busters
+		if(TF2_IsBuster(i))
 			continue;
 		
 		float flDistance = GetVectorDistance(WorldSpaceCenter(i), WorldSpaceCenter(iBomb));
@@ -626,11 +624,11 @@ stock float GetTimeSinceWeaponFired(int client)
 {
 	int iWeapon = GetActiveWeapon(client);
 	if(!IsValidEntity(iWeapon))
-		return 99999.0;
+		return 0.0;
 		
 	float flLastFireTime = GetEntPropFloat(iWeapon, Prop_Send, "m_flLastFireTime");
 	if(flLastFireTime <= 0.0)
-		return 99999.0;
+		return 0.0;
 		
 	return GetGameTime() - flLastFireTime;
 }
@@ -1113,7 +1111,26 @@ stock int Entity_GetClosestClient(int iEnt)
 	
 	for(int i = 1; i <= MaxClients; i++)
 	{
-		if(i != iEnt && IsClientInGame(i) && Entity_Cansee(iEnt, i) && IsPlayerAlive(i) && GetClientTeam(i) != GetClientTeam(iEnt))
+		if(i == iEnt)
+			continue;
+		
+		if(!IsClientInGame(i))
+			continue;
+		
+		if(!IsPlayerAlive(i))
+			continue;
+		
+		if(IsInvulnerable(i))
+			continue;
+			
+		//Always ignore Sentry Busters
+		if(TF2_IsBuster(i))
+			continue;
+			
+		if(!Entity_Cansee(iEnt, i))
+			continue;
+			
+		if(GetClientTeam(i) != GetClientTeam(iEnt))
 		{
 			float flPos2[3];
 			GetClientEyePosition(i, flPos2);
@@ -1202,6 +1219,13 @@ stock bool IsValidClientIndex(int client)
 stock bool TF2_IsMvM()
 {
 	return view_as<bool>(GameRules_GetProp("m_bPlayingMannVsMachine"));
+}
+
+stock bool TF2_IsBuster(int client)
+{
+	char model[PLATFORM_MAX_PATH];
+	GetClientModel(client, model, PLATFORM_MAX_PATH);
+	return StrEqual(model, "models/bots/demo/bot_sentry_buster.mdl");
 }
 
 stock bool IsMiniBoss(int client)

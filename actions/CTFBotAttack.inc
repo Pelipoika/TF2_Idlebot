@@ -133,6 +133,10 @@ int CTFBotAttack_SelectRandomReachableEnemy(int actor)
 		if(IsInvulnerable(i))
 			continue;
 		
+		//Always ignore Sentry Busters
+		if(TF2_IsBuster(i))
+			continue;
+		
 		//Cannot path into enemy spawn rooms.
 	/*	if ((opposingTFTeam == TFTeam_Red  && HasTFAttributes(PF_GetLastKnownArea(i), RED_SPAWN_ROOM)) ||
 			(opposingTFTeam == TFTeam_Blue && HasTFAttributes(PF_GetLastKnownArea(i), BLUE_SPAWN_ROOM)))

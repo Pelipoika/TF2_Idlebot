@@ -515,6 +515,9 @@ methodmap BotAim
 		
 		if(!FindConVar("tf_bot_fire_weapon_allowed").BoolValue)
 			return;
+		
+		if(TF2_IsPlayerInCondition(this.index, TFCond_Taunting))
+			return;
 			
 		if(!HasAmmo(GetActiveWeapon(this.index)))
 			return;
@@ -532,7 +535,7 @@ methodmap BotAim
 		
 		int threat = m_hAimTarget[this]; //this->GetVisionInterface()->GetPrimaryKnownThreat(false);
 	//	if (threat = nullptr || threat->GetEntity() == nullptr || !threat->IsVisibleRecently()) 
-		if (threat <= 0 || threat > MaxClients || !IsClientInGame(threat) || !IsPlayerAlive(threat)) 
+		if (threat <= 0 || threat > MaxClients || !IsClientInGame(threat) || !IsPlayerAlive(threat) || IsInvulnerable(threat)) 
 		{
 			m_hAimTarget[this] = -1;
 			
