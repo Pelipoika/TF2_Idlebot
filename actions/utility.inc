@@ -624,11 +624,11 @@ stock float GetTimeSinceWeaponFired(int client)
 {
 	int iWeapon = GetActiveWeapon(client);
 	if(!IsValidEntity(iWeapon))
-		return 0.0;
+		return 9999.0;
 		
 	float flLastFireTime = GetEntPropFloat(iWeapon, Prop_Send, "m_flLastFireTime");
 	if(flLastFireTime <= 0.0)
-		return 0.0;
+		return 9999.0;
 		
 	return GetGameTime() - flLastFireTime;
 }
@@ -958,8 +958,32 @@ bool IsLineOfFireClear(float from[3], float to[3])
 	return false;
 }
 
-public bool NextBotTraceFilterIgnoreActors(int entity, int contentsMask, any iPumpking)
+public bool NextBotTraceFilterIgnoreActors(int entity, int contentsMask, any iExclude)
 {
+	char class[64];
+	GetEntityClassname(entity, class, sizeof(class));
+	
+	if(StrEqual(class, "entity_medigun_shield"))
+	{
+		return false;
+	}
+	else if(StrEqual(class, "func_respawnroomvisualizer"))
+	{
+		return false;
+	}
+	else if(StrContains(class, "tf_projectile_", false) != -1)
+	{
+		return false;
+	}
+	else if(StrContains(class, "obj_", false) != -1)
+	{
+		return false;
+	}
+	else if(StrEqual(class, "entity_revive_marker"))
+	{
+		return false;
+	}
+
 	return !PF_IsEntityACombatCharacter(entity);
 }
 
@@ -1026,6 +1050,16 @@ stock float[] GetEyeAngles(int client)
 	float v[3];
 	GetClientEyeAngles(client, v);
 	return v;
+}
+
+stock int GetOwnerEntity(int entity)
+{
+	return GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity");
+}
+
+stock void SetOwnerEntity(int entity, int owner)
+{
+	SetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity", owner);
 }
 
 stock int GetActiveWeapon(int client)

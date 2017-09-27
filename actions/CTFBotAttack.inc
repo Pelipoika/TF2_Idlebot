@@ -35,7 +35,7 @@ bool CTFBotAttack_Update(int actor)
 	
 	if(g_flRevalidateTarget[actor] <= GetGameTime())
 	{
-		g_flRevalidateTarget[actor] = GetGameTime() + 3.0;
+		g_flRevalidateTarget[actor] = GetGameTime() + 2.0;
 	
 		//Need new target.
 		if(!PF_IsPathToEntityPossible(actor, m_hAttackTarget[actor], NULL_FLOAT))

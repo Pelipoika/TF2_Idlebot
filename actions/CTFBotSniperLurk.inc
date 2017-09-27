@@ -7,219 +7,156 @@
 //https://github.com/sigsegv-mvm/mvm-reversed/blob/master/server/tf/bot/behavior/sniper/tf_bot_sniper_lurk.h
 //https://github.com/sigsegv-mvm/mvm-reversed/blob/master/server/tf/bot/behavior/sniper/tf_bot_sniper_lurk.cpp
 
-ConVar tf_bot_sniper_patience_duration("tf_bot_sniper_patience_duration", "10", FCVAR_CHEAT,
-	"How long a Sniper bot will wait without seeing an enemy before picking a new spot");
-ConVar tf_bot_sniper_target_linger_duration("tf_bot_sniper_target_linger_duration", "2", FCVAR_CHEAT,
-	"How long a Sniper bot will keep toward at a target it just lost sight of");
-ConVar tf_bot_sniper_allow_opportunistic("tf_bot_sniper_allow_opportunistic", "1", FCVAR_NONE,
-	"If set, Snipers will stop on their way to their preferred lurking spot to snipe at opportunistic targets");
-ConVar tf_mvm_bot_sniper_target_by_dps("tf_mvm_bot_sniper_target_by_dps", "1", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY,
-	"If set, Snipers in MvM mode target the victim that has the highest DPS");
+// How long a Sniper bot will wait without seeing an enemy before picking a new spot
+const float tf_bot_sniper_patience_duration = 10.0;
+// How long a Sniper bot will keep toward at a target it just lost sight of
+const float tf_bot_sniper_target_linger_duration = 2.0;
 
+// If set, Snipers will stop on their way to their preferred lurking spot to snipe at opportunistic targets
+const bool tf_bot_sniper_allow_opportunistic = true;
+// If set, Snipers in MvM mode target the victim that has the highest DPS
+const bool tf_mvm_bot_sniper_target_by_dps   = true;
+
+float m_ctPatience[MAXPLAYERS + 1];            
+float m_vecHome[MAXPLAYERS + 1][3]; 
+
+bool m_bHasHome[MAXPLAYERS + 1];                     
+bool m_bNearHome[MAXPLAYERS + 1];                    
+bool m_bOpportunistic[MAXPLAYERS + 1];               
+
+ArrayList m_Hints[MAXPLAYERS + 1];
+int m_hHint[MAXPLAYERS + 1]; //EHandle / EntRef
 
 bool CTFBotSniperLurk_OnStart(int actor)
 {
-	this->m_ctPatience.Start(RandomFloat(0.9f, 1.1f) * tf_bot_sniper_patience_duration.GetFloat());
-	
-	this->m_vecHome = actor->GetAbsOrigin();
-	this->m_bHasHome = false;
-	this->m_bNearHome = false;
-	// TODO: dword @ 0x4820 = 0
-	this->m_bOpportunistic = tf_bot_sniper_allow_opportunistic.GetBool();
-	
-	CBaseEntity *ent = nullptr;
-	while ((ent = gEntList.FindEntityByClassname(ent, "func_tfbot_hint")) != nullptr) {
-		auto hint = static_cast<CTFBotHint *>(ent);
+	FakeClientCommand(actor, "tournament_player_readystate 1");
+
+	if(m_Hints[actor] != null)
+		delete m_Hints[actor];
 		
-		// TODO: is m_hint an enum or something?
-		if (hint->m_hint == 0) {
-			this->m_Hints.AddToTail(hint);
+	m_Hints[actor] = new ArrayList();
+
+	m_ctPatience[actor] = GetGameTime() + (GetRandomFloat(0.9, 1.1) * tf_bot_sniper_patience_duration);
+	
+	m_vecHome[actor] = GetAbsOrigin(actor);
+	m_bHasHome[actor] = false;
+	m_bNearHome[actor] = false;
+	m_bOpportunistic[actor] = tf_bot_sniper_allow_opportunistic;
+	
+	int ent = -1;
+	while((ent = FindEntityByClassname(ent, "func_tfbot_hint")) != -1)
+	{
+		int iHintType = GetEntProp(ent, Prop_Data, "m_hint");
+		if (iHintType == 0) 
+		{
+			m_Hints[actor].Push(EntIndexToEntRef(ent));
 			
-			if (actor->IsSelf(hint->GetOwnerEntity())) {
-				hint->SetOwnerEntity(nullptr);
+			if (actor == GetOwnerEntity(ent))
+			{
+				SetOwnerEntity(ent, INVALID_ENT_REFERENCE);
 			}
 		}
 	}
 	
-	this->m_hHint = nullptr;
+	m_hHint[actor] = INVALID_ENT_REFERENCE;
 	
-	if (TFGameRules()->IsMannVsMachineMode() && actor->GetTeamNumber() == TF_TEAM_BLUE) {
-		actor->SetMission(CTFBot::MissionType::SNIPER, false);
-	}
-	
-	return ActionResult<CTFBot>::Continue();
+	return true;
 }
 
-ActionResult<CTFBot> CTFBotSniperLurk::Update(CTFBot *actor, float dt)
+bool CTFBotSniperLurk_Update(int actor)
 {
-	actor->AccumulateSniperSpots();
+//	actor->AccumulateSniperSpots();
 	
-	if (!this->m_bHasHome) {
-		this->FindNewHome(actor);
+	PF_SetGoalVector(actor, m_vecHome[actor]);
+	g_bPath[actor] = true;
+	
+	if (!m_bHasHome[actor]) {
+		CTFBotSniperLurk_FindNewHome(actor);
 	}
 	
-	bool attacking = false;
+	//Don't constantly switch target.
+	if (m_hAimTarget[actor] != -1 && IsLineOfFireClear(GetEyePosition(actor), GetEyePosition(m_hAimTarget[actor])) && !IsInvulnerable(m_hAimTarget[actor])) 
+		m_hAimTarget[actor] = m_hAimTarget[actor];
+	else
+		m_hAimTarget[actor] = Entity_GetClosestClient(actor);
 	
-	const CKnownEntity *threat = actor->GetVisionInterface()->GetPrimaryKnownThreat();
-	if (threat != nullptr && threat->GetEntity()->IsAlive() &&
-		actor->GetIntentionInterface()->ShouldAttack(actor, threat)) {
-		if (threat->IsVisibleInFOVNow()) {
-			// dword @ 0x4820 = 0
+	if (m_hAimTarget[actor] != -1 && IsLineOfFireClear(GetEyePosition(actor), GetEyePosition(m_hAimTarget[actor])))
+	{
+		BotAim(actor).AimHeadTowardsEntity(m_hAimTarget[actor], CRITICAL, 0.3, "Looking at visible threat");
+	
+		if (m_bOpportunistic[actor]) 
+		{
+			EquipWeaponSlot(actor, TFWeaponSlot_Primary);
 			
-			float dist_sqr = threat->GetLastKnownPosition().DistToSqr(actor->GetAbsOrigin());
-			if (dist_sqr >= Square(tf_bot_sniper_melee_range.GetFloat())) {
-				return ActionResult<CTFBot>::SuspendFor(new CTFBotMeleeAttack(1.25f * tf_bot_sniper_melee_range.GetFloat()),
-					"Melee attacking nearby threat");
+			m_ctPatience[actor] = GetGameTime() + (GetRandomFloat(0.9, 1.1) * tf_bot_sniper_patience_duration);
+			
+			if (!m_bHasHome[actor]) 
+			{
+				m_vecHome[actor] = GetAbsOrigin(actor);
+			}
+		} 
+		else
+		{
+			if(!m_bNearHome[actor])
+				EquipWeaponSlot(actor, TFWeaponSlot_Secondary);
+			else
+				EquipWeaponSlot(actor, TFWeaponSlot_Primary);
+		}		
+	}
+	
+	float subtracted[3];
+	SubtractVectors(GetAbsOrigin(actor), m_vecHome[actor], subtracted);
+	float dst_from_home = GetVectorLength(subtracted);
+	
+	m_bNearHome[actor] = (dst_from_home < 25.0);
+	
+	if(m_bNearHome[actor])
+	{
+		g_bPath[actor] = false;
+	}
+	
+	if (dst_from_home < 25.0) 
+	{
+		m_bOpportunistic[actor] = tf_bot_sniper_allow_opportunistic;
+		
+		if (m_ctPatience[actor] < GetGameTime())
+		{
+			if (CTFBotSniperLurk_FindNewHome(actor)) 
+			{
+				FakeClientCommand(actor, "voicemenu 2 5");
+				
+				m_ctPatience[actor] = GetGameTime() + (GetRandomFloat(0.9, 1.1) * tf_bot_sniper_patience_duration);
+			} 
+			else 
+			{
+				m_ctPatience[actor] = GetGameTime() + 1.0;
 			}
 		}
-		
-		if (threat->GetTimeSinceLastSeen() < tf_bot_sniper_target_linger_duration.GetFloat() &&
-			actor->IsLineOfFireClear(threat->GetEntity())) {
-			if (this->m_bOpportunistic) {
-				CBaseCombatWeapon *primary = actor->Weapon_GetSlot(0);
-				if (primary != nullptr) {
-					actor->Weapon_Switch(primary);
-				}
-				
-				this->m_ctPatience.Reset();
-				
-				attacking = true;
-				
-				if (!this->m_bHasHome) {
-					this->m_vecHome = actor->GetAbsOrigin();
-					
-					this->m_ctPatience.Start(RandomFloat(0.9f, 1.1f) * tf_bot_sniper_patience_duration.GetFloat());
-					
-					attacking = true;
-				}
-			} else {
-				attacking = false;
-				
-				CBaseCombatWeapon *secondary = actor->Weapon_GetSlot(1);
-				if (secondary != nullptr) {
-					actor->Weapon_Switch(secondary);
-				}
-			}
-		}
+	} 
+	else 
+	{
+		m_ctPatience[actor] = GetGameTime() + (GetRandomFloat(0.9, 1.1) * tf_bot_sniper_patience_duration);
 	}
 	
-	float dsqr_from_home = (actor->GetAbsOrigin().AsVector2D() - this->m_vecHome).LengthSqr();
-	this->m_bNearHome = (dsqr_from_home < Square(25.0f));
-	
-	if (dsqr_from_home < Square(25.0f)) {
-		this->m_bOpportunistic = tf_bot_sniper_allow_opportunistic.GetBool();
-		
-		if (this->m_ctPatience.IsElapsed()) {
-			// increment int @ 0x4820
-			
-			if (this->FindNewHome(actor)) {
-				actor->SpeakConceptIfAllowed(MP_CONCEPT_PLAYER_NEGATIVE);
-				
-				this->m_ctPatience.Start(RandomFloat(0.9f, 1.1f) * tf_bot_sniper_patience_duration.GetFloat());
-			} else {
-				this->m_ctPatience.Start(1.0f);
-			}
-		}
-	} else {
-		this->m_ctPatience.Reset();
-		
-		if (!attacking) {
-			if (this->m_ctRecomputePath.IsElapsed()) {
-				this->m_ctRecomputePath.Start(RandomFloat(1.0f, 2.0f));
-				
-				CTFBotPathCost cost_func(actor, SAFEST_ROUTE);
-				this->m_PathFollower.Compute(actor, this->m_vecHome, cost_func, 0.0f, true);
-			}
-			
-			this->m_PathFollower.Update(actor);
-			
-			if (actor->m_Shared.InCond(TF_COND_ZOOMED)) {
-				actor->PressAltFireButton();
-			}
-			
-			return ActionResult<CTFBot>::Continue();
-		}
-	}
-	
-	CBaseCombatWeapon *primary = actor->Weapon_GetSlot(0);
-	if (primary != nullptr) {
-		actor->Weapon_Switch(primary);
-	
-		auto weapon = static_cast<CTFWeaponBase *>(primary);
-		if (!actor->m_Shared.InCond(TF_COND_ZOOMED) && !weapon->IsWeapon(TF_WEAPON_COMPOUND_BOW)) {
-			actor->PressAltFireButton();
-		}
-	}
-	
-	return ActionResult<CTFBot>::Continue();
+	return true;
 }
 
-void CTFBotSniperLurk::OnEnd(CTFBot *actor, Action<CTFBot> *action)
+void CTFBotSniperLurk_OnEnd(int actor)
 {
-	if (actor->m_Shared.InCond(TF_COND_ZOOMED)) {
-		actor->PressAltFireButton();
-	}
+	//if (TF2_IsPlayerInCondition(actor, TFCond_Zoomed)) 
+	//{
+	//	BotAim(actor).PressAltFireButton();
+	//}
 	
-	if (this->m_hHint != nullptr) {
-		this->m_hHint->SetOwnerEntity(nullptr);
+	if (EntRefToEntIndex(m_hHint[actor]) != INVALID_ENT_REFERENCE) 
+	{
+		SetOwnerEntity(EntRefToEntIndex(m_hHint[actor]), INVALID_ENT_REFERENCE);
 		
-		if (tf_bot_debug_sniper.GetBool()) {
-			DevMsg("%3.2f: %s: Releasing hint.\n", gpGlobals->curtime, actor->GetPlayerName());
-		}
+		PrintToServer("%3.2f: %N: Releasing hint.\n", GetGameTime(), actor);
 	}
 }
-
-ActionResult<CTFBot> CTFBotSniperLurk::OnSuspend(CTFBot *actor, Action<CTFBot> *action)
-{
-	if (actor->m_Shared.InCond(TF_COND_ZOOMED)) {
-		actor->PressAltFireButton();
-	}
-	
-	if (this->m_hHint != nullptr) {
-		this->m_hHint->SetOwnerEntity(nullptr);
-		
-		if (tf_bot_debug_sniper.GetBool()) {
-			DevMsg("%3.2f: %s: Releasing hint.\n", gpGlobals->curtime, actor->GetPlayerName());
-		}
-	}
-	
-	return ActionResult<CTFBot>::Continue();
-}
-
-ActionResult<CTFBot> CTFBotSniperLurk::OnResume(CTFBot *actor, Action<CTFBot> *action)
-{
-	this->m_ctRecomputePath.Invalidate();
-	
-	this->m_hHint = nullptr;
-	this->FindNewHome(actor);
-	
-	return ActionResult<CTFBot>::Continue();
-}
-
-
-QueryResponse CTFBotSniperLurk::ShouldRetreat(const INextBot *nextbot) const
-{
-	if (TFGameRules()->IsMannVsMachineMode() &&
-		nextbot->GetEntity()->GetTeamNumber() == TF_TEAM_BLUE) {
-		return QueryResponse::NO;
-	}
-	
-	return QueryResponse::DONTCARE;
-}
-
-QueryResponse CTFBotSniperLurk::ShouldAttack(const INextBot *nextbot, const CKnownEntity *threat) const
-{
-	CTFNavArea *area = static_cast<CTFNavArea *>(actor->GetLastKnownArea());
-	
-	if (TFGameRules()->IsMannVsMachineMode() && area != nullptr &&
-		(area->m_nAttributes & BLUE_SPAWN_ROOM) != 0) {
-		return QueryResponse::NO;
-	}
-	
-	return QueryResponse::YES;
-}
-
-const CKnownEntity *CTFBotSniperLurk::SelectMoreDangerousThreat(const INextBot *nextbot, const CBaseCombatCharacter *them, const CKnownEntity *threat1, const CKnownEntity *threat2) const
+/*
+const CKnownEntity CTFBotSniperLurk_SelectMoreDangerousThreat(const INextBot *nextbot, const CBaseCombatCharacter *them, const CKnownEntity *threat1, const CKnownEntity *threat2) const
 {
 	if (TFGameRules()->IsMannVsMachineMode() && tf_mvm_bot_sniper_target_by_dps.GetBool()) {
 		CTFBot *actor = ToTFBot(nextbot->GetEntity());
@@ -261,13 +198,71 @@ const CKnownEntity *CTFBotSniperLurk::SelectMoreDangerousThreat(const INextBot *
 	return nullptr;
 }
 
-
-CTFBotHint *CTFBotSniperLurk::FindHint(CTFBot *actor)
+*/
+int CTFBotSniperLurk_FindHint(int actor)
 {
-	// TODO
+	if(m_Hints[actor] == null || m_Hints[actor].Length <= 0)
+	{
+		return INVALID_ENT_REFERENCE;
+	}
+
+	int iBomb = TF2_FindBombNearestToHatch();
+	if(iBomb <= 0)
+	{
+		//Explore random hints while bomb is not in play.
+		return EntRefToEntIndex(m_Hints[actor].Get(GetRandomInt(0, m_Hints[actor].Length - 1)));
+	}
+	
+	ArrayList aPossibleHints = new ArrayList();
+	
+	int iBestHint = INVALID_ENT_REFERENCE;
+	float flBestDistance = 999999999.0;
+	
+	for (int i = 0; i < m_Hints[actor].Length; i++)
+	{
+		int iHint = EntRefToEntIndex(m_Hints[actor].Get(i));
+		if(iHint == INVALID_ENT_REFERENCE || !!GetEntProp(iHint, Prop_Data, "m_isDisabled") == true)
+			continue;
+		
+		if(!IsLineOfFireClear(WorldSpaceCenter(iBomb), WorldSpaceCenter(iHint)))
+			continue;
+		
+		aPossibleHints.Push(iHint);
+		
+		//For fallback.
+		float flDistance = GetVectorDistance(WorldSpaceCenter(iHint), WorldSpaceCenter(iBomb));
+		if(flDistance <= flBestDistance)
+		{
+			flBestDistance = flDistance;
+			iBestHint = iHint;
+		}
+	}
+	
+	if(aPossibleHints.Length > 0)
+	{
+		iBestHint = aPossibleHints.Get(GetRandomInt(0, aPossibleHints.Length - 1));
+	}
+	
+	delete aPossibleHints;
+	return iBestHint;
 }
 
-bool CTFBotSniperLurk::FindNewHome(CTFBot *actor)
+bool CTFBotSniperLurk_FindNewHome(int actor)
 {
-	// TODO
+	m_bHasHome[actor] = false;
+	if(m_Hints[actor] == null || m_Hints[actor].Length <= 0)
+		return false;
+	
+	int iHint = CTFBotSniperLurk_FindHint(actor);
+	if(iHint == INVALID_ENT_REFERENCE)
+		return false;
+
+	NavArea area = TheNavMesh.GetNearestNavArea_Vec(WorldSpaceCenter(iHint), true);
+	if(area == NavArea_Null)
+		return false;
+	
+	area.GetRandomPoint(m_vecHome[actor]);
+	m_bHasHome[actor] = true;
+	
+	return true;
 }

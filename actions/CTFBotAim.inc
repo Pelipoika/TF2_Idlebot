@@ -124,6 +124,7 @@ methodmap BotAim
 	{
 		m_ctReload[this] = GetGameTime() + duration;
 	}	
+	
 	public void Upkeep()
 	{
 		float frametime = GetGameFrameTime();
@@ -454,7 +455,7 @@ methodmap BotAim
 		}
 	}
 	public void AimHeadTowardsEntity(int ent, LookAtPriorityType priority, float duration = 0.0, const char[] reason)
-	{
+	{	
 		if (duration <= 0.0) {
 			duration = 0.1;
 		}

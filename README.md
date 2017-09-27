@@ -26,8 +26,8 @@ Currently can only play MvM
 | CTFBotMarkGiant | Marks a random giant if the player has the F.O.W   | Done |
 | CTFBotMoveToFront | Move to frontline and then press F4              | Done |
 | CTFBotUseItem | Use an item (Sandvich, Banners, Crit-a-Cola)         | Done |
+| CTFBotSniperLurk | Hang around sniper advantage positions            | Done |
 | CTFBotMedicHeal | Search and heal players W.I.P                      | W.I.P |
-| CTFBotSniperLurk | Hang around sniper advantage positions            | W.I.P |
 | CTFBotSpyInfiltrate | Disguise, Sap, Stab, Hide                      | W.I.P |
 | CTFBotPreWave | N/A                                                  | N/A |
 | CTFBotSeekAndDestroye | N/A                                          | N/A |

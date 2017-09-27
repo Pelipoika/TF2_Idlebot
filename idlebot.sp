@@ -66,6 +66,7 @@ char g_szBotModels[][] =
 #define ACTION_MOVE_TO_FRONT 7
 #define ACTION_GET_HEALTH 8
 #define ACTION_USE_ITEM 9
+#define ACTION_SNIPER_LURK 10
 //#define ACTION_MEDIC_HEAL 8
 
 #include <actions/CTFBotAttack>
@@ -77,6 +78,7 @@ char g_szBotModels[][] =
 #include <actions/CTFBotGetHealth>
 #include <actions/CTFBotMoveToFront>
 #include <actions/CTFBotUseItem>
+#include <actions/CTFBotSniperLurk>
 //#include <actions/CTFBotMedicHeal>
 
 Handle g_hHudInfo;
@@ -292,7 +294,6 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 //	UpdateLookingAroundForEnemies();
 	BotAim(client).Upkeep();
 	BotAim(client).FireWeaponAtEnemy();
-	Dodge(client);
 	
 	SetHudTextParams(0.1, 0.1, 0.1, 255, 255, 200, 255, 0, 0.0, 0.0, 0.0);
 	ShowSyncHudText(client, g_hHudInfo, "%s\nRouteType %s\nIsHeadAimingOnTarget %i\nIsHeadSteady %i\nGetHeadSteadyDuration %.1f", CurrentActionToName(g_iCurrentAction[client]), 
@@ -300,7 +301,15 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 																																BotAim(client).IsHeadAimingOnTarget(), 
 																																BotAim(client).IsHeadSteady(),
 																																BotAim(client).GetHeadSteadyDuration());																					
-	
+	//For general throttling.
+	bool bCanCheck = g_flNextUpdate[client] < GetGameTime();
+	if(bCanCheck)
+	{
+		g_flNextUpdate[client] = GetGameTime() + 1.0;
+		
+		Dodge(client);
+	}
+		
 	RunCurrentAction(client);
 	
 	if(g_RoundState == RoundState_BetweenRounds)
@@ -331,11 +340,8 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 			low_health = true;
 		}
 		
-		bool bCanCheck = g_flNextUpdate[client] < GetGameTime();
 		if(bCanCheck)
-		{
-			g_flNextUpdate[client] = GetGameTime() + 1.0;
-			
+		{			
 			SetEntProp(client, Prop_Data, "m_bLagCompensation", false);
 			SetEntProp(client, Prop_Data, "m_bPredictWeapons", false);
 		}
@@ -356,20 +362,27 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 			{
 				if(TF2_GetPlayerClass(client) != TFClass_Scout)
 				{
-					if(CTFBotAttack_IsPossible(client))
+					if(TF2_GetPlayerClass(client) == TFClass_Sniper)
 					{
-						ChangeAction(client, ACTION_ATTACK);
-						m_iRouteType[client] = FASTEST_ROUTE;
-					}
-					else if(CTFBotCollectMoney_IsPossible(client))
-					{
-						ChangeAction(client, ACTION_COLLECT_MONEY);
-						m_iRouteType[client] = SAFEST_ROUTE;
+						ChangeAction(client, ACTION_SNIPER_LURK);
 					}
 					else
 					{
-						ChangeAction(client, ACTION_IDLE);
-						m_iRouteType[client] = DEFAULT_ROUTE;
+						if(CTFBotAttack_IsPossible(client))
+						{
+							ChangeAction(client, ACTION_ATTACK);
+							m_iRouteType[client] = FASTEST_ROUTE;
+						}
+						else if(CTFBotCollectMoney_IsPossible(client))
+						{
+							ChangeAction(client, ACTION_COLLECT_MONEY);
+							m_iRouteType[client] = SAFEST_ROUTE;
+						}
+						else
+						{
+							ChangeAction(client, ACTION_IDLE);
+							m_iRouteType[client] = DEFAULT_ROUTE;
+						}
 					}
 				}
 				else
@@ -593,6 +606,7 @@ stock char CurrentActionToName(int action)
 		case ACTION_MOVE_TO_FRONT: name = "MOVE TO FRONT";
 		case ACTION_USE_ITEM:      name = "USE ITEM";
 		case ACTION_IDLE:          name = "IDLE";
+		case ACTION_SNIPER_LURK:   name = "SNIPER LURK";
 	}
 	
 	return name;
@@ -605,6 +619,11 @@ stock bool ChangeAction(int client, int new_action)
 	//Don't allow starting the same function twice.
 	if(new_action == g_iCurrentAction[client])
 		return false;
+	
+	if (new_action == ACTION_MOVE_TO_FRONT && TF2_GetPlayerClass(client) == TFClass_Sniper)
+	{
+		new_action = ACTION_SNIPER_LURK;
+	}
 	
 	PrintToServer("\"%N\" Change Action \"%s\" -> \"%s\"", client, CurrentActionToName(g_iCurrentAction[client]), CurrentActionToName(new_action));
 	
@@ -623,6 +642,7 @@ stock bool ChangeAction(int client, int new_action)
 		case ACTION_GET_HEALTH:    CTFBotGetHealth_OnEnd(client);
 		case ACTION_MOVE_TO_FRONT: CTFBotMoveToFront_OnEnd(client);
 		case ACTION_USE_ITEM:      CTFBotUseItem_OnEnd(client);
+		case ACTION_SNIPER_LURK:   CTFBotSniperLurk_OnEnd(client);
 	}
 	
 	//Start
@@ -638,6 +658,7 @@ stock bool ChangeAction(int client, int new_action)
 		case ACTION_GET_HEALTH:    g_bStartedAction[client] = CTFBotGetHealth_OnStart(client);
 		case ACTION_MOVE_TO_FRONT: g_bStartedAction[client] = CTFBotMoveToFront_OnStart(client);
 		case ACTION_USE_ITEM:      g_bStartedAction[client] = CTFBotUseItem_OnStart(client);
+		case ACTION_SNIPER_LURK:   g_bStartedAction[client] = CTFBotSniperLurk_OnStart(client);
 	}
 	
 	//Store
@@ -664,6 +685,7 @@ stock bool RunCurrentAction(int client)
 		case ACTION_MOVE_TO_FRONT: g_bStartedAction[client] = CTFBotMoveToFront_Update(client);
 		case ACTION_GET_HEALTH:    g_bStartedAction[client] = CTFBotGetHealth_Update(client);
 		case ACTION_USE_ITEM:      g_bStartedAction[client] = CTFBotUseItem_Update(client);
+		case ACTION_SNIPER_LURK:   g_bStartedAction[client] = CTFBotSniperLurk_Update(client);
 	}
 
 	return g_bStartedAction[client];
@@ -747,7 +769,8 @@ public void PluginBot_Approach(int bot_entidx, const float vec[3])
 {
 	g_vecCurrentGoal[bot_entidx] = vec;
 	
-	if(m_hAimTarget[bot_entidx] <= 0)
+	float bad[3];
+	if(m_hAimTarget[bot_entidx] <= 0 && PF_GetFutureSegment(bot_entidx, 2, bad))
 		BotAim(bot_entidx).AimHeadTowards(TF2_GetLookAheadPosition(bot_entidx), BORING, 0.3, "Aiming towards our goal");
 }
 
@@ -757,7 +780,7 @@ public bool PluginBot_IsEntityTraversable(int bot_entidx, int other_entidx)
 	if(IsValidClientIndex(other_entidx) && GetTeamNumber(bot_entidx) == GetTeamNumber(other_entidx))
 		return true;
 	
-	//Traversing our target should always be possible in order for PF_IsPotentiallyTraversable to work in PredictSubject.
+	//Traversing our target should always be possible in order for PF_IsPotentiallyTraversable to work in PredictSubjectPosition.
 	return (m_hAttackTarget[bot_entidx] == other_entidx) ? true : false; 
 }
 
