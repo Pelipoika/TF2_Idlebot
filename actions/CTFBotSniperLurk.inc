@@ -24,17 +24,11 @@ bool m_bHasHome[MAXPLAYERS + 1];
 bool m_bNearHome[MAXPLAYERS + 1];                    
 bool m_bOpportunistic[MAXPLAYERS + 1];               
 
-ArrayList m_Hints[MAXPLAYERS + 1];
 int m_hHint[MAXPLAYERS + 1]; //EHandle / EntRef
 
 bool CTFBotSniperLurk_OnStart(int actor)
 {
 	FakeClientCommand(actor, "tournament_player_readystate 1");
-
-	if(m_Hints[actor] != null)
-		delete m_Hints[actor];
-		
-	m_Hints[actor] = new ArrayList();
 
 	m_ctPatience[actor] = GetGameTime() + (GetRandomFloat(0.9, 1.1) * tf_bot_sniper_patience_duration);
 	
@@ -46,15 +40,9 @@ bool CTFBotSniperLurk_OnStart(int actor)
 	int ent = -1;
 	while((ent = FindEntityByClassname(ent, "func_tfbot_hint")) != -1)
 	{
-		int iHintType = GetEntProp(ent, Prop_Data, "m_hint");
-		if (iHintType == 0) 
+		if (actor == GetOwnerEntity(ent))
 		{
-			m_Hints[actor].Push(EntIndexToEntRef(ent));
-			
-			if (actor == GetOwnerEntity(ent))
-			{
-				SetOwnerEntity(ent, INVALID_ENT_REFERENCE);
-			}
+			SetOwnerEntity(ent, INVALID_ENT_REFERENCE);
 		}
 	}
 	
@@ -199,35 +187,43 @@ const CKnownEntity CTFBotSniperLurk_SelectMoreDangerousThreat(const INextBot *ne
 }
 
 */
-int CTFBotSniperLurk_FindHint(int actor)
-{
-	if(m_Hints[actor] == null || m_Hints[actor].Length <= 0)
-	{
-		return INVALID_ENT_REFERENCE;
-	}
 
+/*
+	First search for hints visble to bomb and return a random one.
+	If none found AND bomb is valid, use closest hint to bomb.
+	If bomb IS NOT valid and there are hints return a random hint.
+*/
+int CTFBotSniperLurk_FindHint()
+{
 	int iBomb = TF2_FindBombNearestToHatch();
-	if(iBomb <= 0)
-	{
-		//Explore random hints while bomb is not in play.
-		return EntRefToEntIndex(m_Hints[actor].Get(GetRandomInt(0, m_Hints[actor].Length - 1)));
-	}
 	
+	//Every hint available.
 	ArrayList aPossibleHints = new ArrayList();
 	
+	//Every hint with LOS to the Bomb.
+	ArrayList aVisibleHints = new ArrayList();
+	
+	//The closest hint to the bomb that also has LOS.
 	int iBestHint = INVALID_ENT_REFERENCE;
+	
 	float flBestDistance = 999999999.0;
 	
-	for (int i = 0; i < m_Hints[actor].Length; i++)
+	int iHint = -1;
+	while((iHint = FindEntityByClassname(iHint, "func_tfbot_hint")) != -1)
 	{
-		int iHint = EntRefToEntIndex(m_Hints[actor].Get(i));
-		if(iHint == INVALID_ENT_REFERENCE || !!GetEntProp(iHint, Prop_Data, "m_isDisabled") == true)
+		//Sniper hints only.
+		if (GetEntProp(iHint, Prop_Data, "m_hint") != 0) 
 			continue;
 		
-		if(!IsLineOfFireClear(WorldSpaceCenter(iBomb), WorldSpaceCenter(iHint)))
+		//Ignore disabilities.
+		if(GetEntProp(iHint, Prop_Data, "m_isDisabled") == 1)
 			continue;
 		
 		aPossibleHints.Push(iHint);
+		
+		//Bomb not valid so let's just collect all hints.
+		if(iBomb <= 0)
+			continue;
 		
 		//For fallback.
 		float flDistance = GetVectorDistance(WorldSpaceCenter(iHint), WorldSpaceCenter(iBomb));
@@ -236,24 +232,37 @@ int CTFBotSniperLurk_FindHint(int actor)
 			flBestDistance = flDistance;
 			iBestHint = iHint;
 		}
+		
+		if(!IsLineOfFireClear(WorldSpaceCenter(iBomb), WorldSpaceCenter(iHint)))
+			continue;
+		
+		aVisibleHints.Push(iHint);
 	}
 	
-	if(aPossibleHints.Length > 0)
+	if(aVisibleHints.Length > 0)
 	{
-		iBestHint = aPossibleHints.Get(GetRandomInt(0, aPossibleHints.Length - 1));
+		iBestHint = aVisibleHints.Get(GetRandomInt(0, aVisibleHints.Length - 1));
+	}
+	else
+	{
+		if(iBomb <= 0)
+		{
+			//Explore random hints while bomb is not in play.
+			return aPossibleHints.Get(GetRandomInt(0, aPossibleHints.Length - 1));
+		}
 	}
 	
 	delete aPossibleHints;
+	delete aVisibleHints;
+	
 	return iBestHint;
 }
 
 bool CTFBotSniperLurk_FindNewHome(int actor)
 {
 	m_bHasHome[actor] = false;
-	if(m_Hints[actor] == null || m_Hints[actor].Length <= 0)
-		return false;
 	
-	int iHint = CTFBotSniperLurk_FindHint(actor);
+	int iHint = CTFBotSniperLurk_FindHint();
 	if(iHint == INVALID_ENT_REFERENCE)
 		return false;
 
