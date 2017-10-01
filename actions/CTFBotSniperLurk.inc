@@ -76,12 +76,11 @@ bool CTFBotSniperLurk_Update(int actor)
 		{
 			EquipWeaponSlot(actor, TFWeaponSlot_Primary);
 			
-			m_ctPatience[actor] = GetGameTime() + (GetRandomFloat(0.9, 1.1) * tf_bot_sniper_patience_duration);
+			//Lurk a little less time.
+			m_ctPatience[actor] = GetGameTime() + (GetRandomFloat(0.5, 1.0) * tf_bot_sniper_patience_duration);
 			
-			if (!m_bHasHome[actor]) 
-			{
-				m_vecHome[actor] = GetAbsOrigin(actor);
-			}
+			//Saw an enemy so stay where we were when we spotted them.
+			m_vecHome[actor] = GetAbsOrigin(actor);
 		} 
 		else
 		{
