@@ -83,6 +83,10 @@ char g_szBotModels[][] =
 
 Handle g_hHudInfo;
 
+//https://github.com/danielmm8888/TF2Classic/blob/d070129a436a8a070659f0267f6e63564a519a47/src/game/shared/tf/tf_gamemovement.cpp#L171-L174
+//tf_solidobjects
+//https://github.com/danielmm8888/TF2Classic/blob/d070129a436a8a070659f0267f6e63564a519a47/src/game/shared/tf/tf_gamemovement.cpp#L953
+
 public Plugin myinfo = 
 {
 	name = "[TF2] MvM AFK Bot",
@@ -239,12 +243,12 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 
 	float flLastInput   = (GetGameTime() - g_flLastInput[client]);
 	float flMaxIdleTime = (FindConVar("mp_idlemaxtime").FloatValue * 60.0);
-	
+
 	if(flLastInput > (flMaxIdleTime / 2))
 	{
 		if(g_bIdle[client])
 			PrintCenterText(client, "The server plays for you while you are away. Press any key to take control");
-		else
+		else if(!g_bEmulate[client])
 			PrintCenterText(client, "You seem to be away... (%.0fs / %.0fs)\n%s", flLastInput, flMaxIdleTime, (flLastInput > (flMaxIdleTime / 1.2)) ? "The server will take over soon..." : "");
 	}
 	
@@ -620,7 +624,7 @@ stock bool ChangeAction(int client, int new_action)
 	if(new_action == g_iCurrentAction[client])
 		return false;
 	
-	if (new_action == ACTION_MOVE_TO_FRONT && TF2_GetPlayerClass(client) == TFClass_Sniper)
+	if (new_action == ACTION_MOVE_TO_FRONT && TF2_GetPlayerClass(client) == TFClass_Sniper && GetWeaponID(GetPlayerWeaponSlot(client, TFWeaponSlot_Primary)) != TF_WEAPON_COMPOUND_BOW)
 	{
 		new_action = ACTION_SNIPER_LURK;
 	}
@@ -769,9 +773,10 @@ public void PluginBot_Approach(int bot_entidx, const float vec[3])
 {
 	g_vecCurrentGoal[bot_entidx] = vec;
 	
-	float bad[3];
-	if(m_hAimTarget[bot_entidx] <= 0 && PF_GetFutureSegment(bot_entidx, 2, bad))
+	if(m_hAimTarget[bot_entidx] <= 0)
+	{
 		BotAim(bot_entidx).AimHeadTowards(TF2_GetLookAheadPosition(bot_entidx), BORING, 0.3, "Aiming towards our goal");
+	}
 }
 
 public bool PluginBot_IsEntityTraversable(int bot_entidx, int other_entidx) 
@@ -786,14 +791,14 @@ public bool PluginBot_IsEntityTraversable(int bot_entidx, int other_entidx)
 
 public void PluginBot_Jump(int bot_entidx, const float vecPos[3], const float dir[2])
 {
-//	const float watchForClimbRange = 75.0;
-//	if (!PF_IsDiscontinuityAhead(bot_entidx, CLIMB_UP, watchForClimbRange))
-//	{
-	if(GetEntityFlags(bot_entidx) & FL_ONGROUND)
+	float watchForClimbRange = 75.0;
+	if (PF_IsDiscontinuityAhead(bot_entidx, CLIMB_UP, watchForClimbRange))
 	{
-		g_iAdditionalButtons[bot_entidx] |= IN_JUMP;
+		if(GetEntityFlags(bot_entidx) & FL_ONGROUND)
+		{
+			g_iAdditionalButtons[bot_entidx] |= IN_JUMP;
+		}
 	}
-//	}
 }
 
 public float PluginBot_PathCost(int bot_entidx, NavArea area, NavArea from_area, float length)

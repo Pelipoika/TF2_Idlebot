@@ -79,8 +79,11 @@ bool CTFBotSniperLurk_Update(int actor)
 			//Lurk a little less time.
 			m_ctPatience[actor] = GetGameTime() + (GetRandomFloat(0.5, 1.0) * tf_bot_sniper_patience_duration);
 			
-			//Saw an enemy so stay where we were when we spotted them.
-			m_vecHome[actor] = GetAbsOrigin(actor);
+			if(GetEntityFlags(actor) & FL_ONGROUND)
+			{
+				//Saw an enemy so stay where we were when we spotted them.
+				m_vecHome[actor] = GetAbsOrigin(actor);
+			}
 		} 
 		else
 		{

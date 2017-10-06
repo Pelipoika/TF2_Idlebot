@@ -48,7 +48,7 @@ bool CTFBotGoToUpgradeStation_OnStart(int actor)
 	
 	center[2] += 50.0;
 	
-	TR_TraceRay(center, WorldSpaceCenter(g_iStation[actor]), MASK_ALL, RayType_EndPoint);
+	TR_TraceRay(center, WorldSpaceCenter(g_iStation[actor]), MASK_PLAYERSOLID_BRUSHONLY, RayType_EndPoint);
 	TR_GetEndPosition(center);
 	
 	PF_SetGoalVector(actor, center);
@@ -129,7 +129,7 @@ int FindClosestUpgradeStation(int actor)
 		
 		center[2] += 50.0;
 		
-		TR_TraceRay(center, WorldSpaceCenter(i), MASK_ALL, RayType_EndPoint);
+		TR_TraceRay(center, WorldSpaceCenter(i), MASK_PLAYERSOLID_BRUSHONLY, RayType_EndPoint);
 		TR_GetEndPosition(center);
 		
 		if(!PF_IsPathToVectorPossible(actor, center, NULL_FLOAT))
