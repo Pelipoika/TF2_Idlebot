@@ -36,6 +36,10 @@ bool IsPlayerMarkable(int bot, int victim)
 	if (!IsMiniBoss(victim)) 
 		return false;
 	
+	/* must not be a sentry buster */
+	if(TF2_IsBuster(victim))
+		return false;
+	
 	/* must not already be marked for death */
 	if (TF2_IsPlayerInCondition(victim, TFCond_MarkedForDeath)) 
 		return false;

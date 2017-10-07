@@ -233,6 +233,16 @@ public void OnGameFrame()
 
 public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVel[3], float fAng[3], int &iWeapon)
 {
+/*  ???????????????????????????????????????????????????
+	L 10/07/2017 - 18:40:44: [SM] Exception reported: Array index out-of-bounds (index -1, limit 9)
+	L 10/07/2017 - 18:40:44: [SM] Blaming: idlebot.smx
+	L 10/07/2017 - 18:40:44: [SM] Call stack trace:
+	L 10/07/2017 - 18:40:44: [SM]   [1] Line 185, C:\Users\Pelipoika\Documents\GitHub\TF2_Idlebot\idlebot.sp::SetDefender
+	L 10/07/2017 - 18:40:44: [SM]   [2] Line 260, C:\Users\Pelipoika\Documents\GitHub\TF2_Idlebot\idlebot.sp::OnPlayerRunCmd
+*/
+	if(client <= 0)
+		return Plugin_Handled;
+
 	if(IsFakeClient(client) || !IsClientConnected(client))
 		return Plugin_Continue;
 	
