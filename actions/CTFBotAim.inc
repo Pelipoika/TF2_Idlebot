@@ -108,14 +108,20 @@ methodmap BotAim
 	{
 		return g_hSaccadeSpeed.FloatValue;
 	}	
-	public void PressFireButton(float duration = 0.1)
-	{
-		m_ctFire[this] = GetGameTime() + duration;
-	}
+	
 	public void ReleaseFireButton()
+	{
+		m_ctFire[this] = 0.0;
+	}
+	public void ReleaseAltFireButton()
 	{
 		m_ctAltFire[this] = 0.0;
 	}
+	
+	public void PressFireButton(float duration = 0.1)
+	{
+		m_ctFire[this] = GetGameTime() + duration;
+	}	
 	public void PressAltFireButton(float duration = 0.1)
 	{
 		m_ctAltFire[this] = GetGameTime() + duration;
@@ -123,7 +129,7 @@ methodmap BotAim
 	public void PressReloadButton(float duration = 0.1)
 	{
 		m_ctReload[this] = GetGameTime() + duration;
-	}	
+	}
 	
 	public void Upkeep()
 	{
@@ -607,7 +613,7 @@ methodmap BotAim
 			
 			if(GetVectorLength(threat_to_actor) < GetMaxAttackRange(this.index)) 
 			{
-				this.PressFireButton(FindConVar("tf_bot_fire_weapon_min_time").FloatValue / 2);
+				this.PressFireButton(FindConVar("tf_bot_fire_weapon_min_time").FloatValue);
 			}
 		
 			return;

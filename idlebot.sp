@@ -801,14 +801,22 @@ public bool PluginBot_IsEntityTraversable(int bot_entidx, int other_entidx)
 
 public void PluginBot_Jump(int bot_entidx, const float vecPos[3], const float dir[2])
 {
-	float watchForClimbRange = 75.0;
-	if (PF_IsDiscontinuityAhead(bot_entidx, CLIMB_UP, watchForClimbRange))
+	//float watchForClimbRange = 75.0;
+	//if (PF_IsDiscontinuityAhead(bot_entidx, CLIMB_UP, watchForClimbRange))
+	//{
+	
+	//If no target, stop pressing M2 so we cant jump if we are heavy and spun up.
+	if(m_hAimTarget[bot_entidx] <= 0)
 	{
-		if(GetEntityFlags(bot_entidx) & FL_ONGROUND)
-		{
-			g_iAdditionalButtons[bot_entidx] |= IN_JUMP;
-		}
+		BotAim(bot_entidx).ReleaseAltFireButton();
 	}
+	
+	if(GetEntityFlags(bot_entidx) & FL_ONGROUND)
+	{
+		g_iAdditionalButtons[bot_entidx] |= IN_JUMP;
+	}
+	
+	//}
 }
 
 public float PluginBot_PathCost(int bot_entidx, NavArea area, NavArea from_area, float length)
