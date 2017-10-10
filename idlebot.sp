@@ -83,9 +83,11 @@ char g_szBotModels[][] =
 
 Handle g_hHudInfo;
 
+//TODO
 //https://github.com/danielmm8888/TF2Classic/blob/d070129a436a8a070659f0267f6e63564a519a47/src/game/shared/tf/tf_gamemovement.cpp#L171-L174
 //tf_solidobjects
 //https://github.com/danielmm8888/TF2Classic/blob/d070129a436a8a070659f0267f6e63564a519a47/src/game/shared/tf/tf_gamemovement.cpp#L953
+//https://github.com/sigsegv-mvm/mvm-reversed/blob/b2a43a54093fca4e16068e64e567b871bd7d875e/server/tf/bot/behavior/tf_bot_behavior.cpp#L270-L301
 
 public Plugin myinfo = 
 {
@@ -243,7 +245,7 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 	if(client <= 0)
 		return Plugin_Handled;
 
-	if(IsFakeClient(client) || !IsClientConnected(client))
+	if(!IsClientConnected(client) || IsFakeClient(client))
 		return Plugin_Continue;
 	
 	if(iButtons != 0 || iImpulse != 0 || GetClientTeam(client) == 1)

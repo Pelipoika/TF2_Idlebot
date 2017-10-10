@@ -137,10 +137,15 @@ int CTFBotAttack_SelectRandomReachableEnemy(int actor)
 		if(TF2_IsBuster(i))
 			continue;
 		
+		//Where are you
+		NavArea lastKnownArea = PF_GetLastKnownArea(i);
+		if(lastKnownArea == NavArea_Null)
+			continue;
+		
 		//Cannot path into enemy spawn rooms.
-	/*	if ((opposingTFTeam == TFTeam_Red  && HasTFAttributes(PF_GetLastKnownArea(i), RED_SPAWN_ROOM)) ||
-			(opposingTFTeam == TFTeam_Blue && HasTFAttributes(PF_GetLastKnownArea(i), BLUE_SPAWN_ROOM)))
-			continue;*/
+		if ((opposingTFTeam == TFTeam_Red  && HasTFAttributes(lastKnownArea, RED_SPAWN_ROOM)) ||
+			(opposingTFTeam == TFTeam_Blue && HasTFAttributes(lastKnownArea, BLUE_SPAWN_ROOM)))
+			continue;
 		
 		if (!PF_IsPathToEntityPossible(actor, i, NULL_FLOAT))
 			continue;
