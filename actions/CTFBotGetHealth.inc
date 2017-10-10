@@ -122,6 +122,25 @@ bool CTFBotGetHealth_Update(int actor)
 	
 	g_bPath[actor] = true;
 	
+	bool bHealedByDispenser = false;
+	for (int i = 0; i < GetEntProp(actor, Prop_Send, "m_nNumHealers"); i++)
+	{
+		int iHealerIndex = GetHealerByIndex(actor, i);
+		
+		if(IsValidClientIndex(iHealerIndex))
+			continue;
+		
+		//If we are being healed by a non player entity it's propably a dispenser.
+		bHealedByDispenser = true;
+		break;
+	}
+	
+	if(bHealedByDispenser)
+	{
+		g_bPath[actor] = false;
+		return true;
+	}
+	
 	return true;
 }
 

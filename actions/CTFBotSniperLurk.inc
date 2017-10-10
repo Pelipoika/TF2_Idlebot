@@ -69,9 +69,14 @@ bool CTFBotSniperLurk_Update(int actor)
 		m_hAimTarget[actor] = Entity_GetClosestClient(actor);
 	
 	if (m_hAimTarget[actor] != -1 && IsLineOfFireClear(GetEyePosition(actor), GetEyePosition(m_hAimTarget[actor])))
-	{
-		BotAim(actor).AimHeadTowardsEntity(m_hAimTarget[actor], CRITICAL, 0.3, "Looking at visible threat");
+	{	
+		if (!TF2_IsPlayerInCondition(actor, TFCond_Zoomed)) 
+		{
+			BotAim(actor).PressAltFireButton();
+		}
 	
+		BotAim(actor).AimHeadTowardsEntity(m_hAimTarget[actor], CRITICAL, 0.3, "Looking at visible threat");
+		
 		if (m_bOpportunistic[actor]) 
 		{
 			EquipWeaponSlot(actor, TFWeaponSlot_Primary);
@@ -91,7 +96,7 @@ bool CTFBotSniperLurk_Update(int actor)
 				EquipWeaponSlot(actor, TFWeaponSlot_Secondary);
 			else
 				EquipWeaponSlot(actor, TFWeaponSlot_Primary);
-		}		
+		}
 	}
 	
 	float subtracted[3];
@@ -125,6 +130,11 @@ bool CTFBotSniperLurk_Update(int actor)
 	} 
 	else 
 	{
+		if(m_hAimTarget[actor] <= 0 && TF2_IsPlayerInCondition(actor, TFCond_Zoomed))
+		{
+			BotAim(actor).PressAltFireButton();
+		}
+	
 		m_ctPatience[actor] = GetGameTime() + (GetRandomFloat(0.9, 1.1) * tf_bot_sniper_patience_duration);
 	}
 	
@@ -133,10 +143,10 @@ bool CTFBotSniperLurk_Update(int actor)
 
 void CTFBotSniperLurk_OnEnd(int actor)
 {
-	//if (TF2_IsPlayerInCondition(actor, TFCond_Zoomed)) 
-	//{
-	//	BotAim(actor).PressAltFireButton();
-	//}
+	if (TF2_IsPlayerInCondition(actor, TFCond_Zoomed)) 
+	{
+		BotAim(actor).PressAltFireButton();
+	}
 	
 	if (EntRefToEntIndex(m_hHint[actor]) != INVALID_ENT_REFERENCE) 
 	{

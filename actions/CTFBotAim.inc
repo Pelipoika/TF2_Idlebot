@@ -551,10 +551,10 @@ methodmap BotAim
 			m_hAimTarget[this] = -1;
 			
 			//Unscope because target isnt valid.
-			if (IsSniperRifle(this.index) && TF2_IsPlayerInCondition(this.index, TFCond_Zoomed)/* && !GetEntProp(this.index, Prop_Send, "m_bRageDraining")*/)
-			{
-				this.PressAltFireButton(0.1);
-			}
+			//if (IsSniperRifle(this.index) && TF2_IsPlayerInCondition(this.index, TFCond_Zoomed)/* && !GetEntProp(this.index, Prop_Send, "m_bRageDraining")*/)
+			//{
+				//this.PressAltFireButton(0.1);
+			//}
 			
 			return;
 		}
@@ -646,12 +646,12 @@ methodmap BotAim
 			// TODO: bunch of stuff related to IntervalTimer @ 0x5c
 			// ...
 			
-			if (!TF2_IsPlayerInCondition(this.index, TFCond_Zoomed))
+		/*	if (!TF2_IsPlayerInCondition(this.index, TFCond_Zoomed))
 			{
 				//Scope in
 				this.PressAltFireButton(0.1);
-			}
-			else if(GetEntPropFloat(GetActiveWeapon(this.index), Prop_Send, "m_flChargedDamage") >= 40.0 && this.IsHeadAimingOnTarget() && this.IsHeadSteady())
+			}*/
+			if(GetEntPropFloat(GetActiveWeapon(this.index), Prop_Send, "m_flChargedDamage") >= 40.0 && this.IsHeadAimingOnTarget() && this.IsHeadSteady())
 			{
 				//Shoot
 				this.PressFireButton();

@@ -318,6 +318,16 @@ methodmap CMannVsMachineUpgradeManager < CMannVsMachineUpgrades
 	}
 }
 
+stock int GetHealerByIndex(int client, int index)
+{
+	int iShared = FindSendPropInfo("CTFPlayer", "m_Shared");
+
+	Address m_Shared = GetEntityAddress(client) + view_as<Address>(iShared);
+	Address aHealers = view_as<Address>(Dereference(m_Shared, 0x190));
+	
+	return ReadInt(Transpose(aHealers, (index * 0x24))) & 0xFFF;
+}
+
 stock bool HasDemoShieldEquipped(int client)
 {	
 	return !!GetEntProp(client, Prop_Send, "m_bShieldEquipped");
@@ -1334,3 +1344,26 @@ void ComputeHealthAndAmmoVectors(int client, JSONArray array, float max_range)
 		}
 	}
 }
+
+stock Address Transpose(Address pAddr, int iOffset)		
+{		
+    return view_as<Address>(view_as<int>(pAddr) + iOffset);		
+}
+stock int Dereference(Address pAddr, int iOffset = 0)		
+{		
+    if(pAddr == Address_Null)		
+    {
+        return -1;		
+    }
+    
+    return ReadInt(Transpose(pAddr, iOffset));		
+} 		
+stock int ReadInt(Address pAddr)		
+{		
+    if(pAddr == Address_Null)		
+    {
+        return -1;		
+    }
+    		
+    return LoadFromAddress(pAddr, NumberType_Int32);		
+}  
