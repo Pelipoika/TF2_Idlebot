@@ -248,6 +248,10 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 	if(!IsClientConnected(client) || IsFakeClient(client))
 		return Plugin_Continue;
 	
+	//No can do.
+	if(TF2_IsMvM() && TF2_GetClientTeam(client) == TFTeam_Blue)
+		g_flLastInput[client] = GetGameTime();
+	
 	if(iButtons != 0 || iImpulse != 0 || GetClientTeam(client) == 1)
 		g_flLastInput[client] = GetGameTime();
 
