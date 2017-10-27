@@ -257,7 +257,7 @@ int CTFBotSniperLurk_FindHint()
 	}
 	else
 	{
-		if(iBomb <= 0)
+		if(iBomb <= 0 && aPossibleHints.Length > 0)
 		{
 			//Explore random hints while bomb is not in play.
 			return aPossibleHints.Get(GetRandomInt(0, aPossibleHints.Length - 1));
