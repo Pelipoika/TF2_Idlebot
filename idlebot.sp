@@ -195,6 +195,9 @@ stock bool SetDefender(int client, bool bEnabled)
 			PF_EnableCallback(client, PFCB_ClimbUpToLedge, PluginBot_Jump);
 			PF_EnableCallback(client, PFCB_IsEntityTraversable, PluginBot_IsEntityTraversable);
 			PF_EnableCallback(client, PFCB_GetPathCost, PluginBot_PathCost);
+			
+			PF_EnableCallback(client, PFCB_PathFailed, PluginBot_PathFail);
+			PF_EnableCallback(client, PFCB_PathSuccess, PluginBot_PathSuccess);
 		}
 		
 		BotAim(client).Reset();
@@ -849,8 +852,7 @@ public float PluginBot_PathCost(int bot_entidx, NavArea area, NavArea from_area,
 			dist = GetVectorLength(subtracted);
 		}
 		
-		float delta_z = area.ComputeAdjacentConnectionHeightChange(from_area);
-		if(delta_z >= 18.0)
+		if(area.ComputeAdjacentConnectionHeightChange(from_area) >= 18.0)
 		{
 			dist *= 2.0;
 		}
@@ -860,6 +862,25 @@ public float PluginBot_PathCost(int bot_entidx, NavArea area, NavArea from_area,
 	
 	if (m_iRouteType[bot_entidx] == DEFAULT_ROUTE) 
 	{
+		if (length > 0.0) 
+		{
+			dist = length;
+		} 
+		else 
+		{
+			float center[3];          area.GetCenter(center);
+			float fromCenter[3]; from_area.GetCenter(fromCenter);
+		
+			float subtracted[3]; SubtractVectors(center, fromCenter, subtracted);
+		
+			dist = GetVectorLength(subtracted);
+		}
+		
+		if(area.ComputeAdjacentConnectionHeightChange(from_area) >= 18.0)
+		{
+			dist *= 2.0;
+		}
+		
 		if (!GetEntProp(bot_entidx, Prop_Send, "m_bIsMiniBoss")) 
 		{
 			/* very similar to CTFBot::TransientlyConsistentRandomValue */
@@ -918,4 +939,14 @@ public float PluginBot_PathCost(int bot_entidx, NavArea area, NavArea from_area,
 	}*/
 	
 	return from_area.GetCostSoFar() + cost;
+}
+
+public void PluginBot_PathFail(int bot_entidx)
+{
+	g_bPath[bot_entidx] = false;
+}
+
+public void PluginBot_PathSuccess(int bot_entidx)
+{
+	g_bPath[bot_entidx] = true;
 }
