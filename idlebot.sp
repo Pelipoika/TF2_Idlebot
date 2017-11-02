@@ -294,7 +294,7 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 	//Always crouch jump
 	if(GetEntProp(client, Prop_Send, "m_bJumping"))
 	{
-		iButtons |= IN_DUCK
+		iButtons |= IN_DUCK;
 		bChanged = true;
 	}
 	
@@ -374,7 +374,7 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 			{
 				if(TF2_GetPlayerClass(client) != TFClass_Scout)
 				{
-					if(TF2_GetPlayerClass(client) == TFClass_Sniper)
+					if(TF2_GetPlayerClass(client) == TFClass_Sniper && GetWeaponID(GetPlayerWeaponSlot(client, TFWeaponSlot_Primary)) != TF_WEAPON_COMPOUND_BOW)
 					{
 						ChangeAction(client, ACTION_SNIPER_LURK);
 					}
@@ -631,11 +631,6 @@ stock bool ChangeAction(int client, int new_action)
 	//Don't allow starting the same function twice.
 	if(new_action == g_iCurrentAction[client])
 		return false;
-	
-	if (new_action == ACTION_MOVE_TO_FRONT && TF2_GetPlayerClass(client) == TFClass_Sniper && GetWeaponID(GetPlayerWeaponSlot(client, TFWeaponSlot_Primary)) != TF_WEAPON_COMPOUND_BOW)
-	{
-		new_action = ACTION_SNIPER_LURK;
-	}
 	
 	PrintToServer("\"%N\" Change Action \"%s\" -> \"%s\"", client, CurrentActionToName(g_iCurrentAction[client]), CurrentActionToName(new_action));
 	

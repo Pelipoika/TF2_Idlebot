@@ -249,7 +249,7 @@ methodmap BotAim
 						float targetvelocity[3]; targetvelocity = GetAbsVelocity(target_ent);
 						
 						float flProjectileSpeed = GetProjectileSpeed(this.index);
-						
+	
 						float flDistanceProjectileSpeed = flDistance / flProjectileSpeed;
 						
 						target_point[0] = (targetvelocity[0] * flDistanceProjectileSpeed) + targeteyepos[0];
@@ -402,7 +402,9 @@ methodmap BotAim
 		SubtractVectors(new_eye_angle, punch_angle, new_eye_angle);
 		new_eye_angle[0] = AngleNormalize(new_eye_angle[0]);
 		new_eye_angle[1] = AngleNormalize(new_eye_angle[1]);
+		new_eye_angle[2] = 0.0;
 		
+		//PrintToServer("x %f y %f z %f", new_eye_angle[0], new_eye_angle[1], new_eye_angle[2]);
 		SnapEyeAngles(this.index, new_eye_angle);
 	//	TeleportEntity(this.index, NULL_VECTOR, new_eye_angle, NULL_VECTOR);
 	}
