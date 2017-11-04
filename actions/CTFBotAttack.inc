@@ -29,7 +29,6 @@ bool CTFBotAttack_Update(int actor)
 	//	PrintToServer("Curren target is no longer valid.");
 		m_hAttackTarget[actor] = -1;
 		CTFBotAttack_OnStart(actor);
-		g_bPath[actor] = false;
 		return false;
 	}
 	
@@ -42,13 +41,10 @@ bool CTFBotAttack_Update(int actor)
 		{
 			m_hAttackTarget[actor] = -1;
 			CTFBotAttack_OnStart(actor);
-			g_bPath[actor] = false;
 					
 			return false;
 		}	
 	}
-	
-	g_bPath[actor] = true;
 	
 	int closesttoh = TF2_FindBotNearestToBombNearestToHatch(actor);
 	if(closesttoh != -1)
@@ -59,45 +55,6 @@ bool CTFBotAttack_Update(int actor)
 	else
 	{
 		PF_SetGoalVector(actor, PredictSubjectPosition(actor, m_hAttackTarget[actor]));
-	}
-	
-	int iTarget = -1;
-	
-	//Don't constantly switch target.
-	if (TF2_GetPlayerClass(actor) == TFClass_Sniper && m_hAimTarget[actor] != -1 && IsLineOfFireClear(GetEyePosition(actor), GetEyePosition(m_hAttackTarget[actor])) && !IsInvulnerable(m_hAttackTarget[actor])) 
-		iTarget = m_hAimTarget[actor];
-	else
-		iTarget = Entity_GetClosestClient(actor);
-	
-	if(iTarget != -1)
-	{	
-		BotAim(actor).AimHeadTowardsEntity(iTarget, CRITICAL, 0.3, "Looking at visible threat");
-		
-		float dist_to_target = GetVectorDistance(GetAbsOrigin(actor), GetAbsOrigin(m_hAttackTarget[actor]));
-		
-		bool bLOS = IsLineOfFireClear(GetEyePosition(actor), GetEyePosition(m_hAttackTarget[actor]));
-		if(!bLOS)
-		{
-			g_bPath[actor] = true;
-		}
-		else
-		{
-			if(TF2_GetPlayerClass(actor) != TFClass_Sniper)
-			{
-				if((IsMeleeWeapon(actor) || IsWeapon(actor, TF_WEAPON_FLAMETHROWER)) && dist_to_target > 100.0)
-					g_bPath[actor] = true;
-				else if(IsCombatWeapon(actor) && dist_to_target > 500.0)
-					g_bPath[actor] = true;
-				else
-					g_bPath[actor] = false;
-			}
-			else
-				g_bPath[actor] = false;
-		}
-	}
-	else
-	{
-		m_hAimTarget[actor] = -1;
 	}
 	
 	return true;

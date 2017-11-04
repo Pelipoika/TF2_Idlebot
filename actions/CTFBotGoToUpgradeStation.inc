@@ -9,7 +9,6 @@ bool CTFBotGoToUpgradeStation_OnStart(int actor)
 
 	if(g_iStation[actor] == -1)
 	{
-		g_bPath[actor] = false;
 		return false;
 	}
 	
@@ -24,19 +23,16 @@ bool CTFBotGoToUpgradeStation_OnStart(int actor)
 	if(StrContains(map, "mvm_mannworks") != -1)
 	{
 		PF_SetGoalVector(actor, view_as<float>({-643.9, -2635.2, 384.0}));
-		g_bPath[actor] = true;
 		return true;
 	}
 	else if(StrContains(map, "mvm_teien") != -1)
 	{
 		PF_SetGoalVector(actor, view_as<float>({4613.1, -6561.9, 260.0}));
-		g_bPath[actor] = true;
 		return true;
 	}
 	else if(StrContains(map, "mvm_sequoia") != -1)
 	{
 		PF_SetGoalVector(actor, view_as<float>({-5117.0, -377.3, 4.5}));
-		g_bPath[actor] = true;
 		return true;
 	}
 	
@@ -53,8 +49,6 @@ bool CTFBotGoToUpgradeStation_OnStart(int actor)
 	TR_GetEndPosition(center);
 	
 	PF_SetGoalVector(actor, center);
-	
-	g_bPath[actor] = true;
 	return true;
 }
 
@@ -88,7 +82,6 @@ bool CTFBotGoToUpgradeStation_Update(int actor)
 	if (!IsValidEntity(station))
 	{
 		PrintToServer("[%8.3f] CTFBotGoToUpgradeStation(#%d): Upgrade station is invalid.", GetGameTime(), actor);
-		g_bPath[actor] = false;
 		return false;
 	}
 	
@@ -99,8 +92,6 @@ bool CTFBotGoToUpgradeStation_Update(int actor)
 		ChangeAction(actor, ACTION_UPGRADE);
 		return false;
 	}
-	
-	g_bPath[actor] = true;
 	
 	return true;
 }

@@ -109,7 +109,7 @@ bool CTFBotGetHealth_Update(int actor)
 	if(!IsValidHealth(m_hHealth[actor]))
 	{
 		ChangeAction(actor, ACTION_IDLE);
-		g_bPath[actor] = false;
+
 		return false;
 	}
 	
@@ -119,27 +119,6 @@ bool CTFBotGetHealth_Update(int actor)
 	}
 	
 	PF_SetGoalVector(actor, WorldSpaceCenter(m_hHealth[actor]));
-	
-	g_bPath[actor] = true;
-	
-	bool bHealedByDispenser = false;
-	for (int i = 0; i < GetEntProp(actor, Prop_Send, "m_nNumHealers"); i++)
-	{
-		int iHealerIndex = GetHealerByIndex(actor, i);
-		
-		if(IsValidClientIndex(iHealerIndex))
-			continue;
-		
-		//If we are being healed by a non player entity it's propably a dispenser.
-		bHealedByDispenser = true;
-		break;
-	}
-	
-	if(bHealedByDispenser)
-	{
-		g_bPath[actor] = false;
-		return true;
-	}
 	
 	return true;
 }

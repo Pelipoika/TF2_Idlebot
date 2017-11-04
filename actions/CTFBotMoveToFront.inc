@@ -92,9 +92,6 @@ bool CTFBotMoveToFront_Update(int actor)
 	}
 	
 	PF_SetGoalVector(actor, m_vecGoalArea[actor]);
-	
-	g_bPath[actor] = true;
-	
 	return true;
 }
 

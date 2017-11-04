@@ -36,6 +36,8 @@ RouteType m_iRouteType[MAXPLAYERS + 1];
 int g_iCurrentAction[MAXPLAYERS + 1];
 bool g_bStartedAction[MAXPLAYERS + 1];
 
+bool g_bUpdateLookingAroundForEnemies[MAXPLAYERS + 1];
+
 //Idle
 float g_flLastInput[MAXPLAYERS + 1];
 bool g_bIdle[MAXPLAYERS + 1];
@@ -119,6 +121,7 @@ public void OnClientPutInServer(int client)
 	g_bPath[client] = true;
 	g_iCurrentAction[client] = 5;
 	g_bStartedAction[client] = false;
+	g_bUpdateLookingAroundForEnemies[client] = true;
 	g_flNextUpdate[client] = GetGameTime();
 	
 	g_flLastInput[client] = GetGameTime();
@@ -199,7 +202,7 @@ stock bool SetDefender(int client, bool bEnabled)
 			PF_EnableCallback(client, PFCB_OnMoveToSuccess, PluginBot_MoveToSuccess);
 			
 			PF_EnableCallback(client, PFCB_PathFailed, PluginBot_PathFail);
-			PF_EnableCallback(client, PFCB_PathSuccess, PluginBot_PathSuccess);
+			//PF_EnableCallback(client, PFCB_PathSuccess, PluginBot_PathSuccess);
 		}
 		
 		BotAim(client).Reset();
@@ -310,11 +313,8 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 	BotAim(client).FireWeaponAtEnemy();
 	
 	SetHudTextParams(0.1, 0.1, 0.1, 255, 255, 200, 255, 0, 0.0, 0.0, 0.0);
-	ShowSyncHudText(client, g_hHudInfo, "%s\nRouteType %s\nIsHeadAimingOnTarget %i\nIsHeadSteady %i\nGetHeadSteadyDuration %.1f", CurrentActionToName(g_iCurrentAction[client]), 
-																																CurrentRouteTypeToName(client),
-																																BotAim(client).IsHeadAimingOnTarget(), 
-																																BotAim(client).IsHeadSteady(),
-																																BotAim(client).GetHeadSteadyDuration());																					
+	ShowSyncHudText(client, g_hHudInfo, "%s\nRouteType %s\nPathing %s", CurrentActionToName(g_iCurrentAction[client]), CurrentRouteTypeToName(client), g_bPath[client] ? "Yes" : "No");																		
+	
 	//For general throttling.
 	bool bCanCheck = g_flNextUpdate[client] < GetGameTime();
 	if(bCanCheck)
@@ -323,7 +323,7 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 		
 		Dodge(client);
 	}
-		
+	
 	RunCurrentAction(client);
 	
 	if(g_RoundState == RoundState_BetweenRounds)
@@ -376,7 +376,7 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 			{
 				if(TF2_GetPlayerClass(client) != TFClass_Scout)
 				{
-					if(TF2_GetPlayerClass(client) == TFClass_Sniper && GetWeaponID(GetPlayerWeaponSlot(client, TFWeaponSlot_Primary)) != TF_WEAPON_COMPOUND_BOW)
+					if(IsSniperRifle(client))
 					{
 						ChangeAction(client, ACTION_SNIPER_LURK);
 					}
@@ -636,7 +636,7 @@ stock bool ChangeAction(int client, int new_action)
 	
 	PrintToServer("\"%N\" Change Action \"%s\" -> \"%s\"", client, CurrentActionToName(g_iCurrentAction[client]), CurrentActionToName(new_action));
 	
-	g_bPath[client] = false;
+//	g_bPath[client] = false;
 	g_bStartedAction[client] = false;
 	
 	//Stop
@@ -695,6 +695,91 @@ stock bool RunCurrentAction(int client)
 		case ACTION_GET_HEALTH:    g_bStartedAction[client] = CTFBotGetHealth_Update(client);
 		case ACTION_USE_ITEM:      g_bStartedAction[client] = CTFBotUseItem_Update(client);
 		case ACTION_SNIPER_LURK:   g_bStartedAction[client] = CTFBotSniperLurk_Update(client);
+	}
+
+	switch(g_iCurrentAction[client])
+	{
+		case ACTION_IDLE, ACTION_UPGRADE:
+		{
+			g_bPath[client] = false;
+		}
+		case ACTION_SNIPER_LURK:
+		{
+			
+		}
+		case ACTION_ATTACK:
+		{
+			int iTarget = -1;
+	
+			//Don't constantly switch target.
+			if (TF2_GetPlayerClass(client) == TFClass_Sniper && m_hAimTarget[client] != -1 && IsLineOfFireClear(GetEyePosition(client), GetEyePosition(m_hAttackTarget[client])) && !IsInvulnerable(m_hAttackTarget[client])) 
+				iTarget = m_hAimTarget[client];
+			else
+				iTarget = Entity_GetClosestClient(client);
+			
+			if(iTarget != -1)
+			{	
+				BotAim(client).AimHeadTowardsEntity(iTarget, CRITICAL, 0.3, "Looking at visible threat");
+				
+				float dist_to_target = GetVectorDistance(GetAbsOrigin(client), GetAbsOrigin(m_hAttackTarget[client]));
+				
+				bool bLOS = IsLineOfFireClear(GetEyePosition(client), GetEyePosition(m_hAttackTarget[client]));
+				if(!bLOS)
+				{
+					g_bPath[client] = true;
+				}
+				else
+				{
+					if(TF2_GetPlayerClass(client) != TFClass_Sniper)
+					{
+						if((IsMeleeWeapon(client) || IsWeapon(client, TF_WEAPON_FLAMETHROWER)) && dist_to_target > 100.0)
+							g_bPath[client] = true;
+						else if(IsCombatWeapon(client) && dist_to_target > 500.0)
+							g_bPath[client] = true;
+						else
+							g_bPath[client] = false;
+					}
+					else
+						g_bPath[client] = false;
+				}
+			}
+			else
+			{
+				m_hAimTarget[client] = -1;
+			}
+		}
+		case ACTION_GET_HEALTH:
+		{		
+			for (int i = 0; i < GetEntProp(client, Prop_Send, "m_nNumHealers"); i++)
+			{
+				int iHealerIndex = GetHealerByIndex(client, i);
+				
+				if(IsValidClientIndex(iHealerIndex))
+					continue;
+				
+				//If we are being healed by a non player entity it's propably a dispenser.
+				g_bPath[client] = false;
+				break;
+			}
+			
+			g_bPath[client] = true;
+		}
+		case ACTION_GET_AMMO:
+		{
+			if(TF2_GetPlayerClass(client) == TFClass_Sniper && !IsValidClientIndex(m_hAimTarget[client]))
+			{
+				if (TF2_IsPlayerInCondition(client, TFCond_Zoomed)) 
+				{
+					BotAim(client).PressAltFireButton();
+				}
+			}
+			
+			g_bPath[client] = true;	
+		}
+		default:
+		{
+			g_bPath[client] = true;	
+		}
 	}
 
 	return g_bStartedAction[client];
@@ -940,15 +1025,18 @@ public float PluginBot_PathCost(int bot_entidx, NavArea area, NavArea from_area,
 
 public void PluginBot_PathFail(int bot_entidx)
 {
-	g_bPath[bot_entidx] = false;
+	//PrintToChatAll("-------- PluginBot_PathFail bot_entidx %i", bot_entidx);
+	ChangeAction(bot_entidx, ACTION_IDLE);
 }
-
+/*
 public void PluginBot_PathSuccess(int bot_entidx)
 {
-	g_bPath[bot_entidx] = true;
+	PrintToChatAll("-------- PluginBot_PathSuccess bot_entidx %i", bot_entidx);
 }
-
+*/
 public void PluginBot_MoveToSuccess(int bot_entidx, Address path)
 {
-	PrintToChatAll("PluginBot_MoveToSuccess bot_entidx %i path %X", bot_entidx, path);
+	//PrintToChatAll("-------- PluginBot_MoveToSuccess bot_entidx %i path %X", bot_entidx, path);
+	if(g_iCurrentAction[bot_entidx] != ACTION_SNIPER_LURK)
+		ChangeAction(bot_entidx, ACTION_IDLE);
 }

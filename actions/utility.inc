@@ -338,17 +338,6 @@ stock bool HasParachuteEquipped(int client)
 	return !!GetEntProp(client, Prop_Send, "m_bParachuteEquipped");
 }
 
-stock bool IsStealthed(int client)
-{
-	if(TF2_IsPlayerInCondition(client, TFCond_Cloaked))
-		return true;
-	
-	if(TF2_IsPlayerInCondition(client, TFCond_Stealthed))
-		return true;
-		
-	return TF2_IsPlayerInCondition(client, TFCond_StealthedUserBuffFade);
-}
-
 stock float GetNextThink(int entity, const char[] szContext)
 {
 	return SDKCall(g_hGetNextThink, entity, szContext);
@@ -885,7 +874,7 @@ stock bool IsHitScanWeapon(int client)
 
 stock bool IsSniperRifle(int client)
 {
-	int iWeapon = GetActiveWeapon(client);
+	int iWeapon = GetPlayerWeaponSlot(client, TFWeaponSlot_Primary);
 	if(!IsValidEntity(iWeapon))
 		return false;
 	
@@ -1029,6 +1018,9 @@ stock float ApproachAngle( float target, float value, float speed )
 
 stock float[] WorldSpaceCenter(int entity)
 {
+	if(entity <= 0)
+		return NULL_VECTOR;
+
 	float vecPos[3];
 	SDKCall(g_hWorldSpaceCenter, entity, vecPos);
 	return vecPos;
@@ -1036,6 +1028,9 @@ stock float[] WorldSpaceCenter(int entity)
 
 stock float[] GetAbsVelocity(int client)
 {
+	if(client <= 0)
+		return NULL_VECTOR;
+	
 	float v[3];
 	GetEntPropVector(client, Prop_Data, "m_vecAbsVelocity", v);
 	return v;
@@ -1043,6 +1038,9 @@ stock float[] GetAbsVelocity(int client)
 
 stock float[] GetAbsOrigin(int client)
 {
+	if(client <= 0)
+		return NULL_VECTOR;
+
 	float v[3];
 	GetEntPropVector(client, Prop_Data, "m_vecAbsOrigin", v);
 	return v;
@@ -1050,6 +1048,9 @@ stock float[] GetAbsOrigin(int client)
 
 stock float[] GetEyePosition(int client)
 {
+	if(client <= 0)
+		return NULL_VECTOR;
+		
 	float v[3];
 	GetClientEyePosition(client, v);
 	return v;
@@ -1057,6 +1058,9 @@ stock float[] GetEyePosition(int client)
 
 stock float[] GetEyeAngles(int client)
 {
+	if(client <= 0)
+		return NULL_VECTOR;
+
 	float v[3];
 	GetClientEyeAngles(client, v);
 	return v;
@@ -1199,9 +1203,10 @@ stock int Entity_GetClosestClient(int iEnt)
 
 stock bool Entity_Cansee(int iLooker, int iTarget)
 {
-	if(TF2_IsPlayerInCondition(iTarget, TFCond_Disguised) || TF2_IsPlayerInCondition(iTarget, TFCond_Cloaked)
-	|| TF2_IsPlayerInCondition(iTarget, TFCond_Stealthed) || TF2_IsPlayerInCondition(iTarget, TFCond_CloakFlicker)
-	|| TF2_IsPlayerInCondition(iTarget, TFCond_DeadRingered) || TF2_GetClientTeam(iTarget) != GetEnemyTeam(iLooker))
+	if(TF2_GetClientTeam(iTarget) != GetEnemyTeam(iLooker))
+		return false;
+		
+	if(!ShouldSpyTransmit(iTarget))
 		return false;
 		
 	TR_TraceRayFilter(GetEyePosition(iLooker), WorldSpaceCenter(iTarget), MASK_SHOT|CONTENTS_GRATE, RayType_EndPoint, TraceFilterSelf, iLooker);
@@ -1211,6 +1216,48 @@ stock bool Entity_Cansee(int iLooker, int iTarget)
 	}
 	
 	return false;
+}
+
+stock bool ShouldSpyTransmit(int client)
+{
+	// Players who are burning/jarated/bleeding, or who are cloaked and bump into something, are not ignored
+	if(TF2_IsPlayerInCondition(client, TFCond_CloakFlicker)
+	|| TF2_IsPlayerInCondition(client, TFCond_Bleeding)	
+	|| TF2_IsPlayerInCondition(client, TFCond_Jarated)
+	|| TF2_IsPlayerInCondition(client, TFCond_Milked)
+	|| TF2_IsPlayerInCondition(client, TFCond_OnFire)) {
+		return true;
+	}
+	
+	// Spies are only ignored when more than 75% cloaked
+	if(IsStealthed(client)) {
+		return (GetPercentInvisible(client) <= 0.75);
+	}
+	
+	// Spies who are not fully disguised are not ignored
+	if(!TF2_IsPlayerInCondition(client, TFCond_Disguised) 
+	|| TF2_IsPlayerInCondition(client, TFCond_Disguising)) {
+		return true;
+	}
+	
+	return false;
+}
+
+stock bool IsStealthed(int client)
+{
+	if(TF2_IsPlayerInCondition(client, TFCond_Cloaked))
+		return true;
+	
+	if(TF2_IsPlayerInCondition(client, TFCond_Stealthed))
+		return true;
+		
+	return TF2_IsPlayerInCondition(client, TFCond_StealthedUserBuffFade);
+}
+
+stock float GetPercentInvisible(int client)
+{
+	int offset = FindSendPropInfo("CTFPlayer", "m_Shared") + (80 * 4);
+	return GetEntDataFloat(client, offset);
 }
 
 public bool TraceFilterSelf(int entity, int contentsMask, any iExclude)

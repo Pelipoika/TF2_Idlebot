@@ -114,7 +114,11 @@ bool CTFBotPurchaseUpgrades_Update(int actor)
 			
 			if(CTFBotMoveToFront_IsPossible(actor))
 			{
-				ChangeAction(actor, ACTION_MOVE_TO_FRONT);
+				if(!IsSniperRifle(actor))
+				{
+					ChangeAction(actor, ACTION_MOVE_TO_FRONT);
+				}
+
 				delete info;
 				return false;
 			}

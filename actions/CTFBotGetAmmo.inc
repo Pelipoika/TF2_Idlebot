@@ -4,7 +4,9 @@ bool CTFBotGetAmmo_IsPossible(int actor)
 {
 	//Skip lag.
 	if(m_hAmmo[actor] != -1 && IsValidAmmo(m_hAmmo[actor]))
+	{
 		return true;
+	}
 
 	JSONArray ammo = new JSONArray();
 	ComputeHealthAndAmmoVectors(actor, ammo, FindConVar("tf_bot_ammo_search_range").FloatValue);
@@ -33,6 +35,7 @@ bool CTFBotGetAmmo_IsPossible(int actor)
 	}
 	
 	delete ammo;
+
 	return bPossible;
 }
 
@@ -84,7 +87,6 @@ bool CTFBotGetAmmo_Update(int actor)
 	if(!IsValidAmmo(m_hAmmo[actor]))
 	{
 		ChangeAction(actor, ACTION_IDLE);
-		g_bPath[actor] = false;
 		return false;
 	}
 	
@@ -94,8 +96,6 @@ bool CTFBotGetAmmo_Update(int actor)
 	}
 	
 	PF_SetGoalVector(actor, WorldSpaceCenter(m_hAmmo[actor]));
-	
-	g_bPath[actor] = true;
 	
 	return true;
 }

@@ -24,13 +24,11 @@ bool CTFBotCollectMoney_Update(int actor)
 {
 	if (!IsValidCurrencyPack(m_hCurrencyPack[actor])) 
 	{
-		g_bPath[actor] = false;
 		return false;
 	}
 	
 	PF_SetGoalVector(actor, WorldSpaceCenter(m_hCurrencyPack[actor]));
-	g_bPath[actor] = true;
-	
+
 	return true;
 }
 
