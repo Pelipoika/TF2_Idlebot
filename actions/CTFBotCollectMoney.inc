@@ -15,6 +15,8 @@ bool CTFBotCollectMoney_OnStart(int actor)
 {
 	CTFBotCollectMoney_SelectCurrencyPack(actor);
 	
+	BotAim(actor).ReleaseFireButton();
+
 	return true;
 }
 

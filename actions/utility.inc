@@ -574,12 +574,12 @@ public int EquipRequiredWeapon(int client)
 
 stock int GetMaxHealth(int client)
 {
-	return GetEntProp(client, Prop_Data, "m_iMaxHealth");
+	return GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iMaxHealth", _, client);
 }
 
 stock int GetMaxHealthForBuffing(int client)
 {
-	return GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iMaxHealth", _, client);
+	return GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iMaxBuffedHealth", _, client);
 }
 
 float VMX_VectorNormalize(float a1[3])

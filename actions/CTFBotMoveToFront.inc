@@ -68,7 +68,7 @@ bool CTFBotMoveToFront_OnStart(int actor)
 	}
 	
 	area.GetRandomPoint(m_vecGoalArea[actor]);
-	EquipWeaponSlot(actor, TFWeaponSlot_Melee);
+	//EquipWeaponSlot(actor, TFWeaponSlot_Melee);
 	m_ctMoveTimeout[actor] = GetGameTime() + 50.0;
 	
 	return true;
@@ -100,6 +100,8 @@ bool CTFBotMoveToFront_Update(int actor)
 
 void CTFBotMoveToFront_OnEnd(int actor)
 {
+	if(IsValidClientIndex(actor))
+		EquipWeaponSlot(actor, TFWeaponSlot_Primary);
 	m_vecGoalArea[actor] = NULL_VECTOR;
 }
 

@@ -15,8 +15,9 @@ bool CTFBotGoToUpgradeStation_OnStart(int actor)
 	
 	m_ctUpgradeTimeout[actor] = GetGameTime() + 50.0;
 	
+	BotAim(actor).ReleaseFireButton();
 	EquipWeaponSlot(actor, TFWeaponSlot_Melee);
-	
+
 	char map[PLATFORM_MAX_PATH];
 	GetCurrentMap(map, PLATFORM_MAX_PATH);
 	

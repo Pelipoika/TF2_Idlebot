@@ -43,7 +43,7 @@ bool m_bSightedIn[MAXPLAYERS + 1];
 public void InitTFBotAim()
 {
 	g_hDebug                 = CreateConVar("sm_idlebot_debug",                      "0.0",    "Debug aiming", _, true, 0.0, true, 1.0);
-	g_hAimRate               = CreateConVar("sm_idlebot_head_aim_tracking_interval", "0.05",    "Aim Recalculate Interval");
+	g_hAimRate               = CreateConVar("sm_idlebot_head_aim_tracking_interval", "0.05",   "Aim Recalculate Interval");
 	g_hHeadSteadyRate        = CreateConVar("sm_idlebot_head_aim_steady_max_rate",   "100.0",  "Head aim steady max rate");
 	g_hSaccadeSpeed          = CreateConVar("sm_idlebot_saccade_speed",              "1000.0", "Max head angular velocity");
 	g_hHeadResettleAngle     = CreateConVar("sm_idlebot_head_resettle_angle",        "100.0",  "After rotating through this angle, the bot pauses to 'recenter' its virtual mouse on its virtual mousepad");

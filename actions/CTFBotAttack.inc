@@ -123,9 +123,11 @@ int CTFBotAttack_SelectRandomReachableEnemy(int actor)
 		if(!IsClientInGame(i))
 			continue;
 		
+		//Ignore dead
 		if(!IsPlayerAlive(i))
 			continue;
 		
+		//Ignore non enemies
 		if(TF2_GetClientTeam(i) != opposingTFTeam)
 			continue;
 		
@@ -142,11 +144,12 @@ int CTFBotAttack_SelectRandomReachableEnemy(int actor)
 		if(lastKnownArea == NavArea_Null)
 			continue;
 		
-		//Cannot path into enemy spawn rooms.
+		//Cannot path into enemy spawn rooms
 		if ((opposingTFTeam == TFTeam_Red  && HasTFAttributes(lastKnownArea, RED_SPAWN_ROOM)) ||
 			(opposingTFTeam == TFTeam_Blue && HasTFAttributes(lastKnownArea, BLUE_SPAWN_ROOM)))
 			continue;
 		
+		//Ignore unpathable 
 		if (!PF_IsPathToEntityPossible(actor, i, NULL_FLOAT))
 			continue;
 			

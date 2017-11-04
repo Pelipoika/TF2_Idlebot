@@ -196,6 +196,8 @@ stock bool SetDefender(int client, bool bEnabled)
 			PF_EnableCallback(client, PFCB_IsEntityTraversable, PluginBot_IsEntityTraversable);
 			PF_EnableCallback(client, PFCB_GetPathCost, PluginBot_PathCost);
 			
+			PF_EnableCallback(client, PFCB_OnMoveToSuccess, PluginBot_MoveToSuccess);
+			
 			PF_EnableCallback(client, PFCB_PathFailed, PluginBot_PathFail);
 			PF_EnableCallback(client, PFCB_PathSuccess, PluginBot_PathSuccess);
 		}
@@ -282,7 +284,7 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 	
 	if(!g_bEmulate[client] || !PF_Exists(client))
 		return Plugin_Continue;
-	
+
 	bool bChanged = false;
 	if(g_iAdditionalButtons[client] != 0)
 	{
@@ -944,4 +946,9 @@ public void PluginBot_PathFail(int bot_entidx)
 public void PluginBot_PathSuccess(int bot_entidx)
 {
 	g_bPath[bot_entidx] = true;
+}
+
+public void PluginBot_MoveToSuccess(int bot_entidx, Address path)
+{
+	PrintToChatAll("PluginBot_MoveToSuccess bot_entidx %i path %X", bot_entidx, path);
 }
