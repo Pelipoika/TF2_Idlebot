@@ -55,7 +55,6 @@ char g_szBotModels[][] =
 	"models/bots/engineer/bot_engineer.mdl"
 };
 
-#include <actions/utility>
 #include <actions/CTFBotAim>
 
 #define ACTION_IDLE 0
@@ -70,6 +69,9 @@ char g_szBotModels[][] =
 #define ACTION_USE_ITEM 9
 #define ACTION_SNIPER_LURK 10
 //#define ACTION_MEDIC_HEAL 8
+
+#include <actions/utility>
+
 
 #include <actions/CTFBotAttack>
 #include <actions/CTFBotMarkGiant>
@@ -308,12 +310,16 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 	if(m_ctAltFire[client] > GetGameTime()) { iButtons |= IN_ATTACK2; bChanged = true; }
 	
 //	EquipRequiredWeapon();
-//	UpdateLookingAroundForEnemies();
+	UpdateLookingAroundForEnemies(client);
 	BotAim(client).Upkeep();
 	BotAim(client).FireWeaponAtEnemy();
 	
 	SetHudTextParams(0.1, 0.1, 0.1, 255, 255, 200, 255, 0, 0.0, 0.0, 0.0);
-	ShowSyncHudText(client, g_hHudInfo, "%s\nRouteType %s\nPathing %s", CurrentActionToName(g_iCurrentAction[client]), CurrentRouteTypeToName(client), g_bPath[client] ? "Yes" : "No");																		
+	ShowSyncHudText(client, g_hHudInfo, "%s\nRouteType %s\nPathing %s\nWeapon %s #%i", CurrentActionToName(g_iCurrentAction[client]), 
+																		CurrentRouteTypeToName(client), 
+																		g_bPath[client] ? "Yes" : "No",
+																		CurrentWeaponIDToName(client),
+																		GetWeaponID(GetActiveWeapon(client)));
 	
 	//For general throttling.
 	bool bCanCheck = g_flNextUpdate[client] < GetGameTime();
@@ -376,11 +382,7 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 			{
 				if(TF2_GetPlayerClass(client) != TFClass_Scout)
 				{
-					if(IsSniperRifle(client))
-					{
-						ChangeAction(client, ACTION_SNIPER_LURK);
-					}
-					else
+					if(!IsSniperRifle(client))
 					{
 						if(CTFBotAttack_IsPossible(client))
 						{
@@ -397,6 +399,10 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 							ChangeAction(client, ACTION_IDLE);
 							m_iRouteType[client] = DEFAULT_ROUTE;
 						}
+					}
+					else
+					{
+						ChangeAction(client, ACTION_SNIPER_LURK);
 					}
 				}
 				else
@@ -587,45 +593,6 @@ bool l_is_above_ground(int actor, float min_height)
 	return !PF_IsPotentiallyTraversable(actor, from, to, IMMEDIATELY, NULL_FLOAT);
 }
 
-stock char CurrentRouteTypeToName(int client)
-{
-	char name[PLATFORM_MAX_PATH];
-
-	//Stop
-	switch(m_iRouteType[client])
-	{
-		case DEFAULT_ROUTE: name = "DEFAULT";
-		case FASTEST_ROUTE: name = "FASTEST";
-		case SAFEST_ROUTE:  name = "SAFEST";
-		case RETREAT_ROUTE: name = "RETREAT";
-	}
-	
-	return name;
-}
-
-stock char CurrentActionToName(int action)
-{
-	char name[PLATFORM_MAX_PATH];
-
-	//Stop
-	switch(action)
-	{
-		case ACTION_MARK_GIANT:    name = "MARK GIANT";
-		case ACTION_COLLECT_MONEY: name = "COLLECT MONEY";
-		case ACTION_UPGRADE:       name = "UPGRADE";
-		case ACTION_GOTO_UPGRADE:  name = "GO TO UPGRADE STATION";
-		case ACTION_ATTACK:        name = "ATTACK";
-		case ACTION_GET_AMMO:      name = "GET AMMO";
-		case ACTION_GET_HEALTH:    name = "GET HEALTH";
-		case ACTION_MOVE_TO_FRONT: name = "MOVE TO FRONT";
-		case ACTION_USE_ITEM:      name = "USE ITEM";
-		case ACTION_IDLE:          name = "IDLE";
-		case ACTION_SNIPER_LURK:   name = "SNIPER LURK";
-	}
-	
-	return name;
-}
-
 //Stop whatever current action we're doing properly, and change to another.
 //Return whether or not a new action was started.
 stock bool ChangeAction(int client, int new_action)
@@ -636,7 +603,6 @@ stock bool ChangeAction(int client, int new_action)
 	
 	PrintToServer("\"%N\" Change Action \"%s\" -> \"%s\"", client, CurrentActionToName(g_iCurrentAction[client]), CurrentActionToName(new_action));
 	
-//	g_bPath[client] = false;
 	g_bStartedAction[client] = false;
 	
 	//Stop
@@ -697,59 +663,83 @@ stock bool RunCurrentAction(int client)
 		case ACTION_SNIPER_LURK:   g_bStartedAction[client] = CTFBotSniperLurk_Update(client);
 	}
 
+	return g_bStartedAction[client];
+}
+
+stock void UpdateLookingAroundForEnemies(int client)
+{
+	int iTarget = -1;
+
+	//Don't constantly switch target as sniper.
+	if (TF2_GetPlayerClass(client) == TFClass_Sniper && IsValidClientIndex(m_hAimTarget[client]) 
+	&& IsLineOfFireClear(GetEyePosition(client), GetEyePosition(m_hAttackTarget[client]))
+	&& !IsInvulnerable(m_hAttackTarget[client])) 
+		iTarget = m_hAimTarget[client];
+	else
+		iTarget = Entity_GetClosestClient(client);
+	
+	if(iTarget != -1)
+	{
+		BotAim(client).AimHeadTowardsEntity(iTarget, CRITICAL, 0.3, "Looking at visible threat");
+	}
+	else
+	{
+		m_hAimTarget[client] = -1;
+	}
+
+	//Pathing stops when we are near enough enemy.
+	if(g_iCurrentAction[client] == ACTION_ATTACK || g_iCurrentAction[client] == ACTION_USE_ITEM)
+	{
+		float dist_to_target = GetVectorDistance(GetAbsOrigin(client), GetAbsOrigin(m_hAttackTarget[client]));
+		
+		bool bLOS = IsLineOfFireClear(GetEyePosition(client), GetEyePosition(m_hAttackTarget[client]));
+		if(!bLOS)
+		{
+			g_bPath[client] = true;
+		}
+		else
+		{
+			if(TF2_GetPlayerClass(client) != TFClass_Sniper)
+			{
+				if(((IsMeleeWeapon(client) || IsWeapon(client, TF_WEAPON_FLAMETHROWER)) && dist_to_target > 100.0) 
+				|| (IsCombatWeapon(client) && dist_to_target > 500.0))
+					g_bPath[client] = true;
+				else
+					g_bPath[client] = false;
+			}
+			else
+				g_bPath[client] = false;
+		}
+	}
+
 	switch(g_iCurrentAction[client])
 	{
 		case ACTION_IDLE, ACTION_UPGRADE:
 		{
 			g_bPath[client] = false;
 		}
-		case ACTION_SNIPER_LURK:
+		case ACTION_ATTACK, ACTION_SNIPER_LURK, ACTION_MOVE_TO_FRONT, ACTION_GET_AMMO, ACTION_USE_ITEM:
 		{
+			//Attacking decides when it wants to path
+			//All the other actions just look at enemies.
 			
-		}
-		case ACTION_ATTACK:
-		{
-			int iTarget = -1;
-	
-			//Don't constantly switch target.
-			if (TF2_GetPlayerClass(client) == TFClass_Sniper && m_hAimTarget[client] != -1 && IsLineOfFireClear(GetEyePosition(client), GetEyePosition(m_hAttackTarget[client])) && !IsInvulnerable(m_hAttackTarget[client])) 
-				iTarget = m_hAimTarget[client];
-			else
-				iTarget = Entity_GetClosestClient(client);
+			//Return early
+			if(g_iCurrentAction[client] == ACTION_ATTACK || g_iCurrentAction[client] == ACTION_SNIPER_LURK)
+				return;
 			
-			if(iTarget != -1)
-			{	
-				BotAim(client).AimHeadTowardsEntity(iTarget, CRITICAL, 0.3, "Looking at visible threat");
-				
-				float dist_to_target = GetVectorDistance(GetAbsOrigin(client), GetAbsOrigin(m_hAttackTarget[client]));
-				
-				bool bLOS = IsLineOfFireClear(GetEyePosition(client), GetEyePosition(m_hAttackTarget[client]));
-				if(!bLOS)
-				{
-					g_bPath[client] = true;
-				}
-				else
-				{
-					if(TF2_GetPlayerClass(client) != TFClass_Sniper)
-					{
-						if((IsMeleeWeapon(client) || IsWeapon(client, TF_WEAPON_FLAMETHROWER)) && dist_to_target > 100.0)
-							g_bPath[client] = true;
-						else if(IsCombatWeapon(client) && dist_to_target > 500.0)
-							g_bPath[client] = true;
-						else
-							g_bPath[client] = false;
-					}
-					else
-						g_bPath[client] = false;
-				}
-			}
-			else
+			//Unzoom when no target and not lurking.
+			if(TF2_GetPlayerClass(client) == TFClass_Sniper && !IsValidClientIndex(m_hAimTarget[client]))
 			{
-				m_hAimTarget[client] = -1;
+				if (TF2_IsPlayerInCondition(client, TFCond_Zoomed)) 
+				{
+					BotAim(client).PressAltFireButton();
+				}
 			}
+			
+			g_bPath[client] = true;	
 		}
 		case ACTION_GET_HEALTH:
-		{		
+		{
 			for (int i = 0; i < GetEntProp(client, Prop_Send, "m_nNumHealers"); i++)
 			{
 				int iHealerIndex = GetHealerByIndex(client, i);
@@ -764,25 +754,11 @@ stock bool RunCurrentAction(int client)
 			
 			g_bPath[client] = true;
 		}
-		case ACTION_GET_AMMO:
-		{
-			if(TF2_GetPlayerClass(client) == TFClass_Sniper && !IsValidClientIndex(m_hAimTarget[client]))
-			{
-				if (TF2_IsPlayerInCondition(client, TFCond_Zoomed)) 
-				{
-					BotAim(client).PressAltFireButton();
-				}
-			}
-			
-			g_bPath[client] = true;	
-		}
 		default:
 		{
 			g_bPath[client] = true;	
 		}
 	}
-
-	return g_bStartedAction[client];
 }
 
 stock void Dodge(int actor)
@@ -863,7 +839,8 @@ public void PluginBot_Approach(int bot_entidx, const float vec[3])
 {
 	g_vecCurrentGoal[bot_entidx] = vec;
 	
-	if(m_hAimTarget[bot_entidx] <= 0)
+	float nothing[3];
+	if(m_hAimTarget[bot_entidx] <= 0 && PF_GetFutureSegment(bot_entidx, 1, nothing))
 	{
 		BotAim(bot_entidx).AimHeadTowards(TF2_GetLookAheadPosition(bot_entidx), BORING, 0.3, "Aiming towards our goal");
 	}
@@ -885,7 +862,7 @@ public void PluginBot_Jump(int bot_entidx, const float vecPos[3], const float di
 	//if (PF_IsDiscontinuityAhead(bot_entidx, CLIMB_UP, watchForClimbRange))
 	//{
 	
-	//If no target, stop pressing M2 so we cant jump if we are heavy and spun up.
+	//If no target, stop pressing M2 so we can jump if we are heavy and spun up.
 	if(m_hAimTarget[bot_entidx] <= 0)
 	{
 		BotAim(bot_entidx).ReleaseAltFireButton();
@@ -1037,6 +1014,6 @@ public void PluginBot_PathSuccess(int bot_entidx)
 public void PluginBot_MoveToSuccess(int bot_entidx, Address path)
 {
 	//PrintToChatAll("-------- PluginBot_MoveToSuccess bot_entidx %i path %X", bot_entidx, path);
-	if(g_iCurrentAction[bot_entidx] != ACTION_SNIPER_LURK)
+	if(g_iCurrentAction[bot_entidx] != ACTION_SNIPER_LURK && g_iCurrentAction[bot_entidx] != ACTION_UPGRADE)
 		ChangeAction(bot_entidx, ACTION_IDLE);
 }

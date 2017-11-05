@@ -113,11 +113,6 @@ bool CTFBotGetHealth_Update(int actor)
 		return false;
 	}
 	
-	m_hAimTarget[actor] = Entity_GetClosestClient(actor);
-	if(m_hAimTarget[actor] != -1){
-		BotAim(actor).AimHeadTowardsEntity(m_hAimTarget[actor], CRITICAL, 0.3, "Looking at visible threat");
-	}
-	
 	PF_SetGoalVector(actor, WorldSpaceCenter(m_hHealth[actor]));
 	
 	return true;

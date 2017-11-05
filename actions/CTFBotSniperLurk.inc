@@ -62,12 +62,6 @@ bool CTFBotSniperLurk_Update(int actor)
 		CTFBotSniperLurk_FindNewHome(actor);
 	}
 	
-	//Don't constantly switch target.
-	if (m_hAimTarget[actor] != -1 && IsLineOfFireClear(GetEyePosition(actor), GetEyePosition(m_hAimTarget[actor])) && !IsInvulnerable(m_hAimTarget[actor])) 
-		m_hAimTarget[actor] = m_hAimTarget[actor];
-	else
-		m_hAimTarget[actor] = Entity_GetClosestClient(actor);
-	
 	if (m_hAimTarget[actor] != -1 && IsLineOfFireClear(GetEyePosition(actor), GetEyePosition(m_hAimTarget[actor])))
 	{	
 		if (!TF2_IsPlayerInCondition(actor, TFCond_Zoomed)) 
@@ -75,8 +69,6 @@ bool CTFBotSniperLurk_Update(int actor)
 			BotAim(actor).PressAltFireButton();
 		}
 	
-		BotAim(actor).AimHeadTowardsEntity(m_hAimTarget[actor], CRITICAL, 0.3, "Looking at visible threat");
-		
 		if (m_bOpportunistic[actor]) 
 		{
 			EquipWeaponSlot(actor, TFWeaponSlot_Primary);

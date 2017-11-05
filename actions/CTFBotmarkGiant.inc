@@ -115,7 +115,7 @@ bool CTFBotMarkGiant_Update(int actor)
 	float dist_to_target = GetVectorDistance(GetAbsOrigin(actor), GetAbsOrigin(m_hTarget[actor]));
 	if (dist_to_target < 512.0)
 	{
-		BotAim(actor).AimHeadTowardsEntity(m_hTarget[actor], CRITICAL, 0.1, "Look at our mark-for-death target");
+		BotAim(actor).AimHeadTowardsEntity(m_hTarget[actor], OVERRIDE_ALL, 0.1, "Look at our mark-for-death target");
 	}
 	
 	if (dist_to_target > GetDesiredAttackRange(actor)) {

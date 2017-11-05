@@ -114,8 +114,14 @@ bool CTFBotPurchaseUpgrades_Update(int actor)
 			
 			if(CTFBotMoveToFront_IsPossible(actor))
 			{
-				if(!IsSniperRifle(actor))
+				if(IsSniperRifle(actor))
 				{
+					//If we have a sniper rifle start lurking
+					ChangeAction(actor, ACTION_SNIPER_LURK);
+				}
+				else
+				{
+					//Else move to front.
 					ChangeAction(actor, ACTION_MOVE_TO_FRONT);
 				}
 
