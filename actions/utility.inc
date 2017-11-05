@@ -922,6 +922,7 @@ stock bool IsMeleeWeapon(int client)
 	switch(SDKCall(g_hGetWeaponID, iWeapon))
 	{
 		case TF_WEAPON_BAT:           return true;
+		case TF_WEAPON_SLAP:          return true;
 		case TF_WEAPON_CLUB:          return true;
 		case TF_WEAPON_KNIFE:         return true;
 		case TF_WEAPON_FISTS:         return true;
