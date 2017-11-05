@@ -86,7 +86,7 @@ bool CTFBotGetAmmo_Update(int actor)
 {
 	if(!IsValidAmmo(m_hAmmo[actor]))
 	{
-		ChangeAction(actor, ACTION_IDLE);
+		ChangeAction(actor, ACTION_IDLE, "CTFBotGetAmmo_Update ammo is not valid");
 		return false;
 	}
 	

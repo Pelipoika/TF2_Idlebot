@@ -61,7 +61,7 @@ bool CTFBotGoToUpgradeStation_Update(int actor)
 		NavArea area = TheNavMesh.GetNearestNavArea_Vec(WorldSpaceCenter(actor), true, 4000.0, false, false, GetClientTeam(actor));
 		if(area == NavArea_Null)
 		{
-			ChangeAction(actor, ACTION_IDLE);
+			ChangeAction(actor, ACTION_IDLE, "Cannot reach upgrade station.");
 		}
 		else
 		{
@@ -88,8 +88,7 @@ bool CTFBotGoToUpgradeStation_Update(int actor)
 	if (IsStandingAtUpgradeStation(actor)) 
 	{
 		BotAim(actor).AimHeadTowards(WorldSpaceCenter(station), IMPORTANT, 3.0, "Look at our upgrade station");
-		PrintToServer("Reached upgrade station; buying upgrades.");
-		ChangeAction(actor, ACTION_UPGRADE);
+		ChangeAction(actor, ACTION_UPGRADE, "Reached upgrade station; buying upgrades.");
 		return false;
 	}
 	

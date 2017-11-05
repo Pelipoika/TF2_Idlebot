@@ -336,12 +336,12 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 	{
 		if(CTFBotCollectMoney_IsPossible(client))
 		{
-			ChangeAction(client, ACTION_COLLECT_MONEY);
+			ChangeAction(client, ACTION_COLLECT_MONEY, "CTFBotCollectMoney is possible");
 			m_iRouteType[client] = FASTEST_ROUTE;
 		}
 		else if(!IsStandingAtUpgradeStation(client) && g_iCurrentAction[client] != ACTION_MOVE_TO_FRONT && !GameRules_GetProp("m_bPlayerReady", 1, client))
 		{
-			ChangeAction(client, ACTION_GOTO_UPGRADE);
+			ChangeAction(client, ACTION_GOTO_UPGRADE, "!IsStandingAtUpgradeStation && RoundState_BetweenRounds");
 			m_iRouteType[client] = DEFAULT_ROUTE;
 		}
 	}
@@ -368,12 +368,12 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 		
 		if ((g_iCurrentAction[client] == ACTION_GET_HEALTH || bCanCheck) && low_health && CTFBotGetHealth_IsPossible(client)) 
 		{
-			ChangeAction(client, ACTION_GET_HEALTH);
+			ChangeAction(client, ACTION_GET_HEALTH, "Getting health");
 			m_iRouteType[client] = SAFEST_ROUTE;
 		}
 		else if ((g_iCurrentAction[client] == ACTION_GET_AMMO || bCanCheck) && IsAmmoLow(client) && CTFBotGetAmmo_IsPossible(client)) 
 		{
-			ChangeAction(client, ACTION_GET_AMMO);
+			ChangeAction(client, ACTION_GET_AMMO, "Getting ammo");
 			m_iRouteType[client] = SAFEST_ROUTE;
 		}
 		else
@@ -386,45 +386,45 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 					{
 						if(CTFBotAttack_IsPossible(client))
 						{
-							ChangeAction(client, ACTION_ATTACK);
+							ChangeAction(client, ACTION_ATTACK, "CTFBotAttack_IsPossible");
 							m_iRouteType[client] = FASTEST_ROUTE;
 						}
 						else if(CTFBotCollectMoney_IsPossible(client))
 						{
-							ChangeAction(client, ACTION_COLLECT_MONEY);
+							ChangeAction(client, ACTION_COLLECT_MONEY, "CTFBotCollectMoney_IsPossible");
 							m_iRouteType[client] = SAFEST_ROUTE;
 						}
 						else
 						{
-							ChangeAction(client, ACTION_IDLE);
+							ChangeAction(client, ACTION_IDLE, "IsSniperRifle and nothing to do.");
 							m_iRouteType[client] = DEFAULT_ROUTE;
 						}
 					}
 					else
 					{
-						ChangeAction(client, ACTION_SNIPER_LURK);
+						ChangeAction(client, ACTION_SNIPER_LURK, "IsSniperRifle and wants to lurk.");
 					}
 				}
 				else
 				{
 					if(CTFBotCollectMoney_IsPossible(client))
 					{
-						ChangeAction(client, ACTION_COLLECT_MONEY);
+						ChangeAction(client, ACTION_COLLECT_MONEY, "Scout: Collecting money.");
 						m_iRouteType[client] = FASTEST_ROUTE;
 					}
 					else if(CTFBotMarkGiant_IsPossible(client))
 					{
-						ChangeAction(client, ACTION_MARK_GIANT);	
+						ChangeAction(client, ACTION_MARK_GIANT, "Scout: Marking giant.");	
 						m_iRouteType[client] = SAFEST_ROUTE;
 					}
 					else if(CTFBotAttack_IsPossible(client))
 					{
-						ChangeAction(client, ACTION_ATTACK);
+						ChangeAction(client, ACTION_ATTACK, "Scout: Attacking robots.");
 						m_iRouteType[client] = DEFAULT_ROUTE;
 					}
 					else
 					{
-						ChangeAction(client, ACTION_IDLE);
+						ChangeAction(client, ACTION_IDLE, "Scout: Nothing to do.");
 						m_iRouteType[client] = DEFAULT_ROUTE;
 					}
 				}
@@ -475,7 +475,7 @@ stock bool OpportunisticallyUseWeaponAbilities(int client)
 		return false;
 	}
 	
-	m_ctUseWeaponAbilities[client] = GetGameTime() + GetRandomFloat(0.1, 0.2);
+	m_ctUseWeaponAbilities[client] = GetGameTime() + GetRandomFloat(0.3, 1.2);
 	
 	if (TF2_GetPlayerClass(client) == TFClass_DemoMan && HasDemoShieldEquipped(client)) 
 	{
@@ -551,7 +551,7 @@ stock bool OpportunisticallyUseWeaponAbilities(int client)
 		{
 			if (StrEqual(EntityNetClass(weapon), "CTFBuffItem") && GetEntPropFloat(client, Prop_Send, "m_flRageMeter") >= 100.0)
 			{
-				ChangeAction(client, ACTION_USE_ITEM);
+				ChangeAction(client, ACTION_USE_ITEM, "Using TF_WEAPON_BUFF_ITEM");
 				return true;
 			}
 			
@@ -565,7 +565,7 @@ stock bool OpportunisticallyUseWeaponAbilities(int client)
 				continue;
 			}
 			
-			ChangeAction(client, ACTION_USE_ITEM);
+			ChangeAction(client, ACTION_USE_ITEM, "Using TF_WEAPON_LUNCHBOX");
 			return true;
 		}
 		
@@ -595,13 +595,17 @@ bool l_is_above_ground(int actor, float min_height)
 
 //Stop whatever current action we're doing properly, and change to another.
 //Return whether or not a new action was started.
-stock bool ChangeAction(int client, int new_action)
+stock bool ChangeAction(int client, int new_action, const char[] reason = "None")
 {
 	//Don't allow starting the same function twice.
 	if(new_action == g_iCurrentAction[client])
 		return false;
 	
-	PrintToServer("\"%N\" Change Action \"%s\" -> \"%s\"", client, CurrentActionToName(g_iCurrentAction[client]), CurrentActionToName(new_action));
+	//Cannot start new actions unless use item is done.
+	if(g_iCurrentAction[client] == ACTION_USE_ITEM && !CTFBotUseItem_IsDone(client))
+		return false;
+
+	PrintToServer("\"%N\" Change Action \"%s\" -> \"%s\" Reason: \"%s\"", client, CurrentActionToName(g_iCurrentAction[client]), CurrentActionToName(new_action), reason);
 	
 	g_bStartedAction[client] = false;
 	
@@ -721,7 +725,7 @@ stock void UpdateLookingAroundForEnemies(int client)
 		case ACTION_ATTACK, ACTION_SNIPER_LURK, ACTION_MOVE_TO_FRONT, ACTION_GET_AMMO, ACTION_USE_ITEM:
 		{
 			//Attacking decides when it wants to path
-			//All the other actions just look at enemies.
+			//All actions look at enemies.
 			
 			//Return early
 			if(g_iCurrentAction[client] == ACTION_ATTACK || g_iCurrentAction[client] == ACTION_SNIPER_LURK)
@@ -1003,7 +1007,7 @@ public float PluginBot_PathCost(int bot_entidx, NavArea area, NavArea from_area,
 public void PluginBot_PathFail(int bot_entidx)
 {
 	//PrintToChatAll("-------- PluginBot_PathFail bot_entidx %i", bot_entidx);
-	ChangeAction(bot_entidx, ACTION_IDLE);
+	ChangeAction(bot_entidx, ACTION_IDLE, "Path construction failed.");
 }
 /*
 public void PluginBot_PathSuccess(int bot_entidx)
@@ -1015,5 +1019,5 @@ public void PluginBot_MoveToSuccess(int bot_entidx, Address path)
 {
 	//PrintToChatAll("-------- PluginBot_MoveToSuccess bot_entidx %i path %X", bot_entidx, path);
 	if(g_iCurrentAction[bot_entidx] != ACTION_SNIPER_LURK && g_iCurrentAction[bot_entidx] != ACTION_UPGRADE)
-		ChangeAction(bot_entidx, ACTION_IDLE);
+		ChangeAction(bot_entidx, ACTION_IDLE, "Reached path goal.");
 }

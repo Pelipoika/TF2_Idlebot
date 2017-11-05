@@ -97,16 +97,14 @@ bool CTFBotMarkGiant_OnStart(int actor)
 bool CTFBotMarkGiant_Update(int actor)
 {
 	if (!IsValidClientIndex(m_hTarget[actor]) || !IsPlayerAlive(m_hTarget[actor])) {
-		PrintToServer("CTFBotMarkGiant_Update Mark target is no longer valid.");
 		m_hTarget[actor] = -1;
-		ChangeAction(actor, ACTION_ATTACK);
+		ChangeAction(actor, ACTION_ATTACK, "CTFBotMarkGiant_Update Mark target is no longer valid.");
 		return false;
 	}
 	
 	if (!IsPlayerMarkable(actor, m_hTarget[actor])) {
-		PrintToServer("CTFBotMarkGiant_Update Mark target is no longer markable.");
 		m_hTarget[actor] = -1;
-		ChangeAction(actor, ACTION_ATTACK);
+		ChangeAction(actor, ACTION_ATTACK, "CTFBotMarkGiant_Update Mark target is no longer markable.");
 		return false;
 	}
 	
