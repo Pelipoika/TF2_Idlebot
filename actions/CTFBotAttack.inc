@@ -97,14 +97,16 @@ int CTFBotAttack_SelectRandomReachableEnemy(int actor)
 			continue;
 		
 		//Where are you
+		PF_UpdateLastKnownArea(i)
 		NavArea lastKnownArea = PF_GetLastKnownArea(i);
 		if(lastKnownArea == NavArea_Null)
 			continue;
 		
 		//Cannot path into enemy spawn rooms
+	/*	! BROKEN
 		if ((opposingTFTeam == TFTeam_Red  && HasTFAttributes(lastKnownArea, RED_SPAWN_ROOM)) ||
 			(opposingTFTeam == TFTeam_Blue && HasTFAttributes(lastKnownArea, BLUE_SPAWN_ROOM)))
-			continue;
+			continue;*/
 		
 		//Ignore unpathable 
 		if (!PF_IsPathToEntityPossible(actor, i, NULL_FLOAT))
@@ -114,7 +116,7 @@ int CTFBotAttack_SelectRandomReachableEnemy(int actor)
 		playercount++;
 	}
 	
-	if(playercount)
+	if(playercount > 0)
 	{
 		return playerarray[GetRandomInt(0, playercount-1)];
 	}

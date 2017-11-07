@@ -314,7 +314,7 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 	BotAim(client).Upkeep();
 	BotAim(client).FireWeaponAtEnemy();
 	
-	SetHudTextParams(0.1, 0.1, 0.1, 255, 255, 200, 255, 0, 0.0, 0.0, 0.0);
+	SetHudTextParams(0.05, 0.05, 0.1, 255, 255, 200, 255, 0, 0.0, 0.0, 0.0);
 	ShowSyncHudText(client, g_hHudInfo, "%s\nRouteType %s\nPathing %s\nWeapon %s #%i", CurrentActionToName(g_iCurrentAction[client]), 
 																		CurrentRouteTypeToName(client), 
 																		g_bPath[client] ? "Yes" : "No",
@@ -386,23 +386,23 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 					{
 						if(CTFBotAttack_IsPossible(client))
 						{
-							ChangeAction(client, ACTION_ATTACK, "CTFBotAttack_IsPossible");
+							ChangeAction(client, ACTION_ATTACK, "Not Scout: CTFBotAttack_IsPossible");
 							m_iRouteType[client] = FASTEST_ROUTE;
 						}
 						else if(CTFBotCollectMoney_IsPossible(client))
 						{
-							ChangeAction(client, ACTION_COLLECT_MONEY, "CTFBotCollectMoney_IsPossible");
+							ChangeAction(client, ACTION_COLLECT_MONEY, "Not Scout: CTFBotCollectMoney_IsPossible");
 							m_iRouteType[client] = SAFEST_ROUTE;
 						}
 						else
 						{
-							ChangeAction(client, ACTION_IDLE, "IsSniperRifle and nothing to do.");
+							ChangeAction(client, ACTION_IDLE, "Not Scout: Nothing to do.");
 							m_iRouteType[client] = DEFAULT_ROUTE;
 						}
 					}
 					else
 					{
-						ChangeAction(client, ACTION_SNIPER_LURK, "IsSniperRifle and wants to lurk.");
+						ChangeAction(client, ACTION_SNIPER_LURK, "Not Scout: IsSniperRifle and wants to lurk.");
 					}
 				}
 				else
@@ -1006,7 +1006,6 @@ public float PluginBot_PathCost(int bot_entidx, NavArea area, NavArea from_area,
 
 public void PluginBot_PathFail(int bot_entidx)
 {
-	//PrintToChatAll("-------- PluginBot_PathFail bot_entidx %i", bot_entidx);
 	ChangeAction(bot_entidx, ACTION_IDLE, "Path construction failed.");
 }
 /*
@@ -1017,7 +1016,9 @@ public void PluginBot_PathSuccess(int bot_entidx)
 */
 public void PluginBot_MoveToSuccess(int bot_entidx, Address path)
 {
-	//PrintToChatAll("-------- PluginBot_MoveToSuccess bot_entidx %i path %X", bot_entidx, path);
-	if(g_iCurrentAction[bot_entidx] != ACTION_SNIPER_LURK && g_iCurrentAction[bot_entidx] != ACTION_UPGRADE)
+	if(g_iCurrentAction[bot_entidx] != ACTION_SNIPER_LURK 
+	&& g_iCurrentAction[bot_entidx] != ACTION_UPGRADE
+	&& g_iCurrentAction[bot_entidx] != ACTION_GET_HEALTH
+	&& g_iCurrentAction[bot_entidx] != ACTION_USE_ITEM)
 		ChangeAction(bot_entidx, ACTION_IDLE, "Reached path goal.");
 }
