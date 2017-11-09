@@ -76,7 +76,7 @@ bool CTFBotPurchaseUpgrades_OnStart(int actor)
 	if (!IsStandingAtUpgradeStation(actor)) 
 	{
 	//	PrintToServer("Not standing at an upgrade station!");
-		ChangeAction(actor, ACTION_GOTO_UPGRADE);
+		ChangeAction(actor, ACTION_GOTO_UPGRADE, "CTFBotPurchaseUpgrades_OnStart: Not standing at an upgrade station!");
 		return false;
 	}
 	
@@ -93,8 +93,7 @@ bool CTFBotPurchaseUpgrades_Update(int actor)
 {
 	if (!IsStandingAtUpgradeStation(actor)) 
 	{
-		//PrintToServer("Not standing at an upgrade station!");
-		ChangeAction(actor, ACTION_GOTO_UPGRADE);
+		ChangeAction(actor, ACTION_GOTO_UPGRADE, "CTFBotPurchaseUpgrades_Update: Not standing at an upgrade station!");
 		return false;
 	}
 
@@ -117,12 +116,12 @@ bool CTFBotPurchaseUpgrades_Update(int actor)
 				if(IsSniperRifle(actor))
 				{
 					//If we have a sniper rifle start lurking
-					ChangeAction(actor, ACTION_SNIPER_LURK);
+					ChangeAction(actor, ACTION_SNIPER_LURK, "CTFBotPurchaseUpgrades_Update: we have a sniper rifle start lurking");
 				}
 				else
 				{
 					//Else move to front.
-					ChangeAction(actor, ACTION_MOVE_TO_FRONT);
+					ChangeAction(actor, ACTION_MOVE_TO_FRONT, "CTFBotPurchaseUpgrades_Update: move to front");
 				}
 
 				delete info;
@@ -130,7 +129,7 @@ bool CTFBotPurchaseUpgrades_Update(int actor)
 			}
 			else
 			{
-				ChangeAction(actor, ACTION_ATTACK);
+				ChangeAction(actor, ACTION_ATTACK, "CTFBotPurchaseUpgrades_Update: Attack");
 				FakeClientCommand(actor, "tournament_player_readystate 1");
 			}
 			

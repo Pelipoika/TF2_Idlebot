@@ -52,7 +52,7 @@ bool CTFBotMoveToFront_OnStart(int actor)
 	//Cannot path to target hologram from whereever we are.
 	if(iBestEnt == -1)
 	{
-		ChangeAction(actor, ACTION_IDLE);
+		ChangeAction(actor, ACTION_IDLE, "CTFBotMoveToFront_OnStart: Cannot path to target hologram from whereever we are. Pressing F4");
 		FakeClientCommand(actor, "tournament_player_readystate 1");
 		
 		PrintToServer("[%8.3f] CTFBotMoveToFront_OnStart(#%d): iBestEnt == -1", GetGameTime(), actor);
@@ -79,7 +79,7 @@ bool CTFBotMoveToFront_Update(int actor)
 	if (m_ctMoveTimeout[actor] < GetGameTime())
 	{
 		PrintToServer("[%8.3f] CTFBotMoveToFront(#%d): Timeout elapsed!", GetGameTime(), actor);
-		ChangeAction(actor, ACTION_IDLE);
+		ChangeAction(actor, ACTION_IDLE, "CTFBotMoveToFront: Timeout elapsed!");
 		return false;
 	}
 	
@@ -87,7 +87,7 @@ bool CTFBotMoveToFront_Update(int actor)
 	if (GetVectorDistance(m_vecGoalArea[actor], WorldSpaceCenter(actor)) < 80.0)
 	{
 		FakeClientCommand(actor, "tournament_player_readystate 1");
-		ChangeAction(actor, ACTION_IDLE);
+		ChangeAction(actor, ACTION_IDLE, "CTFBotMoveToFront: Goal reached!");
 		return false;
 	}
 	

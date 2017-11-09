@@ -489,7 +489,10 @@ methodmap BotAim
 				m_hAimTarget[this] = ent;
 				m_itAimStart[this] = GetGameTime();
 				m_bHeadOnTarget[this] = false;
-				
+
+				m_itHeadSteady[this] = -1.0;
+				m_bSightedIn[this] = false;
+
 				if (g_hDebug.BoolValue) 
 				{
 					char pri_str[16];

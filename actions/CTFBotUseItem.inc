@@ -44,7 +44,7 @@ stock bool CTFBotUseItem_Update(int actor)
 	if (m_ctTimeout[actor] < GetGameTime())
 	{
 		PrintToServer("[%8.3f] CTFBotUseItem(#%d): Timeout elapsed!", GetGameTime(), actor, actor);
-		ChangeAction(actor, ACTION_IDLE);
+		ChangeAction(actor, ACTION_IDLE, "CTFBotUseItem: Timeout elapsed!");
 		return false;
 	}
 	
@@ -67,7 +67,7 @@ stock bool CTFBotUseItem_Update(int actor)
 			if (CTFBotUseItem_IsDone(actor)) 
 			{
 				PrintToServer("[%8.3f] CTFBotUseItem(#%d): Done using item", GetGameTime(), actor, actor);
-				ChangeAction(actor, ACTION_IDLE);
+				ChangeAction(actor, ACTION_IDLE, "CTFBotUseItem: Done using item");
 				return false;
 			}
 		}

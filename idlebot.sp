@@ -602,7 +602,7 @@ stock bool ChangeAction(int client, int new_action, const char[] reason = "None"
 		return false;
 	
 	//Cannot start new actions unless use item is done.
-	if(g_iCurrentAction[client] == ACTION_USE_ITEM && !CTFBotUseItem_IsDone(client))
+	if(g_iCurrentAction[client] == ACTION_USE_ITEM && !CTFBotUseItem_IsDone(client) && m_ctTimeout[client] > GetGameTime())
 		return false;
 
 	PrintToServer("\"%N\" Change Action \"%s\" -> \"%s\" Reason: \"%s\"", client, CurrentActionToName(g_iCurrentAction[client]), CurrentActionToName(new_action), reason);
@@ -676,15 +676,15 @@ stock void UpdateLookingAroundForEnemies(int client)
 
 	//Don't constantly switch target as sniper.
 	if (TF2_GetPlayerClass(client) == TFClass_Sniper && IsValidClientIndex(m_hAimTarget[client]) 
-	&& IsLineOfFireClear(GetEyePosition(client), GetEyePosition(m_hAttackTarget[client]))
+	&& IsValidClientIndex(m_hAttackTarget[client]) && IsLineOfFireClear(GetEyePosition(client), GetEyePosition(m_hAttackTarget[client]))
 	&& !IsInvulnerable(m_hAttackTarget[client])) 
 		iTarget = m_hAimTarget[client];
 	else
 		iTarget = Entity_GetClosestClient(client);
 	
-	if(iTarget != -1)
+	if(IsValidClientIndex(iTarget))
 	{
-		BotAim(client).AimHeadTowardsEntity(iTarget, CRITICAL, 0.3, "Looking at visible threat");
+		BotAim(client).AimHeadTowardsEntity(iTarget, CRITICAL, 0.1, "Looking at visible threat");
 	}
 	else
 	{
@@ -846,7 +846,7 @@ public void PluginBot_Approach(int bot_entidx, const float vec[3])
 	float nothing[3];
 	if(m_hAimTarget[bot_entidx] <= 0 && PF_GetFutureSegment(bot_entidx, 1, nothing))
 	{
-		BotAim(bot_entidx).AimHeadTowards(TF2_GetLookAheadPosition(bot_entidx), BORING, 0.3, "Aiming towards our goal");
+		BotAim(bot_entidx).AimHeadTowards(TF2_GetLookAheadPosition(bot_entidx), BORING, 0.1, "Aiming towards our goal");
 	}
 }
 
@@ -1018,6 +1018,7 @@ public void PluginBot_MoveToSuccess(int bot_entidx, Address path)
 {
 	if(g_iCurrentAction[bot_entidx] != ACTION_SNIPER_LURK 
 	&& g_iCurrentAction[bot_entidx] != ACTION_UPGRADE
+	&& g_iCurrentAction[bot_entidx] != ACTION_GOTO_UPGRADE
 	&& g_iCurrentAction[bot_entidx] != ACTION_GET_HEALTH
 	&& g_iCurrentAction[bot_entidx] != ACTION_USE_ITEM)
 		ChangeAction(bot_entidx, ACTION_IDLE, "Reached path goal.");

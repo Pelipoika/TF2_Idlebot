@@ -1281,7 +1281,7 @@ stock float Min(float one, float two)
 
 stock float[] TF2_GetLookAheadPosition(int client)
 {
-	int iMaxSegments = TF2_IsPlayerInCondition(client, TFCond_Charging) ? 1 : 6;
+	int iMaxSegments = TF2_IsPlayerInCondition(client, TFCond_Charging) ? 1 : 5;
 	int iSegmentsLookedAt = 0;
 	
 	float vecOut[3];
