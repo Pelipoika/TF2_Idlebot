@@ -37,6 +37,7 @@ int g_iCurrentAction[MAXPLAYERS + 1];
 bool g_bStartedAction[MAXPLAYERS + 1];
 
 bool g_bUpdateLookingAroundForEnemies[MAXPLAYERS + 1];
+float g_flNextLookTime[MAXPLAYERS + 1];
 
 //Idle
 float g_flLastInput[MAXPLAYERS + 1];
@@ -195,7 +196,7 @@ stock bool SetDefender(int client, bool bEnabled)
 		
 		if(!PF_Exists(client))
 		{
-			PF_Create(client, 14.0, 50.0, 1000.0, 0.6, MASK_PLAYERSOLID, 200.0, 0.2);
+			PF_Create(client, 18.0, 45.0, 1000.0, 0.6, MASK_PLAYERSOLID, 200.0, 0.2);
 			PF_EnableCallback(client, PFCB_Approach, PluginBot_Approach);
 			PF_EnableCallback(client, PFCB_ClimbUpToLedge, PluginBot_Jump);
 			PF_EnableCallback(client, PFCB_IsEntityTraversable, PluginBot_IsEntityTraversable);
@@ -677,7 +678,7 @@ stock void UpdateLookingAroundForEnemies(int client)
 	//Don't constantly switch target as sniper.
 	if (TF2_GetPlayerClass(client) == TFClass_Sniper && IsValidClientIndex(m_hAimTarget[client]) 
 	&& IsValidClientIndex(m_hAttackTarget[client]) && IsLineOfFireClear(GetEyePosition(client), GetEyePosition(m_hAttackTarget[client]))
-	&& !IsInvulnerable(m_hAttackTarget[client])) 
+	&& !IsInvulnerable(m_hAttackTarget[client]))
 		iTarget = m_hAimTarget[client];
 	else
 		iTarget = Entity_GetClosestClient(client);
@@ -688,7 +689,83 @@ stock void UpdateLookingAroundForEnemies(int client)
 	}
 	else
 	{
+		if(!g_bUpdateLookingAroundForEnemies[client])
+			return;
+	
 		m_hAimTarget[client] = -1;
+		
+		if(g_flNextLookTime[client] > GetGameTime())
+			return;
+		
+		g_flNextLookTime[client] = GetGameTime() + GetRandomFloat(0.3, 1.0);
+		
+		NavArea lastArea = PF_GetLastKnownArea(client);
+		if(lastArea == NavArea_Null)
+			return;	
+		
+		int iTeamNum = view_as<int>(GetEnemyTeam(client));
+		
+		if ( iTeamNum < 0 || iTeamNum >= 4 )
+			iTeamNum = 0;
+			
+		float flRange = 150.0;
+		if(TF2_IsPlayerInCondition(client, TFCond_Zoomed))
+			flRange = 750.0;
+		
+		//Address ptrAreaCountMin = (view_as<Address>(lastArea) + view_as<Address>(4 * (5 * iTeamNum) + 364));
+		//Address ptrAreaCountMax = (view_as<Address>(lastArea) + view_as<Address>(4 * (5 * iTeamNum) + 376));
+		
+		//int areaCountMin = LoadFromAddress(ptrAreaCountMin, NumberType_Int32);
+		//int areaCountMax = LoadFromAddress(ptrAreaCountMax, NumberType_Int32);
+		
+		int eax = (iTeamNum + iTeamNum * 4); //eax
+		int edi = lastArea + eax * 4 + 364;  //edi
+		
+		eax = edi + 0xC;
+		
+		//"result"
+		int connections = LoadFromAddress(eax, NumberType_Int32);
+		
+		PrintToServer("eax 0x%X connections %i", eax, connections);
+		
+		if(connections > 0)
+		{
+			float vecRandomPoint[3];
+			NavArea navArea = NavArea_Null;
+			
+			for (int i = 0; i <= 20; i++)
+			{
+				Address areas = LoadFromAddress(eax + 4, NumberType_Int32);
+				
+				int iRandomArea = (4 * GetRandomInt(0, connections - 1));
+				
+				Address area = LoadFromAddress(areas + iRandomArea, NumberType_Int32);
+				
+				PrintToServer("areas 0x%X", areas);
+				
+				//navArea = view_as<NavArea>(LoadFromAddress((view_as<Address>(LoadFromAddress(ptrAreaCountMin, NumberType_Int32)) + view_as<Address>(4 * GetRandomInt(0, areaCountMax - 1))), NumberType_Int32));
+				
+				//navArea = eax + 4 * GetRandomInt(0, connections - 1);
+				
+			/*	if(navArea == NavArea_Null)
+					continue;
+				
+				navArea.GetRandomPoint(vecRandomPoint);
+				vecRandomPoint[2] += 53.25;
+				
+				PrintToServer("[#%i] NavArea ID %i (x %f y %f z %f)", i, navArea.GetID(), vecRandomPoint[0], vecRandomPoint[1], vecRandomPoint[2]);
+				
+				float to[3]; SubtractVectors(GetAbsOrigin(client), vecRandomPoint, to);
+				if(GetVectorLength(to, true) > flRange * flRange) // ( IsRangeGreaterThan(vecRandomPoint, flRange) )
+				{
+					if (IsLineOfFireClear(GetEyePosition(client), vecRandomPoint))
+						break;
+				}*/
+			}
+			
+			//PrintToChatAll("Look @ %f %f %f", vecRandomPoint[0], vecRandomPoint[1], vecRandomPoint[2]);
+			//BotAim(client).AimHeadTowards(vecRandomPoint, BORING, 1.0, "Looking toward enemy invasion areas");
+		}
 	}
 
 	//Pathing stops when we are near enough enemy.
@@ -724,9 +801,6 @@ stock void UpdateLookingAroundForEnemies(int client)
 		}
 		case ACTION_ATTACK, ACTION_SNIPER_LURK, ACTION_MOVE_TO_FRONT, ACTION_GET_AMMO, ACTION_USE_ITEM:
 		{
-			//Attacking decides when it wants to path
-			//All actions look at enemies.
-			
 			//Return early
 			if(g_iCurrentAction[client] == ACTION_ATTACK || g_iCurrentAction[client] == ACTION_SNIPER_LURK)
 				return;
@@ -843,11 +917,11 @@ public void PluginBot_Approach(int bot_entidx, const float vec[3])
 {
 	g_vecCurrentGoal[bot_entidx] = vec;
 	
-	float nothing[3];
-	if(m_hAimTarget[bot_entidx] <= 0 && PF_GetFutureSegment(bot_entidx, 1, nothing))
-	{
-		BotAim(bot_entidx).AimHeadTowards(TF2_GetLookAheadPosition(bot_entidx), BORING, 0.1, "Aiming towards our goal");
-	}
+	//float nothing[3];
+	//if(m_hAimTarget[bot_entidx] <= 0 && PF_GetFutureSegment(bot_entidx, 1, nothing))
+	//{
+		//BotAim(bot_entidx).AimHeadTowards(TF2_GetLookAheadPosition(bot_entidx), BORING, 0.1, "Aiming towards our goal");
+	//}
 }
 
 public bool PluginBot_IsEntityTraversable(int bot_entidx, int other_entidx) 

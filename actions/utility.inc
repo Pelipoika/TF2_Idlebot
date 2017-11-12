@@ -323,7 +323,7 @@ stock int GetHealerByIndex(int client, int index)
 	int iShared = FindSendPropInfo("CTFPlayer", "m_Shared");
 
 	Address m_Shared = GetEntityAddress(client) + view_as<Address>(iShared);
-	Address aHealers = view_as<Address>(Dereference(m_Shared, 0x190));
+	Address aHealers = view_as<Address>(Dereference(m_Shared, 0x194));
 	
 	return ReadInt(Transpose(aHealers, (index * 0x24))) & 0xFFF;
 }
@@ -795,7 +795,7 @@ stock bool IsContinuousFireWeapon(int client)
 	if(IsSniperRifle(client))
 		return false;
 	
-	if (!IsCombatWeapon(client))
+	if(!IsCombatWeapon(client))
 		return false;
 
 	switch(SDKCall(g_hGetWeaponID, iWeapon))
@@ -1104,7 +1104,7 @@ stock char CurrentWeaponIDToName(int client)
 
 bool IsLineOfFireClear(float from[3], float to[3])
 {
-	Handle trace = TR_TraceRayFilterEx(from, to, MASK_SOLID_BRUSHONLY, RayType_EndPoint, NextBotTraceFilterIgnoreActors);
+	Handle trace = TR_TraceRayFilterEx(from, to, CONTENTS_SOLID|CONTENTS_MOVEABLE|0x40|CONTENTS_MONSTER, RayType_EndPoint, NextBotTraceFilterIgnoreActors);
 	
 	float flFraction = TR_GetFraction(trace);
 	

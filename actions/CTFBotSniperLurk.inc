@@ -28,6 +28,8 @@ int m_hHint[MAXPLAYERS + 1]; //EHandle / EntRef
 
 bool CTFBotSniperLurk_OnStart(int actor)
 {
+	EquipWeaponSlot(actor, TFWeaponSlot_Primary);
+
 	FakeClientCommand(actor, "tournament_player_readystate 1");
 
 	m_ctPatience[actor] = GetGameTime() + (GetRandomFloat(0.9, 1.1) * tf_bot_sniper_patience_duration);
@@ -99,6 +101,11 @@ bool CTFBotSniperLurk_Update(int actor)
 	
 	if(m_bNearHome[actor])
 	{
+		if (!TF2_IsPlayerInCondition(actor, TFCond_Zoomed)) 
+		{
+			BotAim(actor).PressAltFireButton();
+		}
+	
 		g_bPath[actor] = false;
 	}
 	
