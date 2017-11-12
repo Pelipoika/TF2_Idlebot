@@ -709,10 +709,10 @@ stock void UpdateLookingAroundForEnemies(int client)
 		if(TF2_IsPlayerInCondition(client, TFCond_Zoomed))
 			flRange = 750.0;
 		
-		Address eax = view_as<Address>(iTeamNum + iTeamNum * 4); //eax
-		Address edi = view_as<Address>(lastArea) + eax * view_as<Address>(4 + 364);  //edi
+		int eax = (iTeamNum + iTeamNum * 4); //eax
+		int edi = lastArea + eax * 4 + 364;  //edi
 		
-		eax = edi + view_as<Address>(0xC); // +12
+		eax = edi + 0xC; // +12
 		
 		int connections = LoadFromAddress(eax, NumberType_Int32);
 		
@@ -725,8 +725,8 @@ stock void UpdateLookingAroundForEnemies(int client)
 			{
 				int iRandomArea = (4 * GetRandomInt(0, connections - 1));
 				
-				Address areas = view_as<Address>(LoadFromAddress(eax + view_as<Address>(4), NumberType_Int32));
-				navArea = view_as<NavArea>(LoadFromAddress(areas + view_as<Address>(iRandomArea), NumberType_Int32));
+				Address areas = LoadFromAddress(eax + 4, NumberType_Int32);
+				navArea = view_as<NavArea>(LoadFromAddress(areas + iRandomArea, NumberType_Int32));
 				
 				if(navArea == NavArea_Null)
 					continue;
