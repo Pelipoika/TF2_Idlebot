@@ -710,11 +710,11 @@ stock void UpdateLookingAroundForEnemies(int client)
 			flRange = 750.0;
 		
 		int eax = (iTeamNum + iTeamNum * 4); //eax
-		int edi = lastArea + eax * 4 + 364;  //edi
+		int edi = view_as<int>(lastArea) + eax * 4 + 364;  //edi
 		
 		eax = edi + 0xC; // +12
 		
-		int connections = LoadFromAddress(eax, NumberType_Int32);
+		int connections = LoadFromAddress(view_as<Address>(eax), NumberType_Int32);
 		
 		if(connections > 0)
 		{
@@ -725,8 +725,8 @@ stock void UpdateLookingAroundForEnemies(int client)
 			{
 				int iRandomArea = (4 * GetRandomInt(0, connections - 1));
 				
-				Address areas = LoadFromAddress(eax + 4, NumberType_Int32);
-				navArea = view_as<NavArea>(LoadFromAddress(areas + iRandomArea, NumberType_Int32));
+				Address areas = view_as<Address>(LoadFromAddress(view_as<Address>(eax + 4), NumberType_Int32));
+				navArea = view_as<NavArea>(LoadFromAddress(areas + view_as<Address>(iRandomArea), NumberType_Int32));
 				
 				if(navArea == NavArea_Null)
 					continue;
