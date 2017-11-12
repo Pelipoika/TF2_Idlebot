@@ -703,30 +703,18 @@ stock void UpdateLookingAroundForEnemies(int client)
 		if(lastArea == NavArea_Null)
 			return;	
 		
-		int iTeamNum = view_as<int>(GetEnemyTeam(client));
-		
-		if ( iTeamNum < 0 || iTeamNum >= 4 )
-			iTeamNum = 0;
+		int iTeamNum = GetClientTeam(client);
 			
 		float flRange = 150.0;
 		if(TF2_IsPlayerInCondition(client, TFCond_Zoomed))
 			flRange = 750.0;
 		
-		//Address ptrAreaCountMin = (view_as<Address>(lastArea) + view_as<Address>(4 * (5 * iTeamNum) + 364));
-		//Address ptrAreaCountMax = (view_as<Address>(lastArea) + view_as<Address>(4 * (5 * iTeamNum) + 376));
-		
-		//int areaCountMin = LoadFromAddress(ptrAreaCountMin, NumberType_Int32);
-		//int areaCountMax = LoadFromAddress(ptrAreaCountMax, NumberType_Int32);
-		
 		int eax = (iTeamNum + iTeamNum * 4); //eax
 		int edi = lastArea + eax * 4 + 364;  //edi
 		
-		eax = edi + 0xC;
+		eax = edi + 0xC; // +12
 		
-		//"result"
 		int connections = LoadFromAddress(eax, NumberType_Int32);
-		
-		PrintToServer("eax 0x%X connections %i", eax, connections);
 		
 		if(connections > 0)
 		{
@@ -735,36 +723,29 @@ stock void UpdateLookingAroundForEnemies(int client)
 			
 			for (int i = 0; i <= 20; i++)
 			{
-				Address areas = LoadFromAddress(eax + 4, NumberType_Int32);
-				
 				int iRandomArea = (4 * GetRandomInt(0, connections - 1));
 				
-				Address area = LoadFromAddress(areas + iRandomArea, NumberType_Int32);
+				Address areas = LoadFromAddress(eax + 4, NumberType_Int32);
+				navArea = view_as<NavArea>(LoadFromAddress(areas + iRandomArea, NumberType_Int32));
 				
-				PrintToServer("areas 0x%X", areas);
-				
-				//navArea = view_as<NavArea>(LoadFromAddress((view_as<Address>(LoadFromAddress(ptrAreaCountMin, NumberType_Int32)) + view_as<Address>(4 * GetRandomInt(0, areaCountMax - 1))), NumberType_Int32));
-				
-				//navArea = eax + 4 * GetRandomInt(0, connections - 1);
-				
-			/*	if(navArea == NavArea_Null)
+				if(navArea == NavArea_Null)
 					continue;
 				
 				navArea.GetRandomPoint(vecRandomPoint);
 				vecRandomPoint[2] += 53.25;
 				
-				PrintToServer("[#%i] NavArea ID %i (x %f y %f z %f)", i, navArea.GetID(), vecRandomPoint[0], vecRandomPoint[1], vecRandomPoint[2]);
+				//PrintToServer("[#%i] NavArea ID %i (x %f y %f z %f)", i, navArea.GetID(), vecRandomPoint[0], vecRandomPoint[1], vecRandomPoint[2]);
 				
 				float to[3]; SubtractVectors(GetAbsOrigin(client), vecRandomPoint, to);
-				if(GetVectorLength(to, true) > flRange * flRange) // ( IsRangeGreaterThan(vecRandomPoint, flRange) )
+				if(GetVectorLength(to, true) > flRange * flRange)
 				{
 					if (IsLineOfFireClear(GetEyePosition(client), vecRandomPoint))
 						break;
-				}*/
+				}
 			}
 			
 			//PrintToChatAll("Look @ %f %f %f", vecRandomPoint[0], vecRandomPoint[1], vecRandomPoint[2]);
-			//BotAim(client).AimHeadTowards(vecRandomPoint, BORING, 1.0, "Looking toward enemy invasion areas");
+			BotAim(client).AimHeadTowards(vecRandomPoint, BORING, 1.0, "Looking toward enemy invasion areas");
 		}
 	}
 
