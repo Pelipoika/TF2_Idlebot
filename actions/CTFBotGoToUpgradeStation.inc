@@ -40,6 +40,11 @@ bool CTFBotGoToUpgradeStation_OnStart(int actor)
 		PF_SetGoalVector(actor, view_as<float>({-2013.0, 4561.0, 448.0}));
 		return true;
 	}
+	else if(StrContains(map, "mvm_newnormandy") != -1)
+	{
+		PF_SetGoalVector(actor, view_as<float>({-345.0, 4178.0, 205.0}));
+		return true;
+	}
 	
 	NavArea area = TheNavMesh.GetNearestNavArea_Vec(WorldSpaceCenter(g_iStation[actor]), true, 1000.0, false, false, TEAM_ANY);
 	if(area == NavArea_Null)

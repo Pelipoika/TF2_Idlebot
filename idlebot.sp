@@ -668,11 +668,67 @@ stock bool RunCurrentAction(int client)
 		case ACTION_SNIPER_LURK:   g_bStartedAction[client] = CTFBotSniperLurk_Update(client);
 	}
 
+	switch(g_iCurrentAction[client])
+	{
+		case ACTION_IDLE, ACTION_UPGRADE:
+		{
+			g_bPath[client] = false;
+		}
+		case ACTION_ATTACK, ACTION_SNIPER_LURK, ACTION_MOVE_TO_FRONT, ACTION_GET_AMMO, ACTION_USE_ITEM:
+		{
+			//Return early
+			if(g_iCurrentAction[client] == ACTION_ATTACK || g_iCurrentAction[client] == ACTION_SNIPER_LURK)
+				return false;
+			
+			//Unzoom when no target and not lurking.
+			if(TF2_GetPlayerClass(client) == TFClass_Sniper && !IsValidClientIndex(m_hAimTarget[client]))
+			{
+				if (TF2_IsPlayerInCondition(client, TFCond_Zoomed)) 
+				{
+					BotAim(client).PressAltFireButton();
+				}
+			}
+			
+			g_bPath[client] = true;	
+		}
+		case ACTION_GET_HEALTH:
+		{
+			for (int i = 0; i < GetEntProp(client, Prop_Send, "m_nNumHealers"); i++)
+			{
+				int iHealerIndex = GetHealerByIndex(client, i);
+				
+				if(IsValidClientIndex(iHealerIndex))
+					continue;
+				
+				//If we are being healed by a non player entity it's propably a dispenser.
+				g_bPath[client] = false;
+				break;
+			}
+			
+			g_bPath[client] = true;
+		}
+		default:
+		{
+			g_bPath[client] = true;	
+		}
+	}
+
 	return g_bStartedAction[client];
 }
 
 stock void UpdateLookingAroundForEnemies(int client)
 {
+	if(g_iCurrentAction[client] == ACTION_GOTO_UPGRADE
+	|| g_iCurrentAction[client] == ACTION_UPGRADE
+	|| g_iCurrentAction[client] == ACTION_MARK_GIANT)
+	{
+		g_bUpdateLookingAroundForEnemies[client] = false;
+	}
+	else
+	{
+		g_bUpdateLookingAroundForEnemies[client] = true;
+	}
+
 	int iTarget = -1;
 
 	//Don't constantly switch target as sniper.
@@ -773,51 +829,6 @@ stock void UpdateLookingAroundForEnemies(int client)
 				g_bPath[client] = false;
 		}
 	}
-
-	switch(g_iCurrentAction[client])
-	{
-		case ACTION_IDLE, ACTION_UPGRADE:
-		{
-			g_bPath[client] = false;
-		}
-		case ACTION_ATTACK, ACTION_SNIPER_LURK, ACTION_MOVE_TO_FRONT, ACTION_GET_AMMO, ACTION_USE_ITEM:
-		{
-			//Return early
-			if(g_iCurrentAction[client] == ACTION_ATTACK || g_iCurrentAction[client] == ACTION_SNIPER_LURK)
-				return;
-			
-			//Unzoom when no target and not lurking.
-			if(TF2_GetPlayerClass(client) == TFClass_Sniper && !IsValidClientIndex(m_hAimTarget[client]))
-			{
-				if (TF2_IsPlayerInCondition(client, TFCond_Zoomed)) 
-				{
-					BotAim(client).PressAltFireButton();
-				}
-			}
-			
-			g_bPath[client] = true;	
-		}
-		case ACTION_GET_HEALTH:
-		{
-			for (int i = 0; i < GetEntProp(client, Prop_Send, "m_nNumHealers"); i++)
-			{
-				int iHealerIndex = GetHealerByIndex(client, i);
-				
-				if(IsValidClientIndex(iHealerIndex))
-					continue;
-				
-				//If we are being healed by a non player entity it's propably a dispenser.
-				g_bPath[client] = false;
-				break;
-			}
-			
-			g_bPath[client] = true;
-		}
-		default:
-		{
-			g_bPath[client] = true;	
-		}
-	}
 }
 
 stock void Dodge(int actor)
@@ -898,11 +909,11 @@ public void PluginBot_Approach(int bot_entidx, const float vec[3])
 {
 	g_vecCurrentGoal[bot_entidx] = vec;
 	
-	//float nothing[3];
-	//if(m_hAimTarget[bot_entidx] <= 0 && PF_GetFutureSegment(bot_entidx, 1, nothing))
-	//{
-		//BotAim(bot_entidx).AimHeadTowards(TF2_GetLookAheadPosition(bot_entidx), BORING, 0.1, "Aiming towards our goal");
-	//}
+	float nothing[3];
+	if(m_hAimTarget[bot_entidx] <= 0 && PF_GetFutureSegment(bot_entidx, 1, nothing) && !g_bUpdateLookingAroundForEnemies[bot_entidx])
+	{
+		BotAim(bot_entidx).AimHeadTowards(TF2_GetLookAheadPosition(bot_entidx), BORING, 0.1, "Aiming towards our goal");
+	}
 }
 
 public bool PluginBot_IsEntityTraversable(int bot_entidx, int other_entidx) 
@@ -1075,6 +1086,7 @@ public void PluginBot_MoveToSuccess(int bot_entidx, Address path)
 	&& g_iCurrentAction[bot_entidx] != ACTION_UPGRADE
 	&& g_iCurrentAction[bot_entidx] != ACTION_GOTO_UPGRADE
 	&& g_iCurrentAction[bot_entidx] != ACTION_GET_HEALTH
+	&& g_iCurrentAction[bot_entidx] != ACTION_MOVE_TO_FRONT
 	&& g_iCurrentAction[bot_entidx] != ACTION_USE_ITEM)
-		ChangeAction(bot_entidx, ACTION_IDLE, "Reached path goal.");
+		ChangeAction(bot_entidx, ACTION_IDLE, "PluginBot_MoveToSuccess: Reached path goal.");
 }

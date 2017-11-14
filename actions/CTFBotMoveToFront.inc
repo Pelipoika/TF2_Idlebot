@@ -78,6 +78,7 @@ bool CTFBotMoveToFront_Update(int actor)
 {
 	if (m_ctMoveTimeout[actor] < GetGameTime())
 	{
+		FakeClientCommand(actor, "tournament_player_readystate 1");
 		PrintToServer("[%8.3f] CTFBotMoveToFront(#%d): Timeout elapsed!", GetGameTime(), actor);
 		ChangeAction(actor, ACTION_IDLE, "CTFBotMoveToFront: Timeout elapsed!");
 		return false;
