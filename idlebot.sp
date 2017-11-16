@@ -804,6 +804,9 @@ stock void UpdateLookingAroundForEnemies(int client)
 			BotAim(client).AimHeadTowards(vecRandomPoint, BORING, 1.0, "Looking toward enemy invasion areas");
 		}
 	}
+	
+	if(!IsValidClientIndex(m_hAttackTarget[client]))
+		return;
 
 	//Pathing stops when we are near enough enemy.
 	if(g_iCurrentAction[client] == ACTION_ATTACK || g_iCurrentAction[client] == ACTION_USE_ITEM)
@@ -910,7 +913,7 @@ public void PluginBot_Approach(int bot_entidx, const float vec[3])
 	g_vecCurrentGoal[bot_entidx] = vec;
 	
 	float nothing[3];
-	if(m_hAimTarget[bot_entidx] <= 0 && PF_GetFutureSegment(bot_entidx, 1, nothing) && !g_bUpdateLookingAroundForEnemies[bot_entidx])
+	if(!IsValidClientIndex(m_hAimTarget[bot_entidx]) && PF_GetFutureSegment(bot_entidx, 1, nothing) && !g_bUpdateLookingAroundForEnemies[bot_entidx])
 	{
 		BotAim(bot_entidx).AimHeadTowards(TF2_GetLookAheadPosition(bot_entidx), BORING, 0.1, "Aiming towards our goal");
 	}
