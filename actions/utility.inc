@@ -1417,7 +1417,7 @@ stock bool IsStealthed(int client)
 
 stock float GetPercentInvisible(int client)
 {
-	int offset = FindSendPropInfo("CTFPlayer", "m_Shared") + (80 * 4);
+	int offset = FindSendPropInfo("CTFPlayer", "m_Shared") + (81 * 4);
 	return GetEntDataFloat(client, offset);
 }
 
