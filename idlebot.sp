@@ -694,19 +694,25 @@ stock bool RunCurrentAction(int client)
 		}
 		case ACTION_GET_HEALTH:
 		{
+			bool bHealedByDispenser = false;
+		
 			for (int i = 0; i < GetEntProp(client, Prop_Send, "m_nNumHealers"); i++)
 			{
 				int iHealerIndex = GetHealerByIndex(client, i);
 				
+				//Skip player healers, we want to know if we are healed by a dispenser.
 				if(IsValidClientIndex(iHealerIndex))
 					continue;
 				
 				//If we are being healed by a non player entity it's propably a dispenser.
-				g_bPath[client] = false;
+				bHealedByDispenser = true;
 				break;
 			}
 			
-			g_bPath[client] = true;
+			if(bHealedByDispenser)
+				g_bPath[client] = false;
+			else
+				g_bPath[client] = true;
 		}
 		default:
 		{

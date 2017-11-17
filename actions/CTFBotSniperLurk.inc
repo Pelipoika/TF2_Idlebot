@@ -244,6 +244,9 @@ int CTFBotSniperLurk_FindHint()
 			iBestHint = iHint;
 		}
 		
+		float vecHint[3]; vecHint = GetAbsOrigin(iHint);
+		vecHint[2] += 53.25;
+		
 		if(!IsLineOfFireClear(WorldSpaceCenter(iBomb), WorldSpaceCenter(iHint)))
 			continue;
 		
