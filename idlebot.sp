@@ -675,7 +675,7 @@ stock bool RunCurrentAction(int client)
 		{
 			g_bPath[client] = false;
 		}
-		case ACTION_ATTACK, ACTION_SNIPER_LURK, ACTION_MOVE_TO_FRONT, ACTION_GET_AMMO, ACTION_USE_ITEM:
+		case ACTION_ATTACK, ACTION_SNIPER_LURK, ACTION_MOVE_TO_FRONT, ACTION_USE_ITEM:
 		{
 			//Return early
 			if(g_iCurrentAction[client] == ACTION_ATTACK || g_iCurrentAction[client] == ACTION_SNIPER_LURK)
@@ -692,10 +692,19 @@ stock bool RunCurrentAction(int client)
 			
 			g_bPath[client] = true;	
 		}
-		case ACTION_GET_HEALTH:
+		case ACTION_GET_HEALTH, ACTION_GET_AMMO:
 		{
-			bool bHealedByDispenser = false;
+			//Unzoom when no target because we arent allowed to move if zoomed.
+			if(IsSniperRifle(client) && !IsValidClientIndex(m_hAimTarget[client]))
+			{
+				if (TF2_IsPlayerInCondition(client, TFCond_Zoomed)) 
+				{
+					BotAim(client).PressAltFireButton();
+				}
+			}
 		
+			bool bHealedByDispenser = false;
+			
 			for (int i = 0; i < GetEntProp(client, Prop_Send, "m_nNumHealers"); i++)
 			{
 				int iHealerIndex = GetHealerByIndex(client, i);
