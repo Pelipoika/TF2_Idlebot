@@ -166,9 +166,10 @@ public Action Command_Robot(int client, int args)
 
 stock bool SetDefender(int client, bool bEnabled)
 {
-	if(TF2_GetClientTeam(client) == TFTeam_Unassigned)
+	if(TF2_GetClientTeam(client) == TFTeam_Unassigned || TF2_GetClientTeam(client) == TFTeam_Spectator)
 	{
 		FakeClientCommand(client, "autoteam");
+		FakeClientCommand(client, "joinclass random");
 		FakeClientCommand(client, "joinclass random");
 	}
 
