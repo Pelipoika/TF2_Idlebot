@@ -84,6 +84,10 @@ void CTFBotUseItem_OnEnd(int actor)
 
 bool CTFBotUseItem_IsPossible(int actor)
 {
+	/* Busy */
+	if (TF2_IsPlayerInCondition(actor, TFCond_Kritzkrieged))
+		return false;
+
 	/* the bot cannot actually PressFireButton in these cases */
 	if (TF2_IsPlayerInCondition(actor, TFCond_Dazed))
 		return false;
