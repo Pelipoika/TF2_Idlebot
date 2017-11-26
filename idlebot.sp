@@ -129,8 +129,8 @@ public void OnClientPutInServer(int client)
 	g_iCurrentAction[client] = 5;
 	g_bStartedAction[client] = false;
 	g_bUpdateLookingAroundForEnemies[client] = true;
+	g_flNextLookTime[client] = GetGameTime();
 	g_flNextUpdate[client] = GetGameTime();
-	
 	g_flLastInput[client] = GetGameTime();
 	g_bIdle[client] = false;
 	
@@ -321,10 +321,11 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 	BotAim(client).FireWeaponAtEnemy();
 	
 	SetHudTextParams(0.05, 0.05, 0.1, 255, 255, 200, 255, 0, 0.0, 0.0, 0.0);
-	ShowSyncHudText(client, g_hHudInfo, "%s\nRouteType %s\nPathing %s\nRetreating %s\nWeapon %s #%i", CurrentActionToName(g_iCurrentAction[client]), 
+	ShowSyncHudText(client, g_hHudInfo, "%s\nRouteType %s\nPathing %s\nRetreating %s\nLookAroundForEnemies %s\nWeapon %s #%i", CurrentActionToName(g_iCurrentAction[client]), 
 																		CurrentRouteTypeToName(client), 
 																		g_bPath[client] ? "Yes" : "No",
 																		g_bRetreat[client] ? "Yes" : "No",
+																		g_bUpdateLookingAroundForEnemies[client] ? "Yes" : "No",
 																		CurrentWeaponIDToName(client),
 																		GetWeaponID(GetActiveWeapon(client)));
 	
