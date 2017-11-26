@@ -45,6 +45,10 @@ bool CTFBotAttack_Update(int actor)
 			return false;
 		}	
 	}
+
+	//Don't set path goal if we are retreating.
+	if(g_bRetreat[actor])
+		return true;
 	
 	int closesttoh = TF2_FindBotNearestToBombNearestToHatch(actor);
 	if(closesttoh != -1)

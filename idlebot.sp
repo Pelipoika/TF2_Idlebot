@@ -11,6 +11,7 @@
 
 bool g_bEmulate[MAXPLAYERS + 1];
 bool g_bPath[MAXPLAYERS + 1];
+bool g_bRetreat[MAXPLAYERS + 1];
 
 float g_flNextUpdate[MAXPLAYERS + 1];
 float m_ctUseWeaponAbilities[MAXPLAYERS + 1];
@@ -124,6 +125,7 @@ public void OnClientPutInServer(int client)
 	g_iAdditionalButtons[client] = 0;
 	g_vecCurrentGoal[client] = NULL_VECTOR;
 	g_bPath[client] = true;
+	g_bRetreat[client] = false;
 	g_iCurrentAction[client] = 5;
 	g_bStartedAction[client] = false;
 	g_bUpdateLookingAroundForEnemies[client] = true;
@@ -319,9 +321,10 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 	BotAim(client).FireWeaponAtEnemy();
 	
 	SetHudTextParams(0.05, 0.05, 0.1, 255, 255, 200, 255, 0, 0.0, 0.0, 0.0);
-	ShowSyncHudText(client, g_hHudInfo, "%s\nRouteType %s\nPathing %s\nWeapon %s #%i", CurrentActionToName(g_iCurrentAction[client]), 
+	ShowSyncHudText(client, g_hHudInfo, "%s\nRouteType %s\nPathing %s\nRetreating %s\nWeapon %s #%i", CurrentActionToName(g_iCurrentAction[client]), 
 																		CurrentRouteTypeToName(client), 
 																		g_bPath[client] ? "Yes" : "No",
+																		g_bRetreat[client] ? "Yes" : "No",
 																		CurrentWeaponIDToName(client),
 																		GetWeaponID(GetActiveWeapon(client)));
 	
@@ -611,6 +614,7 @@ stock bool ChangeAction(int client, int new_action, const char[] reason = "None"
 
 	PrintToServer("\"%N\" Change Action \"%s\" -> \"%s\" Reason: \"%s\"", client, CurrentActionToName(g_iCurrentAction[client]), CurrentActionToName(new_action), reason);
 	
+	g_bRetreat[client] = false;
 	g_bStartedAction[client] = false;
 	
 	//Stop
@@ -828,7 +832,7 @@ stock void UpdateLookingAroundForEnemies(int client)
 
 	//Pathing stops when we are near enough enemy.
 	if(g_iCurrentAction[client] == ACTION_ATTACK || g_iCurrentAction[client] == ACTION_USE_ITEM)
-	{
+	{	
 		float dist_to_target = GetVectorDistance(GetAbsOrigin(client), GetAbsOrigin(m_hAttackTarget[client]));
 		
 		bool bLOS = IsLineOfFireClear(GetEyePosition(client), GetEyePosition(m_hAttackTarget[client]));
@@ -838,16 +842,76 @@ stock void UpdateLookingAroundForEnemies(int client)
 		}
 		else
 		{
-			if(TF2_GetPlayerClass(client) != TFClass_Sniper)
+			if(((IsMeleeWeapon(client) || IsWeapon(client, TF_WEAPON_FLAMETHROWER)) && dist_to_target > 100.0) 
+			|| (IsCombatWeapon(client) && dist_to_target > 500.0))
 			{
-				if(((IsMeleeWeapon(client) || IsWeapon(client, TF_WEAPON_FLAMETHROWER)) && dist_to_target > 100.0) 
-				|| (IsCombatWeapon(client) && dist_to_target > 500.0))
-					g_bPath[client] = true;
-				else
-					g_bPath[client] = false;
+				g_bRetreat[client] = false;
+				g_bPath[client] = true;
 			}
 			else
-				g_bPath[client] = false;
+			{
+				if(dist_to_target <= 300.0)
+				{
+					//Keep distance to enemy.
+				
+					if(!g_bRetreat[client])
+					{
+						float flRetreatRange = 400.0;
+						
+						NavArea lastArea = PF_GetLastKnownArea(client);
+						if(lastArea == NavArea_Null)
+							return;	
+						
+						int iTeamNum = view_as<int>(GetEnemyTeam(client));
+						
+						int eax = (iTeamNum + iTeamNum * 4); //eax
+						int edi = view_as<int>(lastArea) + eax * 4 + 364;  //edi
+						
+						eax = edi + 0xC; // +12
+						
+						int connections = LoadFromAddress(view_as<Address>(eax), NumberType_Int32);
+						
+						if(connections > 0)
+						{
+							float vecRandomPoint[3];
+							NavArea navArea = NavArea_Null;
+							
+							for (int i = 0; i <= 20; i++)
+							{
+								int iRandomArea = (4 * GetRandomInt(0, connections - 1));
+								
+								Address areas = view_as<Address>(LoadFromAddress(view_as<Address>(eax + 4), NumberType_Int32));
+								navArea = view_as<NavArea>(LoadFromAddress(areas + view_as<Address>(iRandomArea), NumberType_Int32));
+								
+								if(navArea == NavArea_Null)
+									continue;
+								
+								navArea.GetRandomPoint(vecRandomPoint);
+								vecRandomPoint[2] += 18.0;
+								
+								//PrintToServer("[#%i] NavArea ID %i (x %f y %f z %f)", i, navArea.GetID(), vecRandomPoint[0], vecRandomPoint[1], vecRandomPoint[2]);
+								
+								float to[3]; SubtractVectors(GetAbsOrigin(client), vecRandomPoint, to);
+								if(GetVectorLength(to, true) > flRetreatRange * flRetreatRange)
+								{
+									if (IsLineOfFireClear(GetEyePosition(client), vecRandomPoint))
+										break;
+								}
+							}
+							
+							PF_SetGoalVector(client, vecRandomPoint);
+							g_bPath[client] = true;
+							g_bRetreat[client] = true;
+							//PrintToChatAll("Retreat to %f %f %f", vecRandomPoint[0], vecRandomPoint[1], vecRandomPoint[2]);
+						}
+					}
+				}
+				else
+				{
+					g_bRetreat[client] = false;
+					g_bPath[client] = false;
+				}
+			}
 		}
 	}
 }
