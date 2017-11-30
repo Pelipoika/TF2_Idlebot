@@ -67,6 +67,7 @@ stock bool CTFBotUseItem_Update(int actor)
 			if (CTFBotUseItem_IsDone(actor)) 
 			{
 				PrintToServer("[%8.3f] CTFBotUseItem(#%d): Done using item", GetGameTime(), actor, actor);
+				EquipWeaponSlot(actor, TFWeaponSlot_Primary);
 				ChangeAction(actor, ACTION_IDLE, "CTFBotUseItem: Done using item");
 				return false;
 			}
