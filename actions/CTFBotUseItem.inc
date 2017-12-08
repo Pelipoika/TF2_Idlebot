@@ -95,7 +95,9 @@ bool CTFBotUseItem_IsPossible(int actor)
 		
 	float health_ratio = view_as<float>(GetClientHealth(actor)) / view_as<float>(GetMaxHealth(actor));
 	//Can't eat while slowed.
-	if(TF2_GetPlayerClass(actor) == TFClass_Heavy && health_ratio > FindConVar("tf_bot_health_critical_ratio").FloatValue || TF2_IsPlayerInCondition(actor, TFCond_Slowed))
+	if(TF2_GetPlayerClass(actor) == TFClass_Heavy && health_ratio > FindConVar("tf_bot_health_critical_ratio").FloatValue 
+		|| TF2_IsPlayerInCondition(actor, TFCond_Slowed)
+		|| GetTimeSinceWeaponFired(actor) < 4.0)
 		return false;
 	
 	return true;
