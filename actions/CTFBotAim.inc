@@ -656,7 +656,9 @@ methodmap BotAim
 				//Scope in
 				this.PressAltFireButton(0.1);
 			}*/
-			if(GetEntPropFloat(GetActiveWeapon(this.index), Prop_Send, "m_flChargedDamage") >= 40.0 && this.IsHeadAimingOnTarget() && this.IsHeadSteady())
+			if(HasEntProp(GetActiveWeapon(this.index), Prop_Send, "m_flChargedDamage")
+				&& GetEntPropFloat(GetActiveWeapon(this.index), Prop_Send, "m_flChargedDamage") >= 40.0 
+				&& this.IsHeadAimingOnTarget() && this.IsHeadSteady())
 			{
 				//Shoot
 				this.PressFireButton();
