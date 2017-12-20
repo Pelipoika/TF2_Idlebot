@@ -855,7 +855,7 @@ stock void UpdateLookingAroundForEnemies(int client)
 				{
 					//Keep distance to enemy.
 				
-					if(!g_bRetreat[client])
+					if(!g_bRetreat[client] && !IsMeleeWeapon(client))
 					{
 						float flRetreatRange = 400.0;
 						
