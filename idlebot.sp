@@ -191,7 +191,10 @@ stock bool SetDefender(int client, bool bEnabled)
 		g_bEmulate[client] = false;
 		
 		if(PF_Exists(client))
+		{
 			PF_StopPathing(client);
+			PF_Destroy(client);
+		}
 	}
 	else if(!g_bEmulate[client])
 	{
@@ -682,7 +685,7 @@ stock bool RunCurrentAction(int client)
 		{
 			g_bPath[client] = false;
 		}
-		case ACTION_ATTACK, ACTION_SNIPER_LURK, ACTION_MOVE_TO_FRONT, ACTION_USE_ITEM:
+		case ACTION_ATTACK, ACTION_SNIPER_LURK, ACTION_MOVE_TO_FRONT, ACTION_USE_ITEM, ACTION_GOTO_UPGRADE:
 		{
 			//Return early
 			if(g_iCurrentAction[client] == ACTION_ATTACK || g_iCurrentAction[client] == ACTION_SNIPER_LURK)
@@ -725,10 +728,8 @@ stock bool RunCurrentAction(int client)
 				break;
 			}
 			
-			if(bHealedByDispenser)
-				g_bPath[client] = false;
-			else
-				g_bPath[client] = true;
+			//Path if not healed by dispenser.
+			g_bPath[client] = !bHealedByDispenser;
 		}
 		default:
 		{
