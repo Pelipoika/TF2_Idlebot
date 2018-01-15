@@ -1,4 +1,5 @@
 int m_hTarget[MAXPLAYERS + 1];
+float m_flNextMarkTime[MAXPLAYERS + 1];
 
 int GetMarkForDeathWeapon(int player)
 {
@@ -20,6 +21,9 @@ int GetMarkForDeathWeapon(int player)
 
 bool IsPlayerMarkable(int bot, int victim)
 {
+	if(m_flNextMarkTime[bot] < GetGameTime())
+		return false;
+
 	/* must be ingame */
 	if(!IsClientInGame(victim))
 		return false;
@@ -47,10 +51,6 @@ bool IsPlayerMarkable(int bot, int victim)
 	/* must not be invulnerable */
 	if (IsInvulnerable(victim)) 
 		return false;
-	
-	/* must not be a sentry buster */
-//	CTFBot *vbot = ToTFBot(victim);
-//	if (vbot != nullptr && vbot->GetMission() == CTFBot::MISSION_DESTROY_SENTRIES) return false;
 	
 	return true;
 }
@@ -127,6 +127,7 @@ bool CTFBotMarkGiant_Update(int actor)
 
 void CTFBotMarkGiant_OnEnd(int actor)
 {
+	m_flNextMarkTime[actor] = GetGameTime() + 30.0;
 	m_hTarget[actor] = -1;
 //	actor->PopRequiredWeapon();
 }

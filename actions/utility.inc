@@ -32,6 +32,8 @@ enum
 	TF_LOADOUT_SLOT_TAUNT8    = 18,
 };
 
+int g_iPathLaserModelIndex = -1;
+
 #define MAX_WEAPONS 48
 
 Handle g_hSnapEyeAngles;
@@ -1575,3 +1577,56 @@ stock int ReadInt(Address pAddr)
     		
     return LoadFromAddress(pAddr, NumberType_Int32);		
 }  
+
+
+#define	MAX_OVERLAY_DIST_SQR	90000000
+
+//-----------------------------------------------------------------------------
+// Purpose: Draw a colored 3D cross of the given size at the given position
+//-----------------------------------------------------------------------------
+stock void Cross3D(float position[3], float size, int r, int g, int b, float flDuration)
+{
+	//...
+	g_iPathLaserModelIndex = PrecacheModel("materials/sprites/laserbeam.vmt");
+
+	Line( AddVectorFloatOnAxis(position, size, 0.0, 0.0), SubtractVectorFloatOnAxis(position, size, 0.0, 0.0), r, g, b, flDuration );
+	Line( AddVectorFloatOnAxis(position, 0.0, size, 0.0), SubtractVectorFloatOnAxis(position, 0.0, size, 0.0), r, g, b, flDuration );
+	Line( AddVectorFloatOnAxis(position, 0.0, 0.0, size), SubtractVectorFloatOnAxis(position, 0.0, 0.0, size), r, g, b, flDuration );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Draws a line from one position to another
+//-----------------------------------------------------------------------------
+stock void Line(float origin[3], float target[3], int r, int g, int b, float duration)
+{
+	int color[4];
+	color[0] = r;
+	color[1] = g;
+	color[2] = b;
+	color[3] = 255;
+
+	TE_SetupBeamPoints(origin, target, g_iPathLaserModelIndex, g_iPathLaserModelIndex, 0, 0, duration, 0.5, 0.5, 5, 5.0, color, 30);
+	TE_SendToAllInRange(origin, RangeType_Visibility);
+}
+
+stock float[] AddVectorFloatOnAxis(float vector[3], float x = 0.0, float y = 0.0, float z = 0.0)
+{
+	float v[3]; v = vector;
+	
+	v[0] += x;
+	v[1] += y;
+	v[2] += z;
+
+	return v;
+}
+
+stock float[] SubtractVectorFloatOnAxis(float vector[3], float x = 0.0, float y = 0.0, float z = 0.0)
+{
+	float v[3]; v = vector;
+	
+	v[0] -= x;
+	v[1] -= y;
+	v[2] -= z;
+
+	return v;
+}

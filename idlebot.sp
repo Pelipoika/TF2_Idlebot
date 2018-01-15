@@ -162,6 +162,8 @@ public Action Command_Robot(int client, int args)
 		}
 	
 		SetDefender(client, !g_bEmulate[client]);
+		
+		Cross3D(WorldSpaceCenter(client), 5.0, 0, 255, 0, 1.0);
 	}
 	
 	return Plugin_Handled;
@@ -174,6 +176,10 @@ stock bool SetDefender(int client, bool bEnabled)
 		FakeClientCommand(client, "autoteam");
 		FakeClientCommand(client, "joinclass random");
 		FakeClientCommand(client, "joinclass random");
+		
+		ShowVGUIPanel(client, "info", _, false);
+		ShowVGUIPanel(client, "class_blue", _, false);
+		ShowVGUIPanel(client, "class_red", _, false);
 	}
 
 	if(!bEnabled && g_bEmulate[client])
