@@ -70,7 +70,7 @@ char g_szBotModels[][] =
 #define ACTION_GET_HEALTH 8
 #define ACTION_USE_ITEM 9
 #define ACTION_SNIPER_LURK 10
-//#define ACTION_MEDIC_HEAL 8
+//#define ACTION_MEDIC_HEAL 11
 
 #include <actions/utility>
 
@@ -121,6 +121,7 @@ public void OnPluginStart()
 
 public void OnClientPutInServer(int client)
 {
+	g_iStation[client] = -1;
 	g_bEmulate[client] = false;
 	g_iAdditionalButtons[client] = 0;
 	g_vecCurrentGoal[client] = NULL_VECTOR;
@@ -155,19 +156,111 @@ public Action Command_Robot(int client, int args)
 {
 	if(client > 0 && client <= MaxClients && IsClientInGame(client))
 	{
-		if(TF2_IsMvM() && TF2_GetClientTeam(client) != TFTeam_Red)
+	/*	if(TF2_IsMvM() && TF2_GetClientTeam(client) != TFTeam_Red)
 		{
 			ReplyToCommand(client, "For RED team only");
 			return Plugin_Handled;
 		}
 	
-		SetDefender(client, !g_bEmulate[client]);
+		SetDefender(client, !g_bEmulate[client]);*/
 		
-		Cross3D(WorldSpaceCenter(client), 5.0, 0, 255, 0, 1.0);
+		if (IsVisibleToEnemy(client, WorldSpaceCenter(client))
+		 || IsVisibleToEnemy(client, GetEyePosition(client)))
+		{
+			float vecBestHideSpot[3]; vecBestHideSpot = ComputeFollowPosition(client);
+			
+			if(vecBestHideSpot[0] == 0.0 && vecBestHideSpot[1] == 0.0 && vecBestHideSpot[2] == 0.0)
+				return Plugin_Handled;
+			
+			Line(GetEyePosition(client), vecBestHideSpot, 255, 255, 0, 5.0);
+			Cross3D(vecBestHideSpot, 10.0, 255, 255, 0, 5.0);
+		}
 	}
 	
 	return Plugin_Handled;
 }
+
+
+//CTFBotMedicHeal::ComputeFollowPosition
+stock float[] ComputeFollowPosition(int client)
+{
+	//tf_bot_medic_cover_test_resolution 
+	const int items = 12;
+	const float r = 150.0;
+	
+	float myPos[3]; myPos = WorldSpaceCenter(client);
+
+	//Largest distance wins.
+	float flBestDistance = 0.0;
+	float vecBestHideSpot[3];
+	
+	for(int i = 0; i < items; i++) 
+	{
+		float xyz[3];
+		xyz[0] = myPos[0] + r * Cosine(2 * FLOAT_PI * i / items);
+		xyz[1] = myPos[1] + r *   Sine(2 * FLOAT_PI * i / items);   
+		xyz[2] = myPos[2];
+		
+		TR_TraceRayFilter(myPos, xyz, 0x2006081, RayType_EndPoint, NextBotTraceFilterIgnoreActors);
+		if(IsVisibleToEnemy(client, xyz))
+		{
+			Line(myPos, xyz, 255, 0, 0, 4.0);
+			Cross3D(xyz, 5.0, 255, 0, 0, 4.0);
+		}
+		else
+		{
+			TR_GetEndPosition(xyz);
+			
+			float vecNormal[3];
+			TR_GetPlaneNormal(INVALID_HANDLE, vecNormal);
+			PrintToServer("%i - %f %f %f", i, vecNormal[0], vecNormal[1], vecNormal[2]);
+			
+			//Move the endpoint away from walls
+			float norm[3];				
+			MakeVectorFromPoints(myPos, xyz, norm);
+			NormalizeVector(norm, norm);
+			ScaleVector(norm, 24.0);
+			xyz[0] -= norm[0];
+			xyz[1] -= norm[1];
+		
+			Line(myPos, xyz, 0, 255, 0, 4.0);
+			Cross3D(xyz, 5.0, 0, 255, 0, 4.0);
+			
+			float flDistance = GetVectorDistance(myPos, xyz);
+			if(flDistance > flBestDistance)
+			{
+				flBestDistance = flDistance;
+				vecBestHideSpot = xyz;
+			}
+		}
+	}
+	
+	return vecBestHideSpot;
+}
+
+stock bool IsVisibleToEnemy(int client, float position[3])
+{
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if(i == client)
+			continue;
+			
+		if(!IsClientInGame(i))
+			continue;
+			
+		if(!IsPlayerAlive(i))
+			continue;
+			
+		if(TF2_GetClientTeam(i) != GetEnemyTeam(client))
+			continue;
+		
+		if(IsLineOfFireClear(GetEyePosition(i), position))
+			return true
+	}
+	
+	return false;
+}
+
 
 stock bool SetDefender(int client, bool bEnabled)
 {
@@ -785,54 +878,7 @@ stock void UpdateLookingAroundForEnemies(int client)
 		
 		g_flNextLookTime[client] = GetGameTime() + GetRandomFloat(0.3, 1.0);
 		
-		NavArea lastArea = PF_GetLastKnownArea(client);
-		if(lastArea == NavArea_Null)
-			return;	
-		
-		int iTeamNum = GetClientTeam(client);
-			
-		float flRange = 150.0;
-		if(TF2_IsPlayerInCondition(client, TFCond_Zoomed))
-			flRange = 750.0;
-		
-		int eax = (iTeamNum + iTeamNum * 4); //eax
-		int edi = view_as<int>(lastArea) + eax * 4 + 364;  //edi
-		
-		eax = edi + 0xC; // +12
-		
-		int connections = LoadFromAddress(view_as<Address>(eax), NumberType_Int32);
-		
-		if(connections > 0)
-		{
-			float vecRandomPoint[3];
-			NavArea navArea = NavArea_Null;
-			
-			for (int i = 0; i <= 20; i++)
-			{
-				int iRandomArea = (4 * GetRandomInt(0, connections - 1));
-				
-				Address areas = view_as<Address>(LoadFromAddress(view_as<Address>(eax + 4), NumberType_Int32));
-				navArea = view_as<NavArea>(LoadFromAddress(areas + view_as<Address>(iRandomArea), NumberType_Int32));
-				
-				if(navArea == NavArea_Null)
-					continue;
-				
-				navArea.GetRandomPoint(vecRandomPoint);
-				vecRandomPoint[2] += 53.25;
-				
-				//PrintToServer("[#%i] NavArea ID %i (x %f y %f z %f)", i, navArea.GetID(), vecRandomPoint[0], vecRandomPoint[1], vecRandomPoint[2]);
-				
-				float to[3]; SubtractVectors(GetAbsOrigin(client), vecRandomPoint, to);
-				if(GetVectorLength(to, true) > flRange * flRange)
-				{
-					if (IsLineOfFireClear(GetEyePosition(client), vecRandomPoint))
-						break;
-				}
-			}
-			
-			//PrintToChatAll("Look @ %f %f %f", vecRandomPoint[0], vecRandomPoint[1], vecRandomPoint[2]);
-			BotAim(client).AimHeadTowards(vecRandomPoint, BORING, 1.0, "Looking toward enemy invasion areas");
-		}
+		UpdateLookingAroundForIncomingPlayers(client, true);
 	}
 	
 	if(!IsValidClientIndex(m_hAttackTarget[client]))
@@ -921,6 +967,61 @@ stock void UpdateLookingAroundForEnemies(int client)
 				}
 			}
 		}
+	}
+}
+
+stock void UpdateLookingAroundForIncomingPlayers(int client, bool enemy)
+{
+	NavArea lastArea = PF_GetLastKnownArea(client);
+	if(lastArea == NavArea_Null)
+		return;	
+	
+	int iTeamNum = GetClientTeam(client);
+	
+	if(!enemy)
+		iTeamNum = view_as<int>(GetEnemyTeam(client));
+		
+	float flRange = 150.0;
+	if(TF2_IsPlayerInCondition(client, TFCond_Zoomed))
+		flRange = 750.0;
+	
+	int eax = (iTeamNum + iTeamNum * 4); //eax
+	int edi = view_as<int>(lastArea) + eax * 4 + 364;  //edi
+	
+	eax = edi + 0xC; // +12
+	
+	int connections = LoadFromAddress(view_as<Address>(eax), NumberType_Int32);
+	
+	if(connections > 0)
+	{
+		float vecRandomPoint[3];
+		NavArea navArea = NavArea_Null;
+		
+		for (int i = 0; i <= 20; i++)
+		{
+			int iRandomArea = (4 * GetRandomInt(0, connections - 1));
+			
+			Address areas = view_as<Address>(LoadFromAddress(view_as<Address>(eax + 4), NumberType_Int32));
+			navArea = view_as<NavArea>(LoadFromAddress(areas + view_as<Address>(iRandomArea), NumberType_Int32));
+			
+			if(navArea == NavArea_Null)
+				continue;
+			
+			navArea.GetRandomPoint(vecRandomPoint);
+			vecRandomPoint[2] += 53.25;
+			
+			//PrintToServer("[#%i] NavArea ID %i (x %f y %f z %f)", i, navArea.GetID(), vecRandomPoint[0], vecRandomPoint[1], vecRandomPoint[2]);
+			
+			float to[3]; SubtractVectors(GetAbsOrigin(client), vecRandomPoint, to);
+			if(GetVectorLength(to, true) > flRange * flRange)
+			{
+				if (IsLineOfFireClear(GetEyePosition(client), vecRandomPoint))
+					break;
+			}
+		}
+		
+		//PrintToChatAll("Look @ %f %f %f", vecRandomPoint[0], vecRandomPoint[1], vecRandomPoint[2]);
+		BotAim(client).AimHeadTowards(vecRandomPoint, BORING, 1.0, "Looking toward enemy invasion areas");
 	}
 }
 

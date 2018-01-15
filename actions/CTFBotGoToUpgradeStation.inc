@@ -7,7 +7,7 @@ bool CTFBotGoToUpgradeStation_OnStart(int actor)
 {
 	g_iStation[actor] = FindClosestUpgradeStation(actor);
 
-	if(g_iStation[actor] == -1)
+	if(g_iStation[actor] <= MaxClients)
 	{
 		return false;
 	}
