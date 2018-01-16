@@ -35,7 +35,7 @@ bool CTFBotMedicHeal_Update(int actor)
 	
 	float flDistanceToPatient = GetVectorDistance(GetAbsOrigin(actor), GetAbsOrigin(m_hPatient[actor]));
 	
-	PrintToServer("bVisibleToEnemy %i distance %f", bVisibleToEnemy, flDistanceToPatient);
+	//PrintToServer("bVisibleToEnemy %i distance %f", bVisibleToEnemy, flDistanceToPatient);
 	
 	if (hPatient == m_hPatient[actor]) //Healing patiend, find a spot to cover in while healing our patient.
 	{	
@@ -54,23 +54,31 @@ bool CTFBotMedicHeal_Update(int actor)
 		}
 		else 
 		{
-			if(flDistanceToPatient < 200.0)
+			if(flDistanceToPatient < 180.0)
 			{
 				g_bPath[actor] = false;
 			}
 		}
 		
-		BotAim(actor).AimHeadTowardsEntity(m_hPatient[actor], OVERRIDE_ALL, 1.0, "Look at our patient");
-		BotAim(actor).ReleaseFireButton();
+		if(IsLineOfFireClear(GetEyePosition(actor), WorldSpaceCenter(m_hPatient[actor])))
+		{
+			BotAim(actor).AimHeadTowardsEntity(m_hPatient[actor], OVERRIDE_ALL, 1.0, "Look at our patient");
+		}
+		//BotAim(actor).ReleaseFireButton();
 		
-		g_bUpdateLookingAroundForEnemies[actor] = false;
+		g_bUpdateLookingAroundForEnemies[actor] = true;
 	}
 	else
 	{
 		PF_SetGoalEntity(actor, m_hPatient[actor]);
 		
-		BotAim(actor).AimHeadTowardsEntity(m_hPatient[actor], OVERRIDE_ALL, 1.0, "Look at our desired patient");
-		BotAim(actor).PressFireButton();
+		if(IsLineOfFireClear(GetEyePosition(actor), WorldSpaceCenter(m_hPatient[actor])))
+		{
+			BotAim(actor).AimHeadTowardsEntity(m_hPatient[actor], OVERRIDE_ALL, 1.0, "Look at our desired patient");
+			
+			if(flDistanceToPatient < 400.0)
+				BotAim(actor).PressFireButton();
+		}
 		
 		g_bUpdateLookingAroundForEnemies[actor] = false;
 		g_bPath[actor] = true;
@@ -83,7 +91,7 @@ stock float[] CTFBotMedicHeal_ComputeFollowPosition(int client)
 {
 	//tf_bot_medic_cover_test_resolution 
 	const int items = 8;
-	const float r = 150.0;
+	float r = 100.0 + GetRandomFloat(0.0, 100.0);
 	
 	float myPos[3]; myPos = WorldSpaceCenter(client);
 
@@ -269,6 +277,9 @@ bool CTFBotMedicHeal_IsVisibleToEnemy(int client, float position[3])
 
 int CTFBotMedicHeal_SelectPatient(int actor, int old_patient)
 {
+	if(IsValidClientIndex(old_patient) && IsPlayerAlive(old_patient))
+		return old_patient;
+
 	int playerarray[MAXPLAYERS+1];
 	int playercount;
 	
