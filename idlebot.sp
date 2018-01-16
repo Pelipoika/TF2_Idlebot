@@ -180,6 +180,24 @@ public Action Command_Robot(int client, int args)
 	return Plugin_Handled;
 }
 
+//CTFBotMedicHeal::IsStable
+stock bool IsStable(int client)
+{
+	int iEnemyTeam = view_as<int>(GetEnemyTeam(client));
+	
+	bool bStable = true;
+	
+	if(GetTimeSinceLastInjury(client, iEnemyTeam) < 3.0)
+		bStable = false;
+	
+	if((GetClientHealth(client) / GetMaxHealth(client)) < 1.0)
+		bStable = false;
+	
+	if(TF2_IsPlayerInCondition(client, TFCond_OnFire))
+		bStable = false;
+	
+	return TF2_IsPlayerInCondition(client, TFCond_Bleeding);
+}
 
 //CTFBotMedicHeal::ComputeFollowPosition
 stock float[] ComputeFollowPosition(int client)

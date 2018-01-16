@@ -47,6 +47,7 @@ Handle g_hWorldSpaceCenter;
 Handle g_hGetNextThink;
 Handle g_hLookupBone;
 Handle g_hGetBonePosition;
+Handle g_hGetTimeSinceLastInjury;
 
 Handle g_hGetMaxAmmo;
 Handle g_hGetAmmoCount;
@@ -181,6 +182,18 @@ void InitGamedata()
 	if ((g_hGetBonePosition = EndPrepSDKCall()) == INVALID_HANDLE) SetFailState("Failed to create SDKCall for CBaseAnimating::GetBonePosition signature!");
 	
 	
+	
+	//CBaseCombatCharacter
+	
+	//float CBaseCombatCharacter::GetTimeSinceLastInjury( int team /*= TEAM_ANY */ )
+	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetFromConf(hConf, SDKConf_Virtual, "CBaseCombatCharacter::GetTimeSinceLastInjury");
+	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);	//team
+	PrepSDKCall_SetReturnInfo(SDKType_Float, SDKPass_Plain);
+	if ((g_hGetTimeSinceLastInjury = EndPrepSDKCall()) == INVALID_HANDLE) SetFailState("Failed to create SDKCall for CBaseCombatCharacter::GetTimeSinceLastInjury offset!");
+	
+	
+	
 	//GetItemSchema()
 	StartPrepSDKCall(SDKCall_Static);
 	PrepSDKCall_SetFromConf(hConf, SDKConf_Signature, "GetItemSchema");
@@ -215,6 +228,11 @@ stock int LookupBone(int iEntity, const char[] szName)
 stock void GetBonePosition(int iEntity, int iBone, float origin[3], float angles[3])
 {
 	SDKCall(g_hGetBonePosition, iEntity, iBone, origin, angles);
+}
+
+stock float GetTimeSinceLastInjury(int iEntity, int team = TEAM_ANY)
+{
+	return SDKCall(g_hGetTimeSinceLastInjury, iEntity, team);
 }
 
 
