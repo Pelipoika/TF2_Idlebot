@@ -1597,8 +1597,6 @@ stock int ReadInt(Address pAddr)
 }  
 
 
-#define	MAX_OVERLAY_DIST_SQR	90000000
-
 //-----------------------------------------------------------------------------
 // Purpose: Draw a colored 3D cross of the given size at the given position
 //-----------------------------------------------------------------------------

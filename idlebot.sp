@@ -200,14 +200,41 @@ stock float[] ComputeFollowPosition(int client)
 {
 	//tf_bot_medic_cover_test_resolution 
 	const int items = 12;
-	const float r = 150.0;
+	const float r = 100.0;
 	
 	float myPos[3]; myPos = WorldSpaceCenter(client);
 
 	//Largest distance wins.
 	float flBestDistance = 0.0;
 	float vecBestHideSpot[3];
+
+	/*
+		HidingSpots (Array)
+		{
+			SpotCluster (Array)
+			{
+				HidingSpot (Object)
+				HidingSpot (Object)
+				HidingSpot (Object)
+			}
+			SpotCluster (Array)
+			{
+				HidingSpot (Object)
+				HidingSpot (Object)
+			}
+			SpotCluster (Array)
+			{
+				HidingSpot (Object)
+				HidingSpot (Object)
+				HidingSpot (Object)
+				HidingSpot (Object)
+			}
+		}
+	*/
+
+	JSONArray HidingSpots = new JSONArray();
 	
+	JSONArray SpotCluster = null;
 	for(int i = 0; i < items; i++) 
 	{
 		float xyz[3];
@@ -216,29 +243,30 @@ stock float[] ComputeFollowPosition(int client)
 		xyz[2] = myPos[2];
 		
 		TR_TraceRayFilter(myPos, xyz, 0x2006081, RayType_EndPoint, NextBotTraceFilterIgnoreActors);
-		if(IsVisibleToEnemy(client, xyz))
-		{
-			Line(myPos, xyz, 255, 0, 0, 4.0);
-			Cross3D(xyz, 5.0, 255, 0, 0, 4.0);
-		}
-		else
+		if(!IsVisibleToEnemy(client, xyz))
 		{
 			TR_GetEndPosition(xyz);
 			
-			float vecNormal[3];
-			TR_GetPlaneNormal(INVALID_HANDLE, vecNormal);
-			PrintToServer("%i - %f %f %f", i, vecNormal[0], vecNormal[1], vecNormal[2]);
-			
 			//Move the endpoint away from walls
-			float norm[3];				
-			MakeVectorFromPoints(myPos, xyz, norm);
+			float norm[3]; MakeVectorFromPoints(myPos, xyz, norm);
 			NormalizeVector(norm, norm);
 			ScaleVector(norm, 24.0);
-			xyz[0] -= norm[0];
-			xyz[1] -= norm[1];
+			SubtractVectors(xyz, norm, xyz);
 		
 			Line(myPos, xyz, 0, 255, 0, 4.0);
 			Cross3D(xyz, 5.0, 0, 255, 0, 4.0);
+			
+			//Start new cluster on hiding spot found.
+			if(SpotCluster == null)
+				SpotCluster = new JSONArray();
+			
+			JSONObject HidingSpot = new JSONObject();
+			HidingSpot.SetInt("index", i);
+			HidingSpot.SetFloat("x", xyz[0]);
+			HidingSpot.SetFloat("y", xyz[1]);
+			HidingSpot.SetFloat("z", xyz[2]);		
+			SpotCluster.Push(HidingSpot);
+			delete HidingSpot;
 			
 			float flDistance = GetVectorDistance(myPos, xyz);
 			if(flDistance > flBestDistance)
@@ -247,7 +275,53 @@ stock float[] ComputeFollowPosition(int client)
 				vecBestHideSpot = xyz;
 			}
 		}
+		else
+		{
+			if(SpotCluster != null)
+			{
+				//End this cluster
+				HidingSpots.Push(SpotCluster);
+				delete SpotCluster;
+			}
+			
+			Line(myPos, xyz, 255, 0, 0, 4.0);
+			Cross3D(xyz, 5.0, 255, 0, 0, 4.0);
+		}		
 	}
+	
+	PrintToServer("\nHiding spot clusters %i\n", HidingSpots.Length);
+	
+	int iLargestClusterIndex = -1;
+	int iLargestCluster = -1;
+	
+	for (int i = 0; i < HidingSpots.Length; i++) 
+	{
+		JSONArray aSpotCluster = view_as<JSONArray>(HidingSpots.Get(i));
+		
+		//If this cluster has more hidingspots than our current largest,
+		//Set it as newest largest.
+		if(aSpotCluster.Length > iLargestCluster)
+		{
+			iLargestCluster = aSpotCluster.Length;
+			iLargestClusterIndex = i;
+		}
+		
+		PrintToServer("- Cluster %i", i);
+		for (int o = 0; o < aSpotCluster.Length; o++)
+		{
+			JSONObject HidingSpot = view_as<JSONObject>(aSpotCluster.Get(o));
+			
+			PrintToServer("%2d %3d %4f %-5f %-8f", o, HidingSpot.GetInt("index"), HidingSpot.GetFloat("x"), HidingSpot.GetFloat("y"), HidingSpot.GetFloat("z"));
+			
+			delete HidingSpot;
+		}
+		
+		delete aSpotCluster;
+	}
+	
+	delete HidingSpots;
+	
+	PrintToServer("\n Largest cluster is index %i containing %i hidingspots", iLargestClusterIndex, iLargestCluster);
 	
 	return vecBestHideSpot;
 }

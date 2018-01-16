@@ -148,7 +148,7 @@ methodmap BotAim
 	
 		if (FloatAbs(float(RoundToFloor(AngleDiff(eye_ang[0], m_angLastEyeAngles[this][0])))) > (frametime * g_hHeadSteadyRate.FloatValue)
 		 || FloatAbs(float(RoundToFloor(AngleDiff(eye_ang[1], m_angLastEyeAngles[this][1])))) > (frametime * g_hHeadSteadyRate.FloatValue))
-		 {
+		{
 			m_itHeadSteady[this] = -1.0;	//this->m_itHeadSteady.Invalidate();
 		} 
 		else 
