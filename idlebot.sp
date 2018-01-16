@@ -183,18 +183,14 @@ public Action Command_Robot(int client, int args)
 //CTFBotMedicHeal::IsStable
 stock bool IsStable(int client)
 {
-	int iEnemyTeam = view_as<int>(GetEnemyTeam(client));
-	
-	bool bStable = true;
-	
-	if(GetTimeSinceLastInjury(client, iEnemyTeam) < 3.0)
-		bStable = false;
+	if(GetTimeSinceLastInjury(client, view_as<int>(GetEnemyTeam(client))) < 3.0)
+		return false
 	
 	if((GetClientHealth(client) / GetMaxHealth(client)) < 1.0)
-		bStable = false;
+		return false;
 	
 	if(TF2_IsPlayerInCondition(client, TFCond_OnFire))
-		bStable = false;
+		return false;
 	
 	return TF2_IsPlayerInCondition(client, TFCond_Bleeding);
 }
@@ -270,6 +266,10 @@ stock bool IsVisibleToEnemy(int client, float position[3])
 			continue;
 			
 		if(TF2_GetClientTeam(i) != GetEnemyTeam(client))
+			continue;
+		
+		//Medics arent really a threat.
+		if(TF2_GetPlayerClass(client) == TFClass_Medic)
 			continue;
 		
 		if(IsLineOfFireClear(GetEyePosition(i), position))
