@@ -995,6 +995,7 @@ stock char CurrentActionToName(int action)
 		case ACTION_USE_ITEM:      name = "USE ITEM";
 		case ACTION_IDLE:          name = "IDLE";
 		case ACTION_SNIPER_LURK:   name = "SNIPER LURK";
+		case ACTION_MEDIC_HEAL:    name = "MEDIC HEAL";
 	}
 	
 	return name;

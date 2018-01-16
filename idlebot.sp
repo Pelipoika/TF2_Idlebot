@@ -70,7 +70,7 @@ char g_szBotModels[][] =
 #define ACTION_GET_HEALTH 8
 #define ACTION_USE_ITEM 9
 #define ACTION_SNIPER_LURK 10
-//#define ACTION_MEDIC_HEAL 11
+#define ACTION_MEDIC_HEAL 11
 
 #include <actions/utility>
 
@@ -85,7 +85,7 @@ char g_szBotModels[][] =
 #include <actions/CTFBotMoveToFront>
 #include <actions/CTFBotUseItem>
 #include <actions/CTFBotSniperLurk>
-//#include <actions/CTFBotMedicHeal>
+#include <actions/CTFBotMedicHeal>
 
 Handle g_hHudInfo;
 
@@ -95,7 +95,6 @@ Handle g_hHudInfo;
 //https://github.com/danielmm8888/TF2Classic/blob/d070129a436a8a070659f0267f6e63564a519a47/src/game/shared/tf/tf_gamemovement.cpp#L953
 //https://github.com/sigsegv-mvm/mvm-reversed/blob/b2a43a54093fca4e16068e64e567b871bd7d875e/server/tf/bot/behavior/tf_bot_behavior.cpp#L270-L301
 //Reverse CTFBotVision AFTER you have implemented IVision into extension
-//Use invasion areas of my team for retreating!
 
 public Plugin myinfo = 
 {
@@ -156,203 +155,17 @@ public Action Command_Robot(int client, int args)
 {
 	if(client > 0 && client <= MaxClients && IsClientInGame(client))
 	{
-	/*	if(TF2_IsMvM() && TF2_GetClientTeam(client) != TFTeam_Red)
+		if(TF2_IsMvM() && TF2_GetClientTeam(client) != TFTeam_Red)
 		{
 			ReplyToCommand(client, "For RED team only");
 			return Plugin_Handled;
 		}
 	
-		SetDefender(client, !g_bEmulate[client]);*/
-		
-		if (IsVisibleToEnemy(client, WorldSpaceCenter(client))
-		 || IsVisibleToEnemy(client, GetEyePosition(client)))
-		{
-			float vecBestHideSpot[3]; vecBestHideSpot = ComputeFollowPosition(client);
-			
-			if(vecBestHideSpot[0] == 0.0 && vecBestHideSpot[1] == 0.0 && vecBestHideSpot[2] == 0.0)
-				return Plugin_Handled;
-			
-			Line(GetEyePosition(client), vecBestHideSpot, 255, 255, 0, 5.0);
-			Cross3D(vecBestHideSpot, 10.0, 255, 255, 0, 5.0);
-		}
+		SetDefender(client, !g_bEmulate[client]);
 	}
 	
 	return Plugin_Handled;
 }
-
-//CTFBotMedicHeal::IsStable
-stock bool IsStable(int client)
-{
-	if(GetTimeSinceLastInjury(client, view_as<int>(GetEnemyTeam(client))) < 3.0)
-		return false
-	
-	if((GetClientHealth(client) / GetMaxHealth(client)) < 1.0)
-		return false;
-	
-	if(TF2_IsPlayerInCondition(client, TFCond_OnFire))
-		return false;
-	
-	return TF2_IsPlayerInCondition(client, TFCond_Bleeding);
-}
-
-//CTFBotMedicHeal::ComputeFollowPosition
-stock float[] ComputeFollowPosition(int client)
-{
-	//tf_bot_medic_cover_test_resolution 
-	const int items = 12;
-	const float r = 100.0;
-	
-	float myPos[3]; myPos = WorldSpaceCenter(client);
-
-	//Largest distance wins.
-	float flBestDistance = 0.0;
-	float vecBestHideSpot[3];
-
-	/*
-		HidingSpots (Array)
-		{
-			SpotCluster (Array)
-			{
-				HidingSpot (Object)
-				HidingSpot (Object)
-				HidingSpot (Object)
-			}
-			SpotCluster (Array)
-			{
-				HidingSpot (Object)
-				HidingSpot (Object)
-			}
-			SpotCluster (Array)
-			{
-				HidingSpot (Object)
-				HidingSpot (Object)
-				HidingSpot (Object)
-				HidingSpot (Object)
-			}
-		}
-	*/
-
-	JSONArray HidingSpots = new JSONArray();
-	
-	JSONArray SpotCluster = null;
-	for(int i = 0; i < items; i++) 
-	{
-		float xyz[3];
-		xyz[0] = myPos[0] + r * Cosine(2 * FLOAT_PI * i / items);
-		xyz[1] = myPos[1] + r *   Sine(2 * FLOAT_PI * i / items);   
-		xyz[2] = myPos[2];
-		
-		TR_TraceRayFilter(myPos, xyz, 0x2006081, RayType_EndPoint, NextBotTraceFilterIgnoreActors);
-		if(!IsVisibleToEnemy(client, xyz))
-		{
-			TR_GetEndPosition(xyz);
-			
-			//Move the endpoint away from walls
-			float norm[3]; MakeVectorFromPoints(myPos, xyz, norm);
-			NormalizeVector(norm, norm);
-			ScaleVector(norm, 24.0);
-			SubtractVectors(xyz, norm, xyz);
-		
-			Line(myPos, xyz, 0, 255, 0, 4.0);
-			Cross3D(xyz, 5.0, 0, 255, 0, 4.0);
-			
-			//Start new cluster on hiding spot found.
-			if(SpotCluster == null)
-				SpotCluster = new JSONArray();
-			
-			JSONObject HidingSpot = new JSONObject();
-			HidingSpot.SetInt("index", i);
-			HidingSpot.SetFloat("x", xyz[0]);
-			HidingSpot.SetFloat("y", xyz[1]);
-			HidingSpot.SetFloat("z", xyz[2]);		
-			SpotCluster.Push(HidingSpot);
-			delete HidingSpot;
-			
-			float flDistance = GetVectorDistance(myPos, xyz);
-			if(flDistance > flBestDistance)
-			{
-				flBestDistance = flDistance;
-				vecBestHideSpot = xyz;
-			}
-		}
-		else
-		{
-			if(SpotCluster != null)
-			{
-				//End this cluster
-				HidingSpots.Push(SpotCluster);
-				delete SpotCluster;
-			}
-			
-			Line(myPos, xyz, 255, 0, 0, 4.0);
-			Cross3D(xyz, 5.0, 255, 0, 0, 4.0);
-		}		
-	}
-	
-	PrintToServer("\nHiding spot clusters %i\n", HidingSpots.Length);
-	
-	int iLargestClusterIndex = -1;
-	int iLargestCluster = -1;
-	
-	for (int i = 0; i < HidingSpots.Length; i++) 
-	{
-		JSONArray aSpotCluster = view_as<JSONArray>(HidingSpots.Get(i));
-		
-		//If this cluster has more hidingspots than our current largest,
-		//Set it as newest largest.
-		if(aSpotCluster.Length > iLargestCluster)
-		{
-			iLargestCluster = aSpotCluster.Length;
-			iLargestClusterIndex = i;
-		}
-		
-		PrintToServer("- Cluster %i", i);
-		for (int o = 0; o < aSpotCluster.Length; o++)
-		{
-			JSONObject HidingSpot = view_as<JSONObject>(aSpotCluster.Get(o));
-			
-			PrintToServer("%2d %3d %4f %-5f %-8f", o, HidingSpot.GetInt("index"), HidingSpot.GetFloat("x"), HidingSpot.GetFloat("y"), HidingSpot.GetFloat("z"));
-			
-			delete HidingSpot;
-		}
-		
-		delete aSpotCluster;
-	}
-	
-	delete HidingSpots;
-	
-	PrintToServer("\n Largest cluster is index %i containing %i hidingspots", iLargestClusterIndex, iLargestCluster);
-	
-	return vecBestHideSpot;
-}
-
-stock bool IsVisibleToEnemy(int client, float position[3])
-{
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if(i == client)
-			continue;
-			
-		if(!IsClientInGame(i))
-			continue;
-			
-		if(!IsPlayerAlive(i))
-			continue;
-			
-		if(TF2_GetClientTeam(i) != GetEnemyTeam(client))
-			continue;
-		
-		//Medics arent really a threat.
-		if(TF2_GetPlayerClass(client) == TFClass_Medic)
-			continue;
-		
-		if(IsLineOfFireClear(GetEyePosition(i), position))
-			return true
-	}
-	
-	return false;
-}
-
 
 stock bool SetDefender(int client, bool bEnabled)
 {
@@ -510,7 +323,9 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 	if(m_ctAltFire[client] > GetGameTime()) { iButtons |= IN_ATTACK2; bChanged = true; }
 	
 //	EquipRequiredWeapon();
-	UpdateLookingAroundForEnemies(client);
+	if(TF2_GetPlayerClass(client) != TFClass_Medic)
+		UpdateLookingAroundForEnemies(client);
+		
 	BotAim(client).Upkeep();
 	BotAim(client).FireWeaponAtEnemy();
 	
@@ -582,7 +397,12 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 		{
 			if(g_iCurrentAction[client] != ACTION_USE_ITEM && bCanCheck)
 			{
-				if(TF2_GetPlayerClass(client) != TFClass_Scout)
+				if(TF2_GetPlayerClass(client) == TFClass_Medic)
+				{
+					ChangeAction(client, ACTION_MEDIC_HEAL, "Medic: Start heal mission");
+					m_iRouteType[client] = FASTEST_ROUTE;
+				}
+				else if(TF2_GetPlayerClass(client) != TFClass_Scout)
 				{
 					if(!IsSniperRifle(client))
 					{
@@ -825,6 +645,7 @@ stock bool ChangeAction(int client, int new_action, const char[] reason = "None"
 		case ACTION_MOVE_TO_FRONT: CTFBotMoveToFront_OnEnd(client);
 		case ACTION_USE_ITEM:      CTFBotUseItem_OnEnd(client);
 		case ACTION_SNIPER_LURK:   CTFBotSniperLurk_OnEnd(client);
+		case ACTION_MEDIC_HEAL:    CTFBotMedicHeal_OnEnd(client);
 	}
 	
 	//Start
@@ -841,6 +662,7 @@ stock bool ChangeAction(int client, int new_action, const char[] reason = "None"
 		case ACTION_MOVE_TO_FRONT: g_bStartedAction[client] = CTFBotMoveToFront_OnStart(client);
 		case ACTION_USE_ITEM:      g_bStartedAction[client] = CTFBotUseItem_OnStart(client);
 		case ACTION_SNIPER_LURK:   g_bStartedAction[client] = CTFBotSniperLurk_OnStart(client);
+		case ACTION_MEDIC_HEAL:    g_bStartedAction[client] = CTFBotMedicHeal_OnStart(client);
 	}
 	
 	//Store
@@ -868,6 +690,7 @@ stock bool RunCurrentAction(int client)
 		case ACTION_GET_HEALTH:    g_bStartedAction[client] = CTFBotGetHealth_Update(client);
 		case ACTION_USE_ITEM:      g_bStartedAction[client] = CTFBotUseItem_Update(client);
 		case ACTION_SNIPER_LURK:   g_bStartedAction[client] = CTFBotSniperLurk_Update(client);
+		case ACTION_MEDIC_HEAL:    g_bStartedAction[client] = CTFBotMedicHeal_Update(client);
 	}
 
 	switch(g_iCurrentAction[client])
@@ -876,10 +699,11 @@ stock bool RunCurrentAction(int client)
 		{
 			g_bPath[client] = false;
 		}
-		case ACTION_ATTACK, ACTION_SNIPER_LURK, ACTION_MOVE_TO_FRONT, ACTION_USE_ITEM, ACTION_GOTO_UPGRADE:
+		case ACTION_ATTACK, ACTION_SNIPER_LURK, ACTION_MOVE_TO_FRONT, ACTION_USE_ITEM, ACTION_GOTO_UPGRADE, ACTION_MEDIC_HEAL:
 		{
 			//Return early
-			if(g_iCurrentAction[client] == ACTION_ATTACK || g_iCurrentAction[client] == ACTION_SNIPER_LURK)
+			if(g_iCurrentAction[client] == ACTION_ATTACK || g_iCurrentAction[client] == ACTION_SNIPER_LURK 
+			|| g_iCurrentAction[client] == ACTION_MEDIC_HEAL)
 				return false;
 			
 			//Unzoom when no target and not lurking.
@@ -933,17 +757,6 @@ stock bool RunCurrentAction(int client)
 
 stock void UpdateLookingAroundForEnemies(int client)
 {
-	if(g_iCurrentAction[client] == ACTION_GOTO_UPGRADE
-	|| g_iCurrentAction[client] == ACTION_UPGRADE
-	|| g_iCurrentAction[client] == ACTION_MARK_GIANT)
-	{
-		g_bUpdateLookingAroundForEnemies[client] = false;
-	}
-	else
-	{
-		g_bUpdateLookingAroundForEnemies[client] = true;
-	}
-
 	int iTarget = -1;
 
 	//Don't constantly switch target as sniper.
@@ -1127,6 +940,7 @@ stock void Dodge(int actor)
 	}
 	
 	if (TF2_GetPlayerClass(actor) == TFClass_Engineer  ||
+		TF2_GetPlayerClass(actor) == TFClass_Medic||
 		TF2_IsPlayerInCondition(actor, TFCond_Disguised)  ||
 		TF2_IsPlayerInCondition(actor, TFCond_Disguising) ||
 		IsStealthed(actor)) 
@@ -1360,12 +1174,7 @@ public void PluginBot_PathFail(int bot_entidx)
 {
 	ChangeAction(bot_entidx, ACTION_IDLE, "Path construction failed.");
 }
-/*
-public void PluginBot_PathSuccess(int bot_entidx)
-{
-	PrintToChatAll("-------- PluginBot_PathSuccess bot_entidx %i", bot_entidx);
-}
-*/
+
 public void PluginBot_MoveToSuccess(int bot_entidx, Address path)
 {
 	if(g_iCurrentAction[bot_entidx] != ACTION_SNIPER_LURK 
@@ -1373,6 +1182,7 @@ public void PluginBot_MoveToSuccess(int bot_entidx, Address path)
 	&& g_iCurrentAction[bot_entidx] != ACTION_GOTO_UPGRADE
 	&& g_iCurrentAction[bot_entidx] != ACTION_GET_HEALTH
 	&& g_iCurrentAction[bot_entidx] != ACTION_MOVE_TO_FRONT
-	&& g_iCurrentAction[bot_entidx] != ACTION_USE_ITEM)
+	&& g_iCurrentAction[bot_entidx] != ACTION_USE_ITEM
+	&& g_iCurrentAction[bot_entidx] != ACTION_MEDIC_HEAL)
 		ChangeAction(bot_entidx, ACTION_IDLE, "PluginBot_MoveToSuccess: Reached path goal.");
 }
