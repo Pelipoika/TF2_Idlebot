@@ -7,8 +7,6 @@ ConVar tf_bot_medic_max_call_response_range("tf_bot_medic_max_call_response_rang
 ConVar tf_bot_medic_cover_test_resolution("tf_bot_medic_cover_test_resolution", "8", FCVAR_CHEAT);
 */
 
-float  m_vecFollowPosition[MAXPLAYERS + 1][3];
-
 int m_hPatient[MAXPLAYERS + 1];
 
 bool CTFBotMedicHeal_OnStart(int actor)
@@ -38,12 +36,10 @@ bool CTFBotMedicHeal_Update(int actor)
 	//PrintToServer("bVisibleToEnemy %i distance %f", bVisibleToEnemy, flDistanceToPatient);
 	
 	if (hPatient == m_hPatient[actor]) //Healing patiend, find a spot to cover in while healing our patient.
-	{	
+	{
 		if (bVisibleToEnemy)
 		{
-			float vecBestHideSpot[3]; vecBestHideSpot = CTFBotMedicHeal_ComputeFollowPosition(actor);
-			
-			m_vecFollowPosition[actor] = vecBestHideSpot;
+			float vecBestHideSpot[3]; vecBestHideSpot = CTFBotMedicHeal_ComputeFollowPosition(hPatient);
 			
 			PF_SetGoalVector(actor, vecBestHideSpot);
 			
@@ -52,36 +48,45 @@ bool CTFBotMedicHeal_Update(int actor)
 			else
 				g_bPath[actor] = true;
 		}
-		else 
+		else
 		{
-			if(flDistanceToPatient < 180.0)
-			{
-				g_bPath[actor] = false;
-			}
+			g_bPath[actor] = flDistanceToPatient > 300.0;
 		}
 		
 		if(IsLineOfFireClear(GetEyePosition(actor), WorldSpaceCenter(m_hPatient[actor])))
 		{
 			BotAim(actor).AimHeadTowardsEntity(m_hPatient[actor], OVERRIDE_ALL, 1.0, "Look at our patient");
 		}
-		//BotAim(actor).ReleaseFireButton();
 		
-		g_bUpdateLookingAroundForEnemies[actor] = true;
+		g_bUpdateLookingAroundForEnemies[actor] = false;
 	}
 	else
 	{
 		PF_SetGoalEntity(actor, m_hPatient[actor]);
+		g_bPath[actor] = true;
 		
 		if(IsLineOfFireClear(GetEyePosition(actor), WorldSpaceCenter(m_hPatient[actor])))
 		{
 			BotAim(actor).AimHeadTowardsEntity(m_hPatient[actor], OVERRIDE_ALL, 1.0, "Look at our desired patient");
 			
-			if(flDistanceToPatient < 400.0)
+			//Healing wrong target, release.
+			if(IsValidClientIndex(hPatient) && hPatient != m_hPatient[actor])
+			{
+				PrintToServer("RELEASE");
+				
+				//BotAim(actor).PressFireButton();
+			}
+			else if(flDistanceToPatient < 350.0 && hPatient != m_hPatient[actor] && BotAim(actor).IsHeadAimingOnTarget())
+			{
+				PrintToServer("PPRESS");
+				
 				BotAim(actor).PressFireButton();
+			}
+			
+			g_bUpdateLookingAroundForEnemies[actor] = false;
 		}
-		
-		g_bUpdateLookingAroundForEnemies[actor] = false;
-		g_bPath[actor] = true;
+		else
+			g_bUpdateLookingAroundForEnemies[actor] = true;
 	}
 	
 	return true;
@@ -277,7 +282,8 @@ bool CTFBotMedicHeal_IsVisibleToEnemy(int client, float position[3])
 
 int CTFBotMedicHeal_SelectPatient(int actor, int old_patient)
 {
-	if(IsValidClientIndex(old_patient) && IsPlayerAlive(old_patient))
+	if(IsValidClientIndex(old_patient) && IsPlayerAlive(old_patient) 
+	&& GetClientTeam(old_patient) == GetClientTeam(actor))
 		return old_patient;
 
 	int playerarray[MAXPLAYERS+1];
@@ -328,6 +334,7 @@ int CTFBotMedicHeal_SelectPatient(int actor, int old_patient)
 void CTFBotMedicHeal_OnEnd(int actor)
 {
 	m_hPatient[actor] = -1;
+	g_bUpdateLookingAroundForEnemies[actor] = true;
 }
 
 bool CTFBotMedicHeal_IsPossible(int actor)

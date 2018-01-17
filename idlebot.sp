@@ -126,7 +126,7 @@ public void OnClientPutInServer(int client)
 	g_vecCurrentGoal[client] = NULL_VECTOR;
 	g_bPath[client] = true;
 	g_bRetreat[client] = false;
-	g_iCurrentAction[client] = 5;
+	g_iCurrentAction[client] = ACTION_IDLE;
 	g_bStartedAction[client] = false;
 	g_bUpdateLookingAroundForEnemies[client] = true;
 	g_flNextLookTime[client] = GetGameTime();
@@ -169,6 +169,8 @@ public Action Command_Robot(int client, int args)
 
 stock bool SetDefender(int client, bool bEnabled)
 {
+	g_iCurrentAction[client] = ACTION_IDLE;
+
 	if(TF2_GetClientTeam(client) == TFTeam_Unassigned || TF2_GetClientTeam(client) == TFTeam_Spectator)
 	{
 		FakeClientCommand(client, "autoteam");
@@ -267,8 +269,6 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 	if(iButtons != 0 || iImpulse != 0 || GetClientTeam(client) == 1)
 		g_flLastInput[client] = GetGameTime();
 
-//	PrintToServer("OnPlayerRunCmd %N team %i", client, GetTeamNumber(client));
-
 	float flLastInput   = (GetGameTime() - g_flLastInput[client]);
 	float flMaxIdleTime = (FindConVar("mp_idlemaxtime").FloatValue * 60.0);
 
@@ -323,8 +323,7 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 	if(m_ctAltFire[client] > GetGameTime()) { iButtons |= IN_ATTACK2; bChanged = true; }
 	
 //	EquipRequiredWeapon();
-	if(TF2_GetPlayerClass(client) != TFClass_Medic)
-		UpdateLookingAroundForEnemies(client);
+	UpdateLookingAroundForEnemies(client);
 		
 	BotAim(client).Upkeep();
 	BotAim(client).FireWeaponAtEnemy();

@@ -218,7 +218,7 @@ void CollectUpgrades(int client)
 	{
 		-1,
 		TF_LOADOUT_SLOT_PRIMARY,
-	//	TF_LOADOUT_SLOT_SECONDARY,
+		TF_LOADOUT_SLOT_SECONDARY,
 		TF_LOADOUT_SLOT_MELEE,
 	//	TF_LOADOUT_SLOT_BUILDING,
 	//	TF_LOADOUT_SLOT_PDA
@@ -236,19 +236,19 @@ void CollectUpgrades(int client)
 				continue;
 			
 			/* Blacklist */
-			if(StrEqual(upgrades.m_szAttribute(), "increased jump height"))
-				continue;
+	//		if(StrEqual(upgrades.m_szAttribute(), "increased jump height"))
+	//			continue;
 			
 			//Only demoknight should upgrade melee. NOBODY ELSE.
-			if (TF2_GetPlayerClass(client) != TFClass_DemoMan && slot == TF_LOADOUT_SLOT_MELEE)
-				continue;
+	//		if (TF2_GetPlayerClass(client) != TFClass_DemoMan && slot == TF_LOADOUT_SLOT_MELEE)
+	//			continue;
 			
 			//- Demoman
 			//- No Shield
 			//- No Primary weapon
 			//- Upgrade slot == melee
-			if(TF2_GetPlayerClass(client) == TFClass_DemoMan && !HasDemoShieldEquipped(client) && IsValidEntity(GetPlayerWeaponSlot(client, TFWeaponSlot_Primary)) && slot == TF_LOADOUT_SLOT_MELEE)
-				continue;
+	//		if(TF2_GetPlayerClass(client) == TFClass_DemoMan && !HasDemoShieldEquipped(client) && IsValidEntity(GetPlayerWeaponSlot(client, TFWeaponSlot_Primary)) && slot == TF_LOADOUT_SLOT_MELEE)
+	//			continue;
 			
 			CEconItemAttributeDefinition attr = GetAttributeDefinitionByName(upgrades.m_szAttribute());
 			if(attr.Address == Address_Null)
