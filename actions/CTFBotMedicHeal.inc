@@ -20,6 +20,9 @@ bool CTFBotMedicHeal_Update(int actor)
 {
 	m_hPatient[actor] = CTFBotMedicHeal_SelectPatient(actor, m_hPatient[actor]);
 	
+	if(m_hPatient[actor] <= 0)
+		return false;
+	
 	int hPatient = 0;
 	
 	if(IsWeapon(actor, TF_WEAPON_MEDIGUN)) {
@@ -69,16 +72,9 @@ bool CTFBotMedicHeal_Update(int actor)
 		{
 			BotAim(actor).AimHeadTowardsEntity(m_hPatient[actor], OVERRIDE_ALL, 1.0, "Look at our desired patient");
 			
-			//Healing wrong target, release.
-			if(IsValidClientIndex(hPatient) && hPatient != m_hPatient[actor])
+			if(flDistanceToPatient < 350.0 && hPatient != m_hPatient[actor] && BotAim(actor).IsHeadAimingOnTarget())
 			{
-				PrintToServer("RELEASE");
-				
-				//BotAim(actor).PressFireButton();
-			}
-			else if(flDistanceToPatient < 350.0 && hPatient != m_hPatient[actor] && BotAim(actor).IsHeadAimingOnTarget())
-			{
-				PrintToServer("PPRESS");
+				//PrintToServer("PPRESS");
 				
 				BotAim(actor).PressFireButton();
 			}
