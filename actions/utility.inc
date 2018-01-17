@@ -655,12 +655,25 @@ stock float GetTimeSinceWeaponFired(int client)
 stock float GetProjectileSpeed(int client)
 {
 	int iWeapon = GetActiveWeapon(client);
-	if(IsValidEntity(iWeapon))
+	if(!IsValidEntity(iWeapon))
+		return 0.0;		
+	
+	float flProjectileSpeed = SDKCall(g_hGetProjectileSpeed, iWeapon);
+	if(flProjectileSpeed == 0.0)
 	{
-		return SDKCall(g_hGetProjectileSpeed, iWeapon);
+		//Some projectiles speeds are hardcoded so we manually return them here.
+		switch(SDKCall(g_hGetWeaponID, iWeapon))
+		{
+			case TF_WEAPON_ROCKETLAUNCHER:   flProjectileSpeed = 1100.0;
+			case TF_WEAPON_DIRECTHIT:        flProjectileSpeed = 1980.0;
+			case TF_WEAPON_FLAREGUN:         flProjectileSpeed = 2000.0;
+			case TF_WEAPON_RAYGUN_REVENGE:   flProjectileSpeed = 2000.0; //Manmelter
+			case TF_WEAPON_FLAMETHROWER:     flProjectileSpeed = 1500.0;
+			case TF_WEAPON_SYRINGEGUN_MEDIC: flProjectileSpeed = 990.0;
+		}
 	}
 	
-	return 0.0;
+	return flProjectileSpeed;
 }
 
 stock float GetProjectileGravity(int client)

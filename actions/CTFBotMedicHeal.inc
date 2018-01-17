@@ -25,16 +25,19 @@ bool CTFBotMedicHeal_Update(int actor)
 	
 	int hPatient = 0;
 	
-	if(IsWeapon(actor, TF_WEAPON_MEDIGUN)) {
-		hPatient = GetEntPropEnt(GetActiveWeapon(actor), Prop_Send, "m_hHealingTarget");
-	}
-	else {
-		EquipWeaponSlot(actor, TFWeaponSlot_Secondary);
-	}
-	
 	bool bVisibleToEnemy = (CTFBotMedicHeal_IsVisibleToEnemy(actor, WorldSpaceCenter(actor)) || CTFBotMedicHeal_IsVisibleToEnemy(actor, GetEyePosition(actor)));
 	
 	float flDistanceToPatient = GetVectorDistance(GetAbsOrigin(actor), GetAbsOrigin(m_hPatient[actor]));
+	
+	if(IsWeapon(actor, TF_WEAPON_MEDIGUN)) 
+	{
+		hPatient = GetEntPropEnt(GetActiveWeapon(actor), Prop_Send, "m_hHealingTarget");
+	}
+	
+	if(flDistanceToPatient > 500.0)
+		EquipWeaponSlot(actor, TFWeaponSlot_Primary);
+	else
+		EquipWeaponSlot(actor, TFWeaponSlot_Secondary);
 	
 	//PrintToServer("bVisibleToEnemy %i distance %f", bVisibleToEnemy, flDistanceToPatient);
 	
@@ -42,14 +45,18 @@ bool CTFBotMedicHeal_Update(int actor)
 	{
 		if (bVisibleToEnemy)
 		{
-			float vecBestHideSpot[3]; vecBestHideSpot = CTFBotMedicHeal_ComputeFollowPosition(hPatient);
+			float vecBestHideSpot[3]; 
+			bool bFoundSpot = CTFBotMedicHeal_ComputeFollowPosition(hPatient, vecBestHideSpot);
 			
-			PF_SetGoalVector(actor, vecBestHideSpot);
-			
-			if(GetVectorDistance(GetAbsOrigin(actor), vecBestHideSpot) < 60.0)
-				g_bPath[actor] = false;
-			else
-				g_bPath[actor] = true;
+			if(bFoundSpot)
+			{			
+				PF_SetGoalVector(actor, vecBestHideSpot);
+				
+				if(GetVectorDistance(GetAbsOrigin(actor), vecBestHideSpot) < 60.0)
+					g_bPath[actor] = false;
+				else
+					g_bPath[actor] = true;
+			}
 		}
 		else
 		{
@@ -88,39 +95,15 @@ bool CTFBotMedicHeal_Update(int actor)
 	return true;
 }
 
-stock float[] CTFBotMedicHeal_ComputeFollowPosition(int client)
+stock bool CTFBotMedicHeal_ComputeFollowPosition(int client, float spot[3])
 {
 	//tf_bot_medic_cover_test_resolution 
-	const int items = 8;
+	const int items = 20;
 	float r = 100.0 + GetRandomFloat(0.0, 100.0);
 	
 	float myPos[3]; myPos = WorldSpaceCenter(client);
 
-	float vecBestHideSpot[3]; vecBestHideSpot = GetAbsOrigin(client);
-
-	/*
-		HidingSpots (Array)
-		{
-			SpotCluster (Array)
-			{
-				HidingSpot (Object)
-				HidingSpot (Object)
-				HidingSpot (Object)
-			}
-			SpotCluster (Array)
-			{
-				HidingSpot (Object)
-				HidingSpot (Object)
-			}
-			SpotCluster (Array)
-			{
-				HidingSpot (Object)
-				HidingSpot (Object)
-				HidingSpot (Object)
-				HidingSpot (Object)
-			}
-		}
-	*/
+	float vecBestHideSpot[3];
 
 	JSONArray HidingSpots = new JSONArray();
 	
@@ -227,12 +210,19 @@ stock float[] CTFBotMedicHeal_ComputeFollowPosition(int client)
 		vecBestHideSpot[1] /= iSpotsLookedAt;
 		vecBestHideSpot[2] /= iSpotsLookedAt;
 	}
+	else
+	{
+		delete HidingSpots;
+		return false;
+	}
 	
 	delete HidingSpots;
 	
 	//PrintToServer("\n Largest cluster is index %i containing %i hidingspots", iLargestClusterIndex, iLargestCluster);
 	
-	return vecBestHideSpot;
+	spot = vecBestHideSpot;
+	
+	return true;
 }
 
 bool CTFBotMedicHeal_IsStable(int client)
