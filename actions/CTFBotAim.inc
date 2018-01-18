@@ -658,7 +658,7 @@ methodmap BotAim
 			}*/
 			if(HasEntProp(GetActiveWeapon(this.index), Prop_Send, "m_flChargedDamage")
 				&& GetEntPropFloat(GetActiveWeapon(this.index), Prop_Send, "m_flChargedDamage") >= 40.0 
-				&& this.IsHeadAimingOnTarget() && this.IsHeadSteady())
+				&& this.IsHeadSteady())
 			{
 				//Shoot
 				this.PressFireButton();
@@ -678,7 +678,7 @@ methodmap BotAim
 		
 		if (IsExplosiveProjectileWeapon(this.index)) 
 		{
-			if(this.IsHeadAimingOnTarget() && this.IsHeadSteady())
+			if(this.IsHeadSteady())
 			{
 				this.PressFireButton();	
 				return;

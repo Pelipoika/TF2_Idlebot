@@ -7,14 +7,29 @@ ConVar tf_bot_medic_max_call_response_range("tf_bot_medic_max_call_response_rang
 ConVar tf_bot_medic_cover_test_resolution("tf_bot_medic_cover_test_resolution", "8", FCVAR_CHEAT);
 */
 
+//tf_medigun_autoheal 0 / 1
+bool g_bMedigunAutoHeal[MAXPLAYERS + 1];
+
 int m_hPatient[MAXPLAYERS + 1];
 
 bool CTFBotMedicHeal_OnStart(int actor)
 {
 	m_hPatient[actor] = -1;
 	
+	QueryClientConVar(actor, "tf_medigun_autoheal", OnMedigunModeGet, GetClientUserId(actor));
+	
 	return true;
 }
+
+public void OnMedigunModeGet(QueryCookie cookie, int client, ConVarQueryResult result, const char[] cvarName, const char[] cvarValue, any value)
+{
+	int queriedClient = GetClientOfUserId(value);
+	if(queriedClient <= 0)
+		return;
+	
+	g_bMedigunAutoHeal[queriedClient] = value;
+}
+
 
 bool CTFBotMedicHeal_Update(int actor)
 {
@@ -79,11 +94,12 @@ bool CTFBotMedicHeal_Update(int actor)
 		{
 			BotAim(actor).AimHeadTowardsEntity(m_hPatient[actor], OVERRIDE_ALL, 1.0, "Look at our desired patient");
 			
-			if(flDistanceToPatient < 350.0 && hPatient != m_hPatient[actor] && BotAim(actor).IsHeadAimingOnTarget())
+			if(flDistanceToPatient < 350.0)
 			{
 				//PrintToServer("PPRESS");
-				
-				BotAim(actor).PressFireButton();
+
+				if(!g_bMedigunAutoHeal[actor] || (hPatient != m_hPatient[actor] && BotAim(actor).IsHeadAimingOnTarget()))
+					BotAim(actor).PressFireButton();
 			}
 			
 			g_bUpdateLookingAroundForEnemies[actor] = false;

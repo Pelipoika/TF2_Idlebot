@@ -1281,6 +1281,79 @@ stock void EyeVectors(int client, float fw[3] = NULL_VECTOR, float right[3] = NU
 	GetAngleVectors(GetEyeAngles(client), fw, right, up);
 }
 
+
+//Useless
+stock void AvoidPlayers(int client, float &forwardmove, float &sidemove)
+{
+	float vForward[3], vLeft[3];
+	EyeVectors(client, vForward, vLeft, NULL_VECTOR);
+	
+	float origin[3];
+	float flRadius = 50.0;
+	
+	if (TF2_IsMvM())// In MvM the radius is 150
+		flRadius = 150.0;
+		
+	float flRadiusSquared = flRadius * flRadius;
+	float flRadiusNormalized = 1.0 / flRadius;
+	
+	for(int i = 1; i <= MaxClients; i++)
+	{
+		if(i == client)
+			continue;
+		
+		if(!IsClientInGame(i))
+			continue;
+		
+		//Ignore dead
+		if(!IsPlayerAlive(i))
+			continue;
+		
+		//Ignore non enemies
+		if(TF2_GetClientTeam(i) != TF2_GetClientTeam(client))
+			continue;
+		
+		float vecToTeammate[3];
+		SubtractVectors(GetAbsOrigin(client), GetAbsOrigin(i), vecToTeammate);
+		
+		float flDistanceToTeammate = GetVectorLength(vecToTeammate, true);
+		
+		//PrintToServer("flRadiusSquared %f  flDistanceToTeammate %f", flRadiusSquared, flDistanceToTeammate);
+		
+		if ( flRadiusSquared > flDistanceToTeammate )
+		{
+			float v11 = 1.0 / SquareRoot(flDistanceToTeammate + 0.000000001);
+			float v12 = v11 * ((3.0 - ((v11 * v11) * (flDistanceToTeammate + 0.000000001))) * 0.5);
+			float v13 = 1.0 - (((flDistanceToTeammate + 0.000000001) * flRadiusNormalized) * v12);
+			origin[0] = ((vecToTeammate[0] * v12) * v13) + origin[0];
+			origin[1] = ((vecToTeammate[1] * v12) * v13) + origin[1];
+			origin[2] = ((vecToTeammate[2] * v12) * v13) + origin[2];
+		}
+	}
+	
+	if (origin[0] <= -0.0099999998 || origin[0] >= 0.0099999998
+	 || origin[1] <= -0.0099999998 || origin[1] >= 0.0099999998
+	 || origin[2] <= -0.0099999998 || origin[2] >= 0.0099999998)
+	{
+		//*(CTFBot + 6880) = 1;                   // m_bAvoiding
+		float v15 = (((origin[2] * origin[2]) + (origin[0] * origin[0])) + 0.000000001) + (origin[1] * origin[1]);
+		float v16 = SquareRoot(v15);
+		float v17 = (1.0 / v16) * ((3.0 - (((1.0 / v16) * (1.0 / v16)) * v15)) * 0.5);
+		float v18 = origin[0] * v17;
+		float v19 = origin[1] * v17;
+		float v20 = v17 * origin[2];
+		float v21 = vLeft[0] * v18;
+		float v23 = v18 * vForward[0];
+		//*(CTFBot + 1721) = v18 * 50.0;
+		//*(CTFBot + 1722) = v19 * 50.0;
+		//*(CTFBot + 1723) = v20 * 50.0;
+		forwardmove = ((((vLeft[1] * v19) + v21) + (vLeft[2] * v20)) * 50.0)       + forwardmove;
+		sidemove    = ((((v19 * vForward[1]) + v23) + (v20 * vForward[2])) * 50.0) + sidemove;
+		
+		//PrintToServer("forwardmove %f sidemove %f", v24, v25);
+	}
+}
+
 stock TFTeam GetEnemyTeam(int ent)
 {
 	TFTeam enemy_team = TF2_GetClientTeam(ent);

@@ -175,7 +175,6 @@ stock bool SetDefender(int client, bool bEnabled)
 	{
 		FakeClientCommand(client, "autoteam");
 		FakeClientCommand(client, "joinclass random");
-		FakeClientCommand(client, "joinclass random");
 		
 		ShowVGUIPanel(client, "info", _, false);
 		ShowVGUIPanel(client, "class_blue", _, false);
@@ -187,8 +186,6 @@ stock bool SetDefender(int client, bool bEnabled)
 		SetVariantString("");
 		AcceptEntityInput(client, "SetCustomModel");
 		SetEntProp(client, Prop_Send, "m_bUseClassAnimations", 1);
-		
-		PrintCenterText(client, "");
 		
 		SendConVarValue(client, FindConVar("sv_client_predict"), "-1");
 		SetEntProp(client, Prop_Data, "m_bLagCompensation", true);
@@ -259,14 +256,16 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 	if(client <= 0)
 		return Plugin_Handled;
 
+	//AvoidPlayers(client, fVel[0], fVel[1]);
+	
 	if(!IsClientConnected(client) || IsFakeClient(client))
-		return Plugin_Continue;
+		return Plugin_Continue;	
 	
 	//No can do.
 	if(TF2_IsMvM() && TF2_GetClientTeam(client) == TFTeam_Blue)
 		g_flLastInput[client] = GetGameTime();
 	
-	if(iButtons != 0 || iImpulse != 0 || GetClientTeam(client) == 1)
+	if(iButtons != 0 || iImpulse != 0 || TF2_GetClientTeam(client) == TFTeam_Spectator)
 		g_flLastInput[client] = GetGameTime();
 
 	float flLastInput   = (GetGameTime() - g_flLastInput[client]);
@@ -324,7 +323,7 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 	
 //	EquipRequiredWeapon();
 	UpdateLookingAroundForEnemies(client);
-		
+	
 	BotAim(client).Upkeep();
 	BotAim(client).FireWeaponAtEnemy();
 	
@@ -377,7 +376,7 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 		}
 		
 		if(bCanCheck)
-		{			
+		{
 			SetEntProp(client, Prop_Data, "m_bLagCompensation", false);
 			SetEntProp(client, Prop_Data, "m_bPredictWeapons", false);
 		}
@@ -1184,4 +1183,9 @@ public void PluginBot_MoveToSuccess(int bot_entidx, Address path)
 	&& g_iCurrentAction[bot_entidx] != ACTION_USE_ITEM
 	&& g_iCurrentAction[bot_entidx] != ACTION_MEDIC_HEAL)
 		ChangeAction(bot_entidx, ACTION_IDLE, "PluginBot_MoveToSuccess: Reached path goal.");
+}
+
+stock bool ShouldLookAround(int client)
+{
+	
 }
