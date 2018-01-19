@@ -262,44 +262,35 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 		return Plugin_Continue;	
 	
 	//No can do.
-	if(TF2_IsMvM() && TF2_GetClientTeam(client) == TFTeam_Blue)
-		g_flLastInput[client] = GetGameTime();
-	
-	if(iButtons != 0 || iImpulse != 0 || TF2_GetClientTeam(client) == TFTeam_Spectator)
+	if(TF2_IsMvM() && TF2_GetClientTeam(client) == TFTeam_Blue || iButtons != 0 || iImpulse != 0 || TF2_GetClientTeam(client) == TFTeam_Spectator)
 		g_flLastInput[client] = GetGameTime();
 
 	float flLastInput   = (GetGameTime() - g_flLastInput[client]);
 	float flMaxIdleTime = (FindConVar("mp_idlemaxtime").FloatValue * 60.0);
 
-	if(flLastInput > (flMaxIdleTime / 2))
+	if(flLastInput > (flMaxIdleTime / 2) && !g_bEmulate[client])
 	{
-		if(g_bIdle[client])
-			PrintCenterText(client, "The server plays for you while you are away. Press any key to take control");
-		else if(!g_bEmulate[client])
-			PrintCenterText(client, "You seem to be away... (%.0fs / %.0fs)\n%s", flLastInput, flMaxIdleTime, (flLastInput > (flMaxIdleTime / 1.2)) ? "The server will take over soon..." : "");
-	}
-	
-	if (flLastInput > flMaxIdleTime)
-	{
-		if(!g_bIdle[client] && !g_bEmulate[client])
+		PrintCenterText(client, "You seem to be away... (%.0fs / %.0fs)\n%s", flLastInput, flMaxIdleTime, (flLastInput > (flMaxIdleTime / 1.2)) ? "The server will take over soon..." : "");
+		
+		if (flLastInput > flMaxIdleTime)
 		{
-			g_bIdle[client] = true;
-			SetDefender(client, true);
+			if(!g_bIdle[client] && !g_bEmulate[client])
+			{
+				g_bIdle[client] = true;
+				SetDefender(client, true);
+			}
 		}
-	}
-	else
-	{
-		if(g_bIdle[client])
+		else
 		{
-			g_bIdle[client] = false;
-			SetDefender(client, false);
+			if(g_bIdle[client])
+			{
+				g_bIdle[client] = false;
+				SetDefender(client, false);
+			}
 		}
 	}
 	
-	if(!IsPlayerAlive(client))
-		return Plugin_Continue;
-	
-	if(!g_bEmulate[client] || !PF_Exists(client))
+	if(!IsPlayerAlive(client) || !g_bEmulate[client] || !PF_Exists(client))
 		return Plugin_Continue;
 
 	bool bChanged = false;
@@ -328,7 +319,8 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 	BotAim(client).FireWeaponAtEnemy();
 	
 	SetHudTextParams(0.05, 0.05, 0.1, 255, 255, 200, 255, 0, 0.0, 0.0, 0.0);
-	ShowSyncHudText(client, g_hHudInfo, "%s\nRouteType %s\nPathing %s\nRetreating %s\nLookAroundForEnemies %s\nWeapon %s #%i", CurrentActionToName(g_iCurrentAction[client]), 
+	ShowSyncHudText(client, g_hHudInfo, "The server plays for you while you are away. Press any key to take control\n%s\nRouteType %s\nPathing %s\nRetreating %s\nLookAroundForEnemies %s\nWeapon %s #%i", 
+																		CurrentActionToName(g_iCurrentAction[client]), 
 																		CurrentRouteTypeToName(client), 
 																		g_bPath[client] ? "Yes" : "No",
 																		g_bRetreat[client] ? "Yes" : "No",
@@ -375,11 +367,8 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 			low_health = true;
 		}
 		
-		if(bCanCheck)
-		{
-			SetEntProp(client, Prop_Data, "m_bLagCompensation", false);
-			SetEntProp(client, Prop_Data, "m_bPredictWeapons", false);
-		}
+		SetEntProp(client, Prop_Data, "m_bLagCompensation", false);
+		SetEntProp(client, Prop_Data, "m_bPredictWeapons", false);
 		
 		if ((g_iCurrentAction[client] == ACTION_GET_HEALTH || bCanCheck) && low_health && CTFBotGetHealth_IsPossible(client)) 
 		{
@@ -395,57 +384,58 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 		{
 			if(g_iCurrentAction[client] != ACTION_USE_ITEM && bCanCheck)
 			{
-				if(TF2_GetPlayerClass(client) == TFClass_Medic)
+				switch(TF2_GetPlayerClass(client))
 				{
-					ChangeAction(client, ACTION_MEDIC_HEAL, "Medic: Start heal mission");
-					m_iRouteType[client] = FASTEST_ROUTE;
-				}
-				else if(TF2_GetPlayerClass(client) != TFClass_Scout)
-				{
-					if(!IsSniperRifle(client))
+					case TFClass_Medic:
+					{
+						ChangeAction(client, ACTION_MEDIC_HEAL, "Medic: Start heal mission");
+						m_iRouteType[client] = FASTEST_ROUTE;
+					}
+					case TFClass_Scout:
+					{
+						if(CTFBotCollectMoney_IsPossible(client))
+						{
+							ChangeAction(client, ACTION_COLLECT_MONEY, "Scout: Collecting money.");
+							m_iRouteType[client] = FASTEST_ROUTE;
+						}
+						else if(CTFBotMarkGiant_IsPossible(client))
+						{
+							ChangeAction(client, ACTION_MARK_GIANT, "Scout: Marking giant.");	
+							m_iRouteType[client] = SAFEST_ROUTE;
+						}
+						else if(CTFBotAttack_IsPossible(client))
+						{
+							ChangeAction(client, ACTION_ATTACK, "Scout: Attacking robots.");
+							m_iRouteType[client] = DEFAULT_ROUTE;
+						}
+						else
+						{
+							ChangeAction(client, ACTION_IDLE, "Scout: Nothing to do.");
+							m_iRouteType[client] = DEFAULT_ROUTE;
+						}
+					}
+					case TFClass_Sniper:
+					{
+						ChangeAction(client, ACTION_SNIPER_LURK, "Sniper: wants to lurk.");	
+						m_iRouteType[client] = SAFEST_ROUTE;
+					}
+					default:
 					{
 						if(CTFBotAttack_IsPossible(client))
 						{
-							ChangeAction(client, ACTION_ATTACK, "Not Scout: CTFBotAttack_IsPossible");
+							ChangeAction(client, ACTION_ATTACK, "CTFBotAttack_IsPossible");
 							m_iRouteType[client] = FASTEST_ROUTE;
 						}
 						else if(CTFBotCollectMoney_IsPossible(client))
 						{
-							ChangeAction(client, ACTION_COLLECT_MONEY, "Not Scout: CTFBotCollectMoney_IsPossible");
+							ChangeAction(client, ACTION_COLLECT_MONEY, "CTFBotCollectMoney_IsPossible");
 							m_iRouteType[client] = SAFEST_ROUTE;
 						}
 						else
 						{
-							ChangeAction(client, ACTION_IDLE, "Not Scout: Nothing to do.");
+							ChangeAction(client, ACTION_IDLE, "Nothing to do.");
 							m_iRouteType[client] = DEFAULT_ROUTE;
 						}
-					}
-					else
-					{
-						ChangeAction(client, ACTION_SNIPER_LURK, "Not Scout: IsSniperRifle and wants to lurk.");
-					}
-				}
-				else
-				{
-					if(CTFBotCollectMoney_IsPossible(client))
-					{
-						ChangeAction(client, ACTION_COLLECT_MONEY, "Scout: Collecting money.");
-						m_iRouteType[client] = FASTEST_ROUTE;
-					}
-					else if(CTFBotMarkGiant_IsPossible(client))
-					{
-						ChangeAction(client, ACTION_MARK_GIANT, "Scout: Marking giant.");	
-						m_iRouteType[client] = SAFEST_ROUTE;
-					}
-					else if(CTFBotAttack_IsPossible(client))
-					{
-						ChangeAction(client, ACTION_ATTACK, "Scout: Attacking robots.");
-						m_iRouteType[client] = DEFAULT_ROUTE;
-					}
-					else
-					{
-						ChangeAction(client, ACTION_IDLE, "Scout: Nothing to do.");
-						m_iRouteType[client] = DEFAULT_ROUTE;
 					}
 				}
 			}
