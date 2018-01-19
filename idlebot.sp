@@ -271,22 +271,22 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 	if(flLastInput > (flMaxIdleTime / 2) && !g_bEmulate[client])
 	{
 		PrintCenterText(client, "You seem to be away... (%.0fs / %.0fs)\n%s", flLastInput, flMaxIdleTime, (flLastInput > (flMaxIdleTime / 1.2)) ? "The server will take over soon..." : "");
-		
-		if (flLastInput > flMaxIdleTime)
+	}
+	
+	if (flLastInput > flMaxIdleTime)
+	{
+		if(!g_bIdle[client] && !g_bEmulate[client])
 		{
-			if(!g_bIdle[client] && !g_bEmulate[client])
-			{
-				g_bIdle[client] = true;
-				SetDefender(client, true);
-			}
+			g_bIdle[client] = true;
+			SetDefender(client, true);
 		}
-		else
+	}
+	else
+	{
+		if(g_bIdle[client])
 		{
-			if(g_bIdle[client])
-			{
-				g_bIdle[client] = false;
-				SetDefender(client, false);
-			}
+			g_bIdle[client] = false;
+			SetDefender(client, false);
 		}
 	}
 	
