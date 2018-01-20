@@ -111,28 +111,20 @@ bool CTFBotPurchaseUpgrades_Update(int actor)
 		{
 			//PrintToServer("No more upgrades to buy.");
 			
-			if(CTFBotMoveToFront_IsPossible(actor))
+			if(TF2_GetPlayerClass(actor) == TFClass_Medic)
 			{
-				if(TF2_GetPlayerClass(actor) == TFClass_Medic)
-				{
-					ChangeAction(actor, ACTION_MEDIC_HEAL, "Finished upgrading, start healing");
-				}
-				else
-				{
-					if(IsSniperRifle(actor))
-					{
-						//If we have a sniper rifle start lurking
-						ChangeAction(actor, ACTION_SNIPER_LURK, "Finished upgrading, start lurking");
-					}
-					else
-					{
-						//Else move to front.
-						ChangeAction(actor, ACTION_MOVE_TO_FRONT, "Finished upgrading, move to front");
-					}
-				}
-
-				delete info;
-				return false;
+				ChangeAction(actor, ACTION_MEDIC_HEAL, "Finished upgrading, start healing");
+				FakeClientCommand(actor, "tournament_player_readystate 1");
+			}
+			if(TF2_GetPlayerClass(actor) == TFClass_Sniper)
+			{
+				//If we have a sniper rifle start lurking
+				ChangeAction(actor, ACTION_SNIPER_LURK, "Finished upgrading, start lurking");
+				FakeClientCommand(actor, "tournament_player_readystate 1");
+			}
+			else if(CTFBotMoveToFront_IsPossible(actor))
+			{
+				ChangeAction(actor, ACTION_MOVE_TO_FRONT, "Finished upgrading, move to front");
 			}
 			else
 			{
@@ -393,8 +385,8 @@ void KV_MvM_UpgradesDone(int client)
 
 float GetUpgradeInterval()
 {
-	const float interval = 1.5;
-	const float variance = 0.4;
+	const float interval = 1.25;
+	const float variance = 0.3;
 	
 	return GetRandomFloat(interval - variance, interval + variance);
 }
