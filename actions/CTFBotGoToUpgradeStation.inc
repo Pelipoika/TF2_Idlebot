@@ -60,7 +60,7 @@ bool CTFBotGoToUpgradeStation_OnStart(int actor)
 	
 	center[2] += 50.0;
 	
-	TR_TraceRay(center, WorldSpaceCenter(g_iStation[actor]), MASK_PLAYERSOLID, RayType_EndPoint);
+	TR_TraceRayFilter(center, WorldSpaceCenter(g_iStation[actor]), MASK_PLAYERSOLID, RayType_EndPoint, NextBotTraceFilterIgnoreActors);
 	TR_GetEndPosition(center);
 	
 	PF_SetGoalVector(actor, center);
