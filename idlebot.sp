@@ -327,7 +327,7 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 		Dodge(client);
 		
 		SetHudTextParams(0.05, 0.05, 1.1, 255, 255, 200, 255, 0, 0.0, 0.0, 0.0);
-		ShowSyncHudText(client, g_hHudInfo, "%s\nRouteType %s\nPathing %s\nRetreating %s\nLookAroundForEnemies %s\nWeapon %s #%i\nThe server plays for you while you are away.\nPress any key to take control\n ", 
+		ShowSyncHudText(client, g_hHudInfo, "%s\nRouteType %s\nPathing %s\nRetreating %s\nLookAroundForEnemies %s\nWeapon %s #%i\n\nThe server plays for you while you are away.\nPress any key to take control\n ", 
 											CurrentActionToName(g_iCurrentAction[client]), 
 											CurrentRouteTypeToName(client), 
 											g_bPath[client] ? "Yes" : "No",

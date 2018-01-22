@@ -12,9 +12,13 @@ bool g_bMedigunAutoHeal[MAXPLAYERS + 1];
 
 int m_hPatient[MAXPLAYERS + 1];
 
+float g_flNextHideSpotComputation[MAXPLAYERS + 1];
+
 bool CTFBotMedicHeal_OnStart(int actor)
 {
 	m_hPatient[actor] = -1;
+	
+	g_flNextHideSpotComputation[actor] = -1.0;
 	
 	QueryClientConVar(actor, "tf_medigun_autoheal", OnMedigunModeGet, GetClientUserId(actor));
 	
@@ -27,7 +31,7 @@ public void OnMedigunModeGet(QueryCookie cookie, int client, ConVarQueryResult r
 	if(queriedClient <= 0)
 		return;
 	
-	g_bMedigunAutoHeal[queriedClient] = value;
+	g_bMedigunAutoHeal[queriedClient] = !!StringToInt(cvarValue);
 }
 
 
@@ -58,7 +62,7 @@ bool CTFBotMedicHeal_Update(int actor)
 	
 	if (hPatient == m_hPatient[actor]) //Healing patiend, find a spot to cover in while healing our patient.
 	{
-		if (bVisibleToEnemy)
+		if (bVisibleToEnemy && g_flNextHideSpotComputation[actor] <= GetGameTime())
 		{
 			float vecBestHideSpot[3]; 
 			bool bFoundSpot = CTFBotMedicHeal_ComputeFollowPosition(hPatient, vecBestHideSpot);
@@ -72,10 +76,18 @@ bool CTFBotMedicHeal_Update(int actor)
 				else
 					g_bPath[actor] = true;
 			}
+			
+			g_flNextHideSpotComputation[actor] = GetGameTime() + GetRandomFloat(0.5, 3.0);
 		}
 		else
 		{
 			g_bPath[actor] = flDistanceToPatient > 300.0;
+		}
+		
+		//Autoheal not on, keep holding M1
+		if(!g_bMedigunAutoHeal[actor])
+		{
+			BotAim(actor).PressFireButton();
 		}
 		
 		if(IsLineOfFireClear(GetEyePosition(actor), WorldSpaceCenter(m_hPatient[actor])))
@@ -96,8 +108,6 @@ bool CTFBotMedicHeal_Update(int actor)
 			
 			if(flDistanceToPatient < 350.0)
 			{
-				//PrintToServer("PPRESS");
-
 				if(!g_bMedigunAutoHeal[actor] || (hPatient != m_hPatient[actor] && BotAim(actor).IsHeadAimingOnTarget()))
 					BotAim(actor).PressFireButton();
 			}
