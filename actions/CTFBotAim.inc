@@ -189,7 +189,7 @@ methodmap BotAim
 				if(IsWeapon(this.index, TF_WEAPON_GRENADELAUNCHER) 
 				|| IsWeapon(this.index, TF_WEAPON_PIPEBOMBLAUNCHER))
 				{
-					target_point = GetAbsOrigin(target_ent);
+					target_point = WorldSpaceCenter(target_ent); //GetAbsOrigin(target_ent);
 				
 					float vecTarget[3], vecActor[3];
 					vecTarget = GetAbsOrigin(target_ent);
@@ -310,6 +310,16 @@ methodmap BotAim
 						target_point[0] = vecTarget[0] + AbsVelocity[0] * flDistance;
 						target_point[1] = vecTarget[1] + AbsVelocity[1] * flDistance;
 						target_point[2] = vecTarget[2] + AbsVelocity[2] * flDistance;
+						
+						//If we can't shoot at the feet shoot at the center.
+						if(!IsLineOfFireClear(GetEyePosition(this.index), target_point))
+						{
+							vecTarget = WorldSpaceCenter(target_ent);
+						
+							target_point[0] = vecTarget[0] + AbsVelocity[0] * flDistance;
+							target_point[1] = vecTarget[1] + AbsVelocity[1] * flDistance;
+							target_point[2] = vecTarget[2] + AbsVelocity[2] * flDistance;
+						}
 					}
 					else
 					{
@@ -678,12 +688,6 @@ methodmap BotAim
 		
 		if (IsExplosiveProjectileWeapon(this.index)) 
 		{
-			if(this.IsHeadSteady())
-			{
-				this.PressFireButton();	
-				return;
-			}
-		
 			float aim_vec[3];
 			EyeVectors(this.index, aim_vec, NULL_VECTOR, NULL_VECTOR);
 			ScaleVector(aim_vec, (1.1 * dist_to_threat));
@@ -701,6 +705,13 @@ methodmap BotAim
 			}
 			
 			delete trace;
+			
+			if(this.IsHeadSteady())
+			{
+				this.PressFireButton();	
+			}
+			
+			return;
 		}
 		
 		this.PressFireButton();

@@ -318,16 +318,6 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 	BotAim(client).Upkeep();
 	BotAim(client).FireWeaponAtEnemy();
 	
-	SetHudTextParams(0.05, 0.05, 0.1, 255, 255, 200, 255, 0, 0.0, 0.0, 0.0);
-	ShowSyncHudText(client, g_hHudInfo, "The server plays for you while you are away. Press any key to take control\n%s\nRouteType %s\nPathing %s\nRetreating %s\nLookAroundForEnemies %s\nWeapon %s #%i", 
-																		CurrentActionToName(g_iCurrentAction[client]), 
-																		CurrentRouteTypeToName(client), 
-																		g_bPath[client] ? "Yes" : "No",
-																		g_bRetreat[client] ? "Yes" : "No",
-																		g_bUpdateLookingAroundForEnemies[client] ? "Yes" : "No",
-																		CurrentWeaponIDToName(client),
-																		GetWeaponID(GetActiveWeapon(client)));
-	
 	//For general throttling.
 	bool bCanCheck = g_flNextUpdate[client] < GetGameTime();
 	if(bCanCheck)
@@ -335,6 +325,16 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 		g_flNextUpdate[client] = GetGameTime() + 1.0;
 		
 		Dodge(client);
+		
+		SetHudTextParams(0.05, 0.05, 1.1, 255, 255, 200, 255, 0, 0.0, 0.0, 0.0);
+		ShowSyncHudText(client, g_hHudInfo, "%s\nRouteType %s\nPathing %s\nRetreating %s\nLookAroundForEnemies %s\nWeapon %s #%i\nThe server plays for you while you are away.\nPress any key to take control\n ", 
+											CurrentActionToName(g_iCurrentAction[client]), 
+											CurrentRouteTypeToName(client), 
+											g_bPath[client] ? "Yes" : "No",
+											g_bRetreat[client] ? "Yes" : "No",
+											g_bUpdateLookingAroundForEnemies[client] ? "Yes" : "No",
+											CurrentWeaponIDToName(client),
+											GetWeaponID(GetActiveWeapon(client)));
 	}
 	
 	RunCurrentAction(client);
@@ -549,7 +549,7 @@ stock bool OpportunisticallyUseWeaponAbilities(int client)
 	
 	if(!CTFBotUseItem_IsPossible(client))
 		return false;
-
+	
 	int elementCount = GetEntPropArraySize(client, Prop_Send, "m_hMyWeapons");
 	for (int i = 0; i < elementCount; i++)
 	{
