@@ -216,6 +216,8 @@ stock bool SetDefender(int client, bool bEnabled)
 			PF_EnableCallback(client, PFCB_OnMoveToSuccess, PluginBot_MoveToSuccess);
 			
 			PF_EnableCallback(client, PFCB_PathFailed, PluginBot_PathFail);
+			
+			PF_EnableCallback(client, PFCB_OnActorEmoted, PluginBot_OnActorEmoted);
 			//PF_EnableCallback(client, PFCB_PathSuccess, PluginBot_PathSuccess);
 		}
 		
@@ -1161,6 +1163,32 @@ public float PluginBot_PathCost(int bot_entidx, NavArea area, NavArea from_area,
 public void PluginBot_PathFail(int bot_entidx)
 {
 	ChangeAction(bot_entidx, ACTION_IDLE, "Path construction failed.");
+}
+
+public void PluginBot_OnActorEmoted(int bot_entidx, int who, int concept)
+{
+	//PrintToServer(">>>>>>>>>> PluginBot_OnActorEmoted %i who %i concept %i", bot_entidx, who, concept);
+	
+	if(g_iCurrentAction[bot_entidx] != ACTION_MEDIC_HEAL)
+		return;
+	
+	if(!IsValidClientIndex(who))
+		return;
+	
+	//"Move Up!"
+	if (concept == 13 || concept == 25 )
+	{
+		int patient = m_hPatient[bot_entidx];
+		
+		if (IsValidClientIndex(patient) && who == patient)
+		{
+			//int medigun = GetActiveTFWeapon(bot_entidx);
+			//if (IsReadyToDeployUber(medigun)) 
+			//{
+			BotAim(bot_entidx).PressAltFireButton();
+			//}
+		}
+	}
 }
 
 public void PluginBot_MoveToSuccess(int bot_entidx, Address path)

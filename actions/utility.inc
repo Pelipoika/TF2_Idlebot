@@ -1522,6 +1522,95 @@ stock bool IsStealthed(int client)
 	return TF2_IsPlayerInCondition(client, TFCond_StealthedUserBuffFade);
 }
 
+stock void DisguiseAsMemberOfEnemyTeam(int client)
+{
+	TF2_DisguisePlayer(client, GetEnemyTeam(client), view_as<TFClassType>(GetRandomInt(1, 9)));
+}
+
+stock bool IsAnyEnemySentryAbleToAttackMe(int client)
+{
+	int v5; // edi@6
+	int v6; // eax@9
+	int sentry; // ebx@9
+	char v8; // al@23
+	char v9; // [sp+Fh] [bp-19h]@2
+	
+	if ( TF2_IsPlayerInCondition(client, TFCond_Disguised) || (TF2_IsPlayerInCondition(client, TFCond_Disguising) || (v9 = IsStealthed(client)) != 0 )
+	{
+		v9 = 0;
+	}
+	else
+	{
+		v5 = 0;
+		if ( dword_18DFB8C > 0 )
+		{
+			while ( 1 )
+			{
+				v6 = *(_DWORD *)(IBaseObjectAutoList::m_IBaseObjectAutoListAutoList + 4 * v5);
+				sentry = v6 - 2148;
+				
+				if ( !v6 )
+					sentry = 0;
+				
+				if ( CBaseObject::ObjectType((CBaseObject *)sentry) == 2
+					&& !(unsigned __int8)CBaseObject::HasSapper((CBaseObject *)sentry)
+					&& !(unsigned __int8)CBaseObject::IsPlasmaDisabled((CBaseObject *)sentry)
+					&& !*(_BYTE *)(sentry + 2568)
+					&& !*(_BYTE *)(sentry + 2584)
+					&& !*(_BYTE *)(sentry + 2570) )
+				{
+					if ( GetVectorDistance(GetAbsOrigin(sentry), GetAbsOrigin(client), true) <= 1210000.0 && IsThreatAimingTowardMe(this, sentry, 0.95) )
+					{
+						//CBaseCombatCharacter::IsLineOfSightClear(CBaseEntity*, CBaseCombatCharacter::LineOfSightCheckType)
+						if ( IsLineOfSightClear(this, sentry, 1) )
+							break;
+					}
+				}
+				if ( dword_18DFB8C <= ++v5 )
+				return (unsigned __int8)v9;
+			}
+			v9 = v8;
+		}
+	}
+	return (unsigned __int8)v9;
+}
+
+stock bool IsThreatAimingTowardMe(int entity, int looker, float flDot)
+{
+	float vecToLooker[3];
+	MakeVectorFromPoints(GetAbsOrigin(entity), GetAbsOrigin(looker), vecToLooker);
+	
+	float flLength = GetVectorLength(vecToLooker, true);
+	
+	NormalizeVector(vecToLooker, vecToLooker);
+	
+	float vForward[3];
+	if ( IsValidClientIndex(looker) )
+	{
+		EyeVectors(entity, vForward, NULL_VECTOR, NULL_VECTOR);
+	}
+	else
+	{
+		if ( !HasEntProp(looker, Prop_Send, "m_hEnemy") || (v10 * flLength) >= 1100.0 )
+			return false;
+		
+		//CObjectSentrygun::GetTurretAngles()
+		AngleVectors(GetTurretAngles(CObjectSentryGun), vForward);
+	}
+	
+	if ( GetVectorDotProduct(vForward, vecToLooker) > flDot )
+		return true;
+		
+	return false;
+}
+
+stock char[] GetClassName(int entity)
+{
+	char class[64];
+	GetEntityClassname(entity, class, sizeof(class));
+	return class;
+}
+
 stock float GetPercentInvisible(int client)
 {
 	int offset = FindSendPropInfo("CTFPlayer", "m_Shared") + (81 * 4);
