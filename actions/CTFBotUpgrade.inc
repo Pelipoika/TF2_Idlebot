@@ -213,7 +213,8 @@ void CollectUpgrades(int client)
 		
 	CTFPlayerUpgrades[client] = new JSONArray();
 	
-	int iArraySlots[] = 
+	
+/*	int iArraySlots[] = 
 	{
 		-1,
 		TF_LOADOUT_SLOT_PRIMARY,
@@ -221,11 +222,27 @@ void CollectUpgrades(int client)
 	//	TF_LOADOUT_SLOT_MELEE,
 	//	TF_LOADOUT_SLOT_BUILDING,
 	//	TF_LOADOUT_SLOT_PDA
-	};
+	};*/
 	
-	for (int i = 0; i < sizeof(iArraySlots); i++)
+	ArrayList iArraySlots = new ArrayList();
+	iArraySlots.Push(-1);	//Always buy player upgrades
+	
+	bool bDemoKnight = (HasDemoShieldEquipped(client) && (!IsValidEntity(GetPlayerWeaponSlot(client, TFWeaponSlot_Primary)) || HasParachuteEquipped(client)));
+	
+	//Demoknight doesn't buy primary weapon upgrades.
+	if(bDemoKnight)
+		iArraySlots.Push(TF_LOADOUT_SLOT_MELEE);
+	else
+		iArraySlots.Push(TF_LOADOUT_SLOT_PRIMARY);
+	
+	if(IsValidEntity(GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary)))
 	{
-		int slot = iArraySlots[i];
+		iArraySlots.Push(TF_LOADOUT_SLOT_SECONDARY);
+	}
+
+	for (int i = 0; i < iArraySlots.Length; i++)
+	{
+		int slot = iArraySlots.Get(i);
 	
 		for (int index = 0; index < MAX_UPGRADES; index++)
 		{
@@ -236,17 +253,6 @@ void CollectUpgrades(int client)
 			
 			/* Blacklist */
 	//		if(StrEqual(upgrades.m_szAttribute(), "increased jump height"))
-	//			continue;
-			
-			//Only demoknight should upgrade melee. NOBODY ELSE.
-	//		if (TF2_GetPlayerClass(client) != TFClass_DemoMan && slot == TF_LOADOUT_SLOT_MELEE)
-	//			continue;
-			
-			//- Demoman
-			//- No Shield
-			//- No Primary weapon
-			//- Upgrade slot == melee
-	//		if(TF2_GetPlayerClass(client) == TFClass_DemoMan && !HasDemoShieldEquipped(client) && IsValidEntity(GetPlayerWeaponSlot(client, TFWeaponSlot_Primary)) && slot == TF_LOADOUT_SLOT_MELEE)
 	//			continue;
 			
 			CEconItemAttributeDefinition attr = GetAttributeDefinitionByName(upgrades.m_szAttribute());
@@ -268,6 +274,8 @@ void CollectUpgrades(int client)
 			delete UpgradeInfo;
 		}
 	}
+	
+	delete iArraySlots;
 	
 /*	PrintToServer("Unsorted upgrades for #%d \"%N\": %i total\n", client, client, CTFPlayerUpgrades[client].Length);
 	PrintToServer("%3s %4s %-5s %-8s\n", "#", "SLOT", "INDEX", "PRIORITY");

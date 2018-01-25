@@ -97,6 +97,7 @@ bool CTFBotGoToUpgradeStation_Update(int actor)
 	if (!IsValidEntity(station))
 	{
 		PrintToServer("[%8.3f] CTFBotGoToUpgradeStation(#%d): Upgrade station is invalid.", GetGameTime(), actor);
+		ChangeAction(actor, ACTION_IDLE, "Upgrade station is invalid.");
 		return false;
 	}
 	
