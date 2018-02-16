@@ -6,7 +6,7 @@ bool CTFBotGetHealth_IsPossible(int actor)
 //		return false;
 	
 	float health_ratio = view_as<float>(GetClientHealth(actor)) / view_as<float>(GetMaxHealth(actor));
-	float ratio = clamp((health_ratio - FindConVar("tf_bot_health_critical_ratio").FloatValue) / FindConVar("tf_bot_health_ok_ratio").FloatValue - FindConVar("tf_bot_health_critical_ratio").FloatValue, 0.0, 1.0);
+	float ratio = clamp((health_ratio - FindConVar("tf_bot_health_critical_ratio").FloatValue) / (FindConVar("tf_bot_health_ok_ratio").FloatValue - FindConVar("tf_bot_health_critical_ratio").FloatValue), 0.0, 1.0);
 	
 //	if (TF2_IsPlayerInCondition(actor, TFCond_OnFire))
 //		ratio = 0.0;
@@ -54,10 +54,12 @@ bool CTFBotGetHealth_IsPossible(int actor)
 bool CTFBotGetHealth_OnStart(int actor)
 {
 	float health_ratio = view_as<float>(GetClientHealth(actor)) / view_as<float>(GetMaxHealth(actor));
-	float ratio = clamp((health_ratio - FindConVar("tf_bot_health_critical_ratio").FloatValue) / FindConVar("tf_bot_health_ok_ratio").FloatValue - FindConVar("tf_bot_health_critical_ratio").FloatValue, 0.0, 1.0);
+	float ratio = clamp((health_ratio - FindConVar("tf_bot_health_critical_ratio").FloatValue) / (FindConVar("tf_bot_health_ok_ratio").FloatValue - FindConVar("tf_bot_health_critical_ratio").FloatValue), 0.0, 1.0);
 	
 //	if (TF2_IsPlayerInCondition(actor, TFCond_OnFire))
 //		ratio = 0.0;
+	
+	//((100 / 175) - 0.8) / (0.3 - 0.8)
 	
 	float far_range = FindConVar("tf_bot_health_search_far_range").FloatValue;
 	float max_range = ratio * (FindConVar("tf_bot_health_search_near_range").FloatValue - far_range);

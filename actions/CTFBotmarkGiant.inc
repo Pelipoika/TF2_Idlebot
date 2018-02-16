@@ -113,6 +113,7 @@ bool CTFBotMarkGiant_Update(int actor)
 	float dist_to_target = GetVectorDistance(GetAbsOrigin(actor), GetAbsOrigin(m_hTarget[actor]));
 	if (dist_to_target < 512.0)
 	{
+		g_bUpdateLookingAroundForEnemies[actor] = false;
 		BotAim(actor).AimHeadTowardsEntity(m_hTarget[actor], OVERRIDE_ALL, 0.1, "Look at our mark-for-death target");
 	}
 	
@@ -129,6 +130,7 @@ void CTFBotMarkGiant_OnEnd(int actor)
 {
 	m_flNextMarkTime[actor] = GetGameTime() + 30.0;
 	m_hTarget[actor] = -1;
+	g_bUpdateLookingAroundForEnemies[actor] = true;
 //	actor->PopRequiredWeapon();
 }
 

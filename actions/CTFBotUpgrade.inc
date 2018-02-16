@@ -86,6 +86,8 @@ bool CTFBotPurchaseUpgrades_OnStart(int actor)
 	
 	g_flNextUpgrade[actor] = GetGameTime() + GetUpgradeInterval();
 	
+	g_bUpdateLookingAroundForEnemies[actor] = false;
+	
 	return true;
 }
 
@@ -145,6 +147,8 @@ bool CTFBotPurchaseUpgrades_Update(int actor)
 void CTFBotPurchaseUpgrades_OnEnd(int actor)
 {
 	KV_MvM_UpgradesDone(actor);
+	
+	g_bUpdateLookingAroundForEnemies[actor] = true;
 }
 
 JSONObject CTFBotPurchaseUpgrades_ChooseUpgrade(int actor)
