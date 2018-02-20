@@ -490,8 +490,8 @@ stock int GetBomb()
 stock int TF2_FindBotNearestToBombNearestToHatch(int client)
 {
 	int iBomb = TF2_FindBombNearestToHatch();
-	if(iBomb == -1)
-		return -1;
+	if(iBomb == 0)
+		return 0;
 	
 	float flOrigin[3]; flOrigin = WorldSpaceCenter(iBomb);
 	
@@ -516,7 +516,7 @@ stock int TF2_FindBotNearestToBombNearestToHatch(int client)
 		if(TF2_IsBuster(i))
 			continue;
 		
-		float flDistance = GetVectorDistance(WorldSpaceCenter(i), WorldSpaceCenter(iBomb));
+		float flDistance = GetVectorDistance(WorldSpaceCenter(i), flOrigin);
 		if(flDistance <= flBestDistance)
 		{
 			flBestDistance = flDistance;

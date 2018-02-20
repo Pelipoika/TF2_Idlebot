@@ -51,7 +51,7 @@ bool CTFBotAttack_Update(int actor)
 		return true;
 	
 	int closesttoh = TF2_FindBotNearestToBombNearestToHatch(actor);
-	if(closesttoh != -1)
+	if(closesttoh > 0)
 	{
 		m_hAttackTarget[actor] = closesttoh;
 		PF_SetGoalVector(actor, PredictSubjectPosition(actor, m_hAttackTarget[actor]));

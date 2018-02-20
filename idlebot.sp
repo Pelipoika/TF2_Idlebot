@@ -533,81 +533,84 @@ stock void StartMainAction(int client)
 		else if (health_ratio < FindConVar("tf_bot_health_ok_ratio").FloatValue){
 			low_health = true;
 		}
+	
+		if (g_iCurrentAction[client] == ACTION_GET_HEALTH && low_health && CTFBotGetHealth_IsPossible(client))
+		{
+			ChangeAction(client, ACTION_GET_HEALTH, "Getting health");
+			m_iRouteType[client] = SAFEST_ROUTE;
+			
+			return;
+		}
+		else if (g_iCurrentAction[client] == ACTION_GET_AMMO && IsAmmoLow(client) && CTFBotGetAmmo_IsPossible(client))
+		{
+			ChangeAction(client, ACTION_GET_AMMO, "Getting ammo");
+			m_iRouteType[client] = SAFEST_ROUTE;
+			
+			return;
+		}
 		
 		SetEntProp(client, Prop_Data, "m_bLagCompensation", false);
 		SetEntProp(client, Prop_Data, "m_bPredictWeapons", false);
 		
-		if (g_iCurrentAction[client] != ACTION_GET_HEALTH && low_health && CTFBotGetHealth_IsPossible(client))
+	
+		if(g_iCurrentAction[client] != ACTION_USE_ITEM
+		&& g_iCurrentAction[client] != ACTION_MELEE_ATTACK)
 		{
-			ChangeAction(client, ACTION_GET_HEALTH, "Getting health");
-			m_iRouteType[client] = SAFEST_ROUTE;
-		}
-		else if (g_iCurrentAction[client] != ACTION_GET_AMMO && IsAmmoLow(client) && CTFBotGetAmmo_IsPossible(client))
-		{
-			ChangeAction(client, ACTION_GET_AMMO, "Getting ammo");
-			m_iRouteType[client] = SAFEST_ROUTE;
-		}
-		else
-		{
-			if(g_iCurrentAction[client] != ACTION_USE_ITEM
-			&& g_iCurrentAction[client] != ACTION_MELEE_ATTACK)
+			switch(TF2_GetPlayerClass(client))
 			{
-				switch(TF2_GetPlayerClass(client))
+				case TFClass_Medic:
 				{
-					case TFClass_Medic:
+					ChangeAction(client, ACTION_MEDIC_HEAL, "Medic: Start heal mission");
+					m_iRouteType[client] = FASTEST_ROUTE;
+				}
+				case TFClass_Scout:
+				{
+					if(CTFBotCollectMoney_IsPossible(client))
 					{
-						ChangeAction(client, ACTION_MEDIC_HEAL, "Medic: Start heal mission");
+						ChangeAction(client, ACTION_COLLECT_MONEY, "Scout: Collecting money.");
 						m_iRouteType[client] = FASTEST_ROUTE;
 					}
-					case TFClass_Scout:
+					else if(CTFBotMarkGiant_IsPossible(client))
 					{
-						if(CTFBotCollectMoney_IsPossible(client))
-						{
-							ChangeAction(client, ACTION_COLLECT_MONEY, "Scout: Collecting money.");
-							m_iRouteType[client] = FASTEST_ROUTE;
-						}
-						else if(CTFBotMarkGiant_IsPossible(client))
-						{
-							ChangeAction(client, ACTION_MARK_GIANT, "Scout: Marking giant.");	
-							m_iRouteType[client] = SAFEST_ROUTE;
-						}
-						else if(CTFBotAttack_IsPossible(client))
-						{
-							ChangeAction(client, ACTION_ATTACK, "Scout: Attacking robots.");
-							m_iRouteType[client] = DEFAULT_ROUTE;
-						}
-						else
-						{
-							ChangeAction(client, ACTION_IDLE, "Scout: Nothing to do.");
-							m_iRouteType[client] = DEFAULT_ROUTE;
-						}
-					}
-					case TFClass_Sniper:
-					{
-						ChangeAction(client, ACTION_SNIPER_LURK, "Sniper: wants to lurk.");	
+						ChangeAction(client, ACTION_MARK_GIANT, "Scout: Marking giant.");	
 						m_iRouteType[client] = SAFEST_ROUTE;
 					}
-					default:
+					else if(CTFBotAttack_IsPossible(client))
 					{
-						if(CTFBotAttack_IsPossible(client))
-						{
-							ChangeAction(client, ACTION_ATTACK, "CTFBotAttack_IsPossible");
-							m_iRouteType[client] = FASTEST_ROUTE;
-						}
-						else if(CTFBotCollectMoney_IsPossible(client))
-						{
-							ChangeAction(client, ACTION_COLLECT_MONEY, "CTFBotCollectMoney_IsPossible");
-							m_iRouteType[client] = SAFEST_ROUTE;
-						}
-						else
-						{
-							ChangeAction(client, ACTION_IDLE, "Nothing to do.");
-							m_iRouteType[client] = DEFAULT_ROUTE;
-						}
+						ChangeAction(client, ACTION_ATTACK, "Scout: Attacking robots.");
+						m_iRouteType[client] = DEFAULT_ROUTE;
+					}
+					else
+					{
+						ChangeAction(client, ACTION_IDLE, "Scout: Nothing to do.");
+						m_iRouteType[client] = DEFAULT_ROUTE;
+					}
+				}
+				case TFClass_Sniper:
+				{
+					ChangeAction(client, ACTION_SNIPER_LURK, "Sniper: wants to lurk.");	
+					m_iRouteType[client] = SAFEST_ROUTE;
+				}
+				default:
+				{
+					if(CTFBotAttack_IsPossible(client))
+					{
+						ChangeAction(client, ACTION_ATTACK, "CTFBotAttack_IsPossible");
+						m_iRouteType[client] = FASTEST_ROUTE;
+					}
+					else if(CTFBotCollectMoney_IsPossible(client))
+					{
+						ChangeAction(client, ACTION_COLLECT_MONEY, "CTFBotCollectMoney_IsPossible");
+						m_iRouteType[client] = SAFEST_ROUTE;
+					}
+					else
+					{
+						ChangeAction(client, ACTION_IDLE, "Nothing to do.");
+						m_iRouteType[client] = DEFAULT_ROUTE;
 					}
 				}
 			}
-		}	
+		}
 	}
 	
 	g_flNextUpdate[client] = GetGameTime() + 1.0;
