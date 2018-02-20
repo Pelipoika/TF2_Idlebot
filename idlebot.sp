@@ -71,6 +71,7 @@ char g_szBotModels[][] =
 #define ACTION_USE_ITEM 9
 #define ACTION_SNIPER_LURK 10
 #define ACTION_MEDIC_HEAL 11
+#define ACTION_MELEE_ATTACK 12
 
 #include <actions/utility>
 
@@ -86,6 +87,7 @@ char g_szBotModels[][] =
 #include <actions/CTFBotUseItem>
 #include <actions/CTFBotSniperLurk>
 #include <actions/CTFBotMedicHeal>
+#include <actions/CTFBotMeleeAttack>
 
 Handle g_hHudInfo;
 
@@ -320,129 +322,10 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 	BotAim(client).Upkeep();
 	BotAim(client).FireWeaponAtEnemy();
 	
-	//For general throttling.
-	bool bCanCheck = g_flNextUpdate[client] < GetGameTime();
-	if(bCanCheck)
-	{
-		g_flNextUpdate[client] = GetGameTime() + 1.0;
-		
-		Dodge(client);
-		
-		SetHudTextParams(0.05, 0.05, 1.1, 255, 255, 200, 255, 0, 0.0, 0.0, 0.0);
-		ShowSyncHudText(client, g_hHudInfo, "%s\nRouteType %s\nPathing %s\nRetreating %s\nLookAroundForEnemies %s\nWeapon %s #%i\n\nThe server plays for you while you are away.\nPress any key to take control\n ", 
-											CurrentActionToName(g_iCurrentAction[client]), 
-											CurrentRouteTypeToName(client), 
-											g_bPath[client] ? "Yes" : "No",
-											g_bRetreat[client] ? "Yes" : "No",
-											g_bUpdateLookingAroundForEnemies[client] ? "Yes" : "No",
-											CurrentWeaponIDToName(client),
-											GetWeaponID(GetActiveWeapon(client)));
-	}
-	
+	StartMainAction(client);
 	RunCurrentAction(client);
 	
-	if(g_RoundState == RoundState_BetweenRounds)
-	{
-		if(CTFBotCollectMoney_IsPossible(client))
-		{
-			ChangeAction(client, ACTION_COLLECT_MONEY, "CTFBotCollectMoney is possible");
-			m_iRouteType[client] = FASTEST_ROUTE;
-		}
-		else if(!IsStandingAtUpgradeStation(client) && g_iCurrentAction[client] != ACTION_MOVE_TO_FRONT && !GameRules_GetProp("m_bPlayerReady", 1, client))
-		{
-			ChangeAction(client, ACTION_GOTO_UPGRADE, "!IsStandingAtUpgradeStation && RoundState_BetweenRounds");
-			m_iRouteType[client] = DEFAULT_ROUTE;
-		}
-	}
-	else if(g_RoundState == RoundState_RoundRunning)
-	{
-		OpportunisticallyUseWeaponAbilities(client);
-	
-		bool low_health = false;
-		
-		float health_ratio = view_as<float>(GetClientHealth(client)) / view_as<float>(GetMaxHealth(client));
-		
-		if ((GetTimeSinceWeaponFired(client) > 2.0 || TF2_GetPlayerClass(client) == TFClass_Sniper)	&& health_ratio < FindConVar("tf_bot_health_critical_ratio").FloatValue){
-			low_health = true;
-		} 
-		else if (health_ratio < FindConVar("tf_bot_health_ok_ratio").FloatValue){
-			low_health = true;
-		}
-		
-		SetEntProp(client, Prop_Data, "m_bLagCompensation", false);
-		SetEntProp(client, Prop_Data, "m_bPredictWeapons", false);
-		
-		if ((g_iCurrentAction[client] == ACTION_GET_HEALTH || bCanCheck) && low_health && CTFBotGetHealth_IsPossible(client)) 
-		{
-			ChangeAction(client, ACTION_GET_HEALTH, "Getting health");
-			m_iRouteType[client] = SAFEST_ROUTE;
-		}
-		else if ((g_iCurrentAction[client] == ACTION_GET_AMMO || bCanCheck) && IsAmmoLow(client) && CTFBotGetAmmo_IsPossible(client)) 
-		{
-			ChangeAction(client, ACTION_GET_AMMO, "Getting ammo");
-			m_iRouteType[client] = SAFEST_ROUTE;
-		}
-		else
-		{
-			if(g_iCurrentAction[client] != ACTION_USE_ITEM && bCanCheck)
-			{
-				switch(TF2_GetPlayerClass(client))
-				{
-					case TFClass_Medic:
-					{
-						ChangeAction(client, ACTION_MEDIC_HEAL, "Medic: Start heal mission");
-						m_iRouteType[client] = FASTEST_ROUTE;
-					}
-					case TFClass_Scout:
-					{
-						if(CTFBotCollectMoney_IsPossible(client))
-						{
-							ChangeAction(client, ACTION_COLLECT_MONEY, "Scout: Collecting money.");
-							m_iRouteType[client] = FASTEST_ROUTE;
-						}
-						else if(CTFBotMarkGiant_IsPossible(client))
-						{
-							ChangeAction(client, ACTION_MARK_GIANT, "Scout: Marking giant.");	
-							m_iRouteType[client] = SAFEST_ROUTE;
-						}
-						else if(CTFBotAttack_IsPossible(client))
-						{
-							ChangeAction(client, ACTION_ATTACK, "Scout: Attacking robots.");
-							m_iRouteType[client] = DEFAULT_ROUTE;
-						}
-						else
-						{
-							ChangeAction(client, ACTION_IDLE, "Scout: Nothing to do.");
-							m_iRouteType[client] = DEFAULT_ROUTE;
-						}
-					}
-					case TFClass_Sniper:
-					{
-						ChangeAction(client, ACTION_SNIPER_LURK, "Sniper: wants to lurk.");	
-						m_iRouteType[client] = SAFEST_ROUTE;
-					}
-					default:
-					{
-						if(CTFBotAttack_IsPossible(client))
-						{
-							ChangeAction(client, ACTION_ATTACK, "CTFBotAttack_IsPossible");
-							m_iRouteType[client] = FASTEST_ROUTE;
-						}
-						else if(CTFBotCollectMoney_IsPossible(client))
-						{
-							ChangeAction(client, ACTION_COLLECT_MONEY, "CTFBotCollectMoney_IsPossible");
-							m_iRouteType[client] = SAFEST_ROUTE;
-						}
-						else
-						{
-							ChangeAction(client, ACTION_IDLE, "Nothing to do.");
-							m_iRouteType[client] = DEFAULT_ROUTE;
-						}
-					}
-				}
-			}
-		}	
-	}
+	Dodge(client);
 	
 	if(g_bPath[client])
 	{
@@ -480,6 +363,7 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 	
 	return bChanged ? Plugin_Changed : Plugin_Continue;
 }
+
 
 stock bool OpportunisticallyUseWeaponAbilities(int client)
 {
@@ -605,6 +489,130 @@ bool l_is_above_ground(int actor, float min_height)
 	return !PF_IsPotentiallyTraversable(actor, from, to, IMMEDIATELY, NULL_FLOAT);
 }
 
+stock void StartMainAction(int client)
+{
+	bool bCanCheck = g_flNextUpdate[client] < GetGameTime();
+	
+	if(!bCanCheck)
+		return;
+		
+	SetHudTextParams(0.05, 0.05, 1.1, 255, 255, 200, 255, 0, 0.0, 0.0, 0.0);
+	ShowSyncHudText(client, g_hHudInfo, "%s\nRouteType %s\nPathing %s\nRetreating %s\nLookAroundForEnemies %s\nWeapon %s #%i\n\nThe server plays for you while you are away.\nPress any key to take control\n ", 
+										CurrentActionToName(g_iCurrentAction[client]), 
+										CurrentRouteTypeToName(client), 
+										g_bPath[client] ? "Yes" : "No",
+										g_bRetreat[client] ? "Yes" : "No",
+										g_bUpdateLookingAroundForEnemies[client] ? "Yes" : "No",
+										CurrentWeaponIDToName(client),
+										GetWeaponID(GetActiveWeapon(client)));
+	
+	if(g_RoundState == RoundState_BetweenRounds)
+	{
+		if(CTFBotCollectMoney_IsPossible(client))
+		{
+			ChangeAction(client, ACTION_COLLECT_MONEY, "CTFBotCollectMoney is possible");
+			m_iRouteType[client] = FASTEST_ROUTE;
+		}
+		else if(!IsStandingAtUpgradeStation(client) && g_iCurrentAction[client] != ACTION_MOVE_TO_FRONT && !GameRules_GetProp("m_bPlayerReady", 1, client))
+		{
+			ChangeAction(client, ACTION_GOTO_UPGRADE, "!IsStandingAtUpgradeStation && RoundState_BetweenRounds");
+			m_iRouteType[client] = DEFAULT_ROUTE;
+		}
+	}
+	else if(g_RoundState == RoundState_RoundRunning)
+	{
+		OpportunisticallyUseWeaponAbilities(client);
+	
+		bool low_health = false;
+		
+		float health_ratio = view_as<float>(GetClientHealth(client)) / view_as<float>(GetMaxHealth(client));
+		
+		if ((GetTimeSinceWeaponFired(client) > 2.0 || TF2_GetPlayerClass(client) == TFClass_Sniper)	&& health_ratio < FindConVar("tf_bot_health_critical_ratio").FloatValue){
+			low_health = true;
+		} 
+		else if (health_ratio < FindConVar("tf_bot_health_ok_ratio").FloatValue){
+			low_health = true;
+		}
+		
+		SetEntProp(client, Prop_Data, "m_bLagCompensation", false);
+		SetEntProp(client, Prop_Data, "m_bPredictWeapons", false);
+		
+		if (g_iCurrentAction[client] != ACTION_GET_HEALTH && low_health && CTFBotGetHealth_IsPossible(client))
+		{
+			ChangeAction(client, ACTION_GET_HEALTH, "Getting health");
+			m_iRouteType[client] = SAFEST_ROUTE;
+		}
+		else if (g_iCurrentAction[client] != ACTION_GET_AMMO && IsAmmoLow(client) && CTFBotGetAmmo_IsPossible(client))
+		{
+			ChangeAction(client, ACTION_GET_AMMO, "Getting ammo");
+			m_iRouteType[client] = SAFEST_ROUTE;
+		}
+		else
+		{
+			if(g_iCurrentAction[client] != ACTION_USE_ITEM
+			&& g_iCurrentAction[client] != ACTION_MELEE_ATTACK)
+			{
+				switch(TF2_GetPlayerClass(client))
+				{
+					case TFClass_Medic:
+					{
+						ChangeAction(client, ACTION_MEDIC_HEAL, "Medic: Start heal mission");
+						m_iRouteType[client] = FASTEST_ROUTE;
+					}
+					case TFClass_Scout:
+					{
+						if(CTFBotCollectMoney_IsPossible(client))
+						{
+							ChangeAction(client, ACTION_COLLECT_MONEY, "Scout: Collecting money.");
+							m_iRouteType[client] = FASTEST_ROUTE;
+						}
+						else if(CTFBotMarkGiant_IsPossible(client))
+						{
+							ChangeAction(client, ACTION_MARK_GIANT, "Scout: Marking giant.");	
+							m_iRouteType[client] = SAFEST_ROUTE;
+						}
+						else if(CTFBotAttack_IsPossible(client))
+						{
+							ChangeAction(client, ACTION_ATTACK, "Scout: Attacking robots.");
+							m_iRouteType[client] = DEFAULT_ROUTE;
+						}
+						else
+						{
+							ChangeAction(client, ACTION_IDLE, "Scout: Nothing to do.");
+							m_iRouteType[client] = DEFAULT_ROUTE;
+						}
+					}
+					case TFClass_Sniper:
+					{
+						ChangeAction(client, ACTION_SNIPER_LURK, "Sniper: wants to lurk.");	
+						m_iRouteType[client] = SAFEST_ROUTE;
+					}
+					default:
+					{
+						if(CTFBotAttack_IsPossible(client))
+						{
+							ChangeAction(client, ACTION_ATTACK, "CTFBotAttack_IsPossible");
+							m_iRouteType[client] = FASTEST_ROUTE;
+						}
+						else if(CTFBotCollectMoney_IsPossible(client))
+						{
+							ChangeAction(client, ACTION_COLLECT_MONEY, "CTFBotCollectMoney_IsPossible");
+							m_iRouteType[client] = SAFEST_ROUTE;
+						}
+						else
+						{
+							ChangeAction(client, ACTION_IDLE, "Nothing to do.");
+							m_iRouteType[client] = DEFAULT_ROUTE;
+						}
+					}
+				}
+			}
+		}	
+	}
+	
+	g_flNextUpdate[client] = GetGameTime() + 1.0;
+}
+
 //Stop whatever current action we're doing properly, and change to another.
 //Return whether or not a new action was started.
 stock bool ChangeAction(int client, int new_action, const char[] reason = "None")
@@ -623,6 +631,23 @@ stock bool ChangeAction(int client, int new_action, const char[] reason = "None"
 	g_bStartedAction[client] = false;
 	
 	//Stop
+	StopCurrentAction(client);
+
+	//Start
+	StartNewAction(client, new_action);
+	
+	//Store
+	g_iCurrentAction[client] = new_action;
+	
+	SetVariantString(g_szBotModels[view_as<int>(TF2_GetPlayerClass(client)) - 1]);
+	AcceptEntityInput(client, "SetCustomModel");
+	SetEntProp(client, Prop_Send, "m_bUseClassAnimations", 1);
+
+	return g_bStartedAction[client];
+}
+
+stock void StopCurrentAction(int client)
+{
 	switch(g_iCurrentAction[client])
 	{
 		case ACTION_MARK_GIANT:    CTFBotMarkGiant_OnEnd(client);
@@ -636,9 +661,12 @@ stock bool ChangeAction(int client, int new_action, const char[] reason = "None"
 		case ACTION_USE_ITEM:      CTFBotUseItem_OnEnd(client);
 		case ACTION_SNIPER_LURK:   CTFBotSniperLurk_OnEnd(client);
 		case ACTION_MEDIC_HEAL:    CTFBotMedicHeal_OnEnd(client);
+		case ACTION_MELEE_ATTACK:  CTFBotMeleeAttack_OnEnd(client);
 	}
-	
-	//Start
+}
+
+stock void StartNewAction(int client, int new_action)
+{
 	switch(new_action)
 	{
 		case ACTION_IDLE:          g_bPath[client] = false;
@@ -653,16 +681,8 @@ stock bool ChangeAction(int client, int new_action, const char[] reason = "None"
 		case ACTION_USE_ITEM:      g_bStartedAction[client] = CTFBotUseItem_OnStart(client);
 		case ACTION_SNIPER_LURK:   g_bStartedAction[client] = CTFBotSniperLurk_OnStart(client);
 		case ACTION_MEDIC_HEAL:    g_bStartedAction[client] = CTFBotMedicHeal_OnStart(client);
+		case ACTION_MELEE_ATTACK:  g_bStartedAction[client] = CTFBotMeleeAttack_OnStart(client);
 	}
-	
-	//Store
-	g_iCurrentAction[client] = new_action;
-	
-	SetVariantString(g_szBotModels[view_as<int>(TF2_GetPlayerClass(client)) - 1]);
-	AcceptEntityInput(client, "SetCustomModel");
-	SetEntProp(client, Prop_Send, "m_bUseClassAnimations", 1);
-
-	return g_bStartedAction[client];
 }
 
 stock bool RunCurrentAction(int client)
@@ -681,6 +701,7 @@ stock bool RunCurrentAction(int client)
 		case ACTION_USE_ITEM:      g_bStartedAction[client] = CTFBotUseItem_Update(client);
 		case ACTION_SNIPER_LURK:   g_bStartedAction[client] = CTFBotSniperLurk_Update(client);
 		case ACTION_MEDIC_HEAL:    g_bStartedAction[client] = CTFBotMedicHeal_Update(client);
+		case ACTION_MELEE_ATTACK:  g_bStartedAction[client] = CTFBotMeleeAttack_Update(client);
 	}
 
 	switch(g_iCurrentAction[client])
@@ -1199,7 +1220,8 @@ public void PluginBot_MoveToSuccess(int bot_entidx, Address path)
 	&& g_iCurrentAction[bot_entidx] != ACTION_GET_HEALTH
 	&& g_iCurrentAction[bot_entidx] != ACTION_MOVE_TO_FRONT
 	&& g_iCurrentAction[bot_entidx] != ACTION_USE_ITEM
-	&& g_iCurrentAction[bot_entidx] != ACTION_MEDIC_HEAL)
+	&& g_iCurrentAction[bot_entidx] != ACTION_MEDIC_HEAL
+	&& g_iCurrentAction[bot_entidx] != ACTION_MELEE_ATTACK)
 		ChangeAction(bot_entidx, ACTION_IDLE, "PluginBot_MoveToSuccess: Reached path goal.");
 }
 

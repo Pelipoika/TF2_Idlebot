@@ -527,6 +527,42 @@ stock int TF2_FindBotNearestToBombNearestToHatch(int client)
 	return iBestEntity;
 }
 
+stock int TF2_FindBotNearestToMe(int client, float max_distance)
+{
+	float flOrigin[3]; flOrigin = WorldSpaceCenter(client);
+	
+	float flBestDistance = 999999.0;
+	int iBestEntity = 0;
+	
+	for(int i = 1; i <= MaxClients; i++)
+	{
+		if(i == client)
+			continue;
+		
+		if(!IsClientInGame(i))
+			continue;
+		
+		if(!IsPlayerAlive(i))
+			continue;
+		
+		if(TF2_GetClientTeam(i) != GetEnemyTeam(client))
+			continue;
+		
+		//Always ignore Sentry Busters
+		if(TF2_IsBuster(i))
+			continue;
+		
+		float flDistance = GetVectorDistance(WorldSpaceCenter(i), flOrigin);
+		if(flDistance <= flBestDistance && flDistance <= max_distance)
+		{
+			flBestDistance = flDistance;
+			iBestEntity = i;
+		}
+	}
+	
+	return iBestEntity;
+}
+
 stock int TF2_FindBombNearestToHatch()
 {
 	float flOrigin[3]; flOrigin = TF2_GetBombHatchPosition();
@@ -1009,6 +1045,7 @@ stock char CurrentActionToName(int action)
 		case ACTION_IDLE:          name = "IDLE";
 		case ACTION_SNIPER_LURK:   name = "SNIPER LURK";
 		case ACTION_MEDIC_HEAL:    name = "MEDIC HEAL";
+		case ACTION_MELEE_ATTACK:  name = "MELEE ATTACK";
 	}
 	
 	return name;
@@ -1573,6 +1610,28 @@ stock bool IsAnyEnemySentryAbleToAttackMe(int client)
 		}
 	}
 	return (unsigned __int8)v9;
+}
+
+stock bool UTIL_IsVisibleToTeam(float vecPos[3], int team)
+{
+    for (int i = 1; i <= MaxClients; i++)
+    {
+        if(!IsClientInGame(i))
+            continue;
+            
+        if(!IsPlayerAlive(i))
+            continue;
+            
+        if(GetClientTeam(i) != team)
+            continue;
+        
+        if(!IsLineOfFireClear(vecPos, GetEyePosition(i)))
+            continue;
+            
+        return true;
+    }
+    
+    return false;
 }
 
 stock bool IsThreatAimingTowardMe(int entity, int looker, float flDot)

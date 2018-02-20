@@ -11,6 +11,8 @@
 const float tf_bot_sniper_patience_duration = 10.0;
 // How long a Sniper bot will keep toward at a target it just lost sight of
 const float tf_bot_sniper_target_linger_duration = 2.0;
+// If threat is closer than this, attack with melee weapon
+const float tf_bot_sniper_melee_range = 200.0;
 
 // If set, Snipers will stop on their way to their preferred lurking spot to snipe at opportunistic targets
 const bool tf_bot_sniper_allow_opportunistic = true;
@@ -70,7 +72,15 @@ bool CTFBotSniperLurk_Update(int actor)
 		{
 			BotAim(actor).PressAltFireButton();
 		}
-	
+
+
+		if(GetVectorDistance(GetAbsOrigin(m_hAimTarget[actor]), GetAbsOrigin(actor)) < tf_bot_sniper_melee_range)
+		{
+			ChangeAction(actor, ACTION_MELEE_ATTACK, "Melee attacking nearby threat");
+			CTFBotMeleeAttack_OnStart(actor, 1.25 * tf_bot_sniper_melee_range);
+			return true;
+		}
+		
 		if (m_bOpportunistic[actor]) 
 		{
 			EquipWeaponSlot(actor, TFWeaponSlot_Primary);
