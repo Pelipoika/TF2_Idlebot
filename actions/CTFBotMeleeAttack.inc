@@ -16,6 +16,8 @@ bool CTFBotMeleeAttack_OnStart(int actor, float abandon_range = -1.0)
 		m_flAbandonRange[actor] = abandon_range;
 	}
 	
+	g_bUpdateLookingAroundForEnemies[actor] = false;
+	
 	return true;
 }
 
@@ -40,6 +42,7 @@ bool CTFBotMeleeAttack_Update(int actor)
 	EquipWeaponSlot(actor, TFWeaponSlot_Melee);
 	//PrintToServer("EquipWeaponSlot MELEE");
 	
+	BotAim(actor).AimHeadTowardsEntity(bot_nearest_to_me, OVERRIDE_ALL, 0.1, "Aim at nearby melee target.");
 	BotAim(actor).PressFireButton();
 	
 	PF_SetGoalEntity(actor, bot_nearest_to_me);
@@ -50,5 +53,5 @@ bool CTFBotMeleeAttack_Update(int actor)
 void CTFBotMeleeAttack_OnEnd(int actor)
 {
 	//Something here so we don't get a compile warning
-	m_flAbandonRange[actor] = 1.0;
+	g_bUpdateLookingAroundForEnemies[actor] = true;
 }
