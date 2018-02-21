@@ -276,9 +276,7 @@ stock bool GetBombInfo(JSONObject info)
 	}
 	
 	int closest_flag = INVALID_ENT_REFERENCE;
-	float closest_flag_x;
-	float closest_flag_y;
-	float closest_flag_z;
+	float closest_flag_pos[3];
 	
 	int flag = -1;
 	while ((flag = FindEntityByClassname(flag, "item_teamflag")) != -1)
@@ -309,6 +307,7 @@ stock bool GetBombInfo(JSONObject info)
 		{
 			closest_flag = flag;
 			hatch_dist = m_flBombTargetDistance;
+			closest_flag_pos = flag_pos;
 		}
 	}
 	
@@ -317,9 +316,9 @@ stock bool GetBombInfo(JSONObject info)
 	float range_back = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_backward_range").FloatValue;
 	float range_fwd  = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_forward_range").FloatValue;
 	
-	info.SetFloat("closest_pos_x", closest_flag_x);
-	info.SetFloat("closest_pos_y", closest_flag_y);
-	info.SetFloat("closest_pos_z", closest_flag_z);
+	info.SetFloat("closest_pos_x", closest_flag_pos[0]);
+	info.SetFloat("closest_pos_y", closest_flag_pos[1]);
+	info.SetFloat("closest_pos_z", closest_flag_pos[2]);
 	info.SetFloat("hatch_dist_back", hatch_dist + range_back);
 	info.SetFloat("hatch_dist_fwd",  hatch_dist - range_fwd);
 	
