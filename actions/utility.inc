@@ -63,6 +63,8 @@ Handle g_hIsUpgradeTierEnabled;
 
 Address g_MannVsMachineUpgrades;
 Address g_pGameRules;
+Address TheNavAreas;
+Address navarea_count;
 
 void InitGamedata()
 {
@@ -208,11 +210,120 @@ void InitGamedata()
 	if ((g_hGetAttributeDefinitionByName = EndPrepSDKCall()) == null) SetFailState("Failed to create SDKCall for CEconItemSchema::GetAttributeDefinitionByName signature!"); 
 	
 	g_MannVsMachineUpgrades = GameConfGetAddress(hConf, "MannVsMachineUpgrades");
-	g_pGameRules = GameConfGetAddress(hConf, "GameRules");
+	PrintToServer("Found \"g_MannVsMachineUpgrades\" @ 0x%X", g_MannVsMachineUpgrades);
 	
-	PrintToServer("g_MannVsMachineUpgrades 0x%x\ng_pGameRules 0x%x", g_MannVsMachineUpgrades, g_pGameRules);
+	g_pGameRules = GameConfGetAddress(hConf, "GameRules");
+	PrintToServer("Found \"g_pGameRules\" @ 0x%X", g_pGameRules);
+
+
+	navarea_count = GameConfGetAddress(hConf, "navarea_count");
+	PrintToServer("Found \"navarea_count\" @ 0x%X", navarea_count);
+	
+	//TheNavAreas is nicely above navarea_count
+	TheNavAreas = view_as<Address>(LoadFromAddress(navarea_count + view_as<Address>(0x4), NumberType_Int32));
+	PrintToServer("Found \"TheNavAreas\" @ 0x%X", TheNavAreas);
+	
+	
+	JSONObject BombInfo = new JSONObject();
+	bool success = GetBombInfo(BombInfo);
+	
+	char strJSON[5028];
+	BombInfo.ToString(strJSON, sizeof(strJSON), JSON_INDENT(4));
+	
+	PrintToServer("\nsuccess ? %s\n%s\n", success ? "Yes" : "No", strJSON);
+
+	delete BombInfo;
+	
 
 	delete hConf;
+}
+
+/*
+struct BombInfo_t
+{
+	Vector closest_pos;
+	float hatch_dist_fwd;
+	float hatch_dist_back;
+};
+*/
+
+//TODO Gamedata me
+const int g_iBombTargetDistance = 548;	//0x224h
+
+stock bool GetBombInfo(JSONObject info)
+{
+	int iAreaCount = LoadFromAddress(navarea_count, NumberType_Int32);
+
+	//Check that this map has any nav areas
+	if ( iAreaCount <= 0 )
+		return false;
+
+	float hatch_dist = 0.0;
+	
+	for (int i = 0; i < (iAreaCount - 1); i++)
+	{
+		NavArea area = view_as<NavArea>(LoadFromAddress(TheNavAreas + view_as<Address>(4 * i), NumberType_Int32));
+		
+		//Skip spawn areas
+		if (HasTFAttributes(area, (BLUE_SPAWN_ROOM | RED_SPAWN_ROOM))) {
+			//PrintToServer("Skip spawn area.. #%i", area.GetID());
+			continue;
+		}
+		
+		float m_flBombTargetDistance = view_as<float>(LoadFromAddress(view_as<Address>(area) + view_as<Address>(g_iBombTargetDistance), NumberType_Int32));
+		
+		hatch_dist = Max(Max(m_flBombTargetDistance, hatch_dist), 0.0);
+	}
+	
+	int closest_flag = INVALID_ENT_REFERENCE;
+	float closest_flag_x;
+	float closest_flag_y;
+	float closest_flag_z;
+	
+	int flag = -1;
+	while ((flag = FindEntityByClassname(flag, "item_teamflag")) != -1)
+	{
+		//Ignore bombs not in play
+		if(GetEntProp(flag, Prop_Send, "m_nFlagStatus") == 0)
+			continue;
+		
+		//Ignore bombs not on our team
+		if (GetEntProp(flag, Prop_Send, "m_iTeamNum") != view_as<int>(TFTeam_Blue))
+			continue;
+			
+		float flag_pos[3];
+		
+		int owner = GetOwnerEntity(flag);
+		
+		if (IsValidClientIndex(owner)) 	{
+			flag_pos = GetAbsOrigin(owner);
+		} else {
+			flag_pos = WorldSpaceCenter(flag);
+		}
+		
+		NavArea area = TheNavMesh.GetNearestNavArea_Vec(flag_pos);
+		
+		float m_flBombTargetDistance = view_as<float>(LoadFromAddress(view_as<Address>(area) + view_as<Address>(g_iBombTargetDistance), NumberType_Int32));
+		
+		if (area != NavArea_Null && m_flBombTargetDistance < hatch_dist) 
+		{
+			closest_flag = flag;
+			hatch_dist = m_flBombTargetDistance;
+		}
+	}
+	
+	bool success = (closest_flag != INVALID_ENT_REFERENCE);
+	
+	float range_back = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_backward_range").FloatValue;
+	float range_fwd  = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_forward_range").FloatValue;
+	
+	info.SetFloat("closest_pos_x", closest_flag_x);
+	info.SetFloat("closest_pos_y", closest_flag_y);
+	info.SetFloat("closest_pos_z", closest_flag_z);
+	info.SetFloat("hatch_dist_back", hatch_dist + range_back);
+	info.SetFloat("hatch_dist_fwd",  hatch_dist - range_fwd);
+	
+	return success;
 }
 
 stock void SnapEyeAngles(int client, float viewAngles[3])

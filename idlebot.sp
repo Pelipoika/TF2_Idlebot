@@ -98,6 +98,13 @@ Handle g_hHudInfo;
 //https://github.com/sigsegv-mvm/mvm-reversed/blob/b2a43a54093fca4e16068e64e567b871bd7d875e/server/tf/bot/behavior/tf_bot_behavior.cpp#L270-L301
 //Reverse CTFBotVision AFTER you have implemented IVision into extension
 
+//Reverse void CTFBot::EquipBestWeaponForThreat(CKnownEntity const*)
+//	Mainly for soldiers shotgun handling
+
+//Figure out what "tf_bot_mvm_show_engineer_hint_region" is doing
+//	https://gist.github.com/sigsegv-mvm/a1f103ae79bbb0a5c5ff7dcd4a378958
+//	Engineer bots use BombInfo to determine if they should advance their buildings
+
 public Plugin myinfo = 
 {
 	name = "[TF2] MvM AFK Bot",
@@ -116,8 +123,12 @@ public void OnPluginStart()
 	
 	g_hHudInfo = CreateHudSynchronizer();
 	
-	InitGamedata();
 	InitTFBotAim();
+}
+
+public void OnMapStart()
+{
+	InitGamedata();
 }
 
 public void OnClientPutInServer(int client)
@@ -534,14 +545,14 @@ stock void StartMainAction(int client)
 			low_health = true;
 		}
 	
-		if (g_iCurrentAction[client] == ACTION_GET_HEALTH && low_health && CTFBotGetHealth_IsPossible(client))
+		if (low_health && CTFBotGetHealth_IsPossible(client))
 		{
 			ChangeAction(client, ACTION_GET_HEALTH, "Getting health");
 			m_iRouteType[client] = SAFEST_ROUTE;
 			
 			return;
 		}
-		else if (g_iCurrentAction[client] == ACTION_GET_AMMO && IsAmmoLow(client) && CTFBotGetAmmo_IsPossible(client))
+		else if (IsAmmoLow(client) && CTFBotGetAmmo_IsPossible(client))
 		{
 			ChangeAction(client, ACTION_GET_AMMO, "Getting ammo");
 			m_iRouteType[client] = SAFEST_ROUTE;

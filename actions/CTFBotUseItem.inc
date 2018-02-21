@@ -21,7 +21,7 @@ float m_ctTimeout[MAXPLAYERS + 1];
 
 bool CTFBotUseItem_OnStart(int actor)
 {
-	PrintToServer("[%8.3f] CTFBotUseItem(#%d): OnStart", GetGameTime(), actor, actor);
+	//PrintToServer("[%8.3f] CTFBotUseItem(#%d): OnStart", GetGameTime(), actor, actor);
 
 	m_TauntState[actor] = BEFORE;
 	m_State[actor] = FIRE;
@@ -43,7 +43,7 @@ stock bool CTFBotUseItem_Update(int actor)
 {
 	if (m_ctTimeout[actor] < GetGameTime())
 	{
-		PrintToServer("[%8.3f] CTFBotUseItem(#%d): Timeout elapsed!", GetGameTime(), actor, actor);
+		//PrintToServer("[%8.3f] CTFBotUseItem(#%d): Timeout elapsed!", GetGameTime(), actor, actor);
 		ChangeAction(actor, ACTION_IDLE, "CTFBotUseItem: Timeout elapsed!");
 		return false;
 	}
@@ -56,7 +56,7 @@ stock bool CTFBotUseItem_Update(int actor)
 		{
 			if (GetGameTime() >= m_flSwitchTime[actor])
 			{
-				PrintToServer("[%8.3f] CTFBotUseItem(#%d): Using item now", GetGameTime(), actor, actor);
+				//PrintToServer("[%8.3f] CTFBotUseItem(#%d): Using item now", GetGameTime(), actor, actor);
 				
 				BotAim(actor).PressFireButton(1.0);
 				m_State[actor] = WAIT;
@@ -66,7 +66,7 @@ stock bool CTFBotUseItem_Update(int actor)
 		{
 			if (CTFBotUseItem_IsDone(actor)) 
 			{
-				PrintToServer("[%8.3f] CTFBotUseItem(#%d): Done using item", GetGameTime(), actor, actor);
+				//PrintToServer("[%8.3f] CTFBotUseItem(#%d): Done using item", GetGameTime(), actor, actor);
 				EquipWeaponSlot(actor, TFWeaponSlot_Primary);
 				ChangeAction(actor, ACTION_IDLE, "CTFBotUseItem: Done using item");
 				return false;
@@ -79,7 +79,7 @@ stock bool CTFBotUseItem_Update(int actor)
 
 void CTFBotUseItem_OnEnd(int actor)
 {
-	PrintToServer("[%8.3f] CTFBotUseItem(#%d): OnEnd", GetGameTime(), actor, actor);
+	//PrintToServer("[%8.3f] CTFBotUseItem(#%d): OnEnd", GetGameTime(), actor, actor);
 	BotAim(actor).ReleaseFireButton();
 }
 
