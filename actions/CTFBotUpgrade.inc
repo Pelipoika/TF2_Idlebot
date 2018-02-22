@@ -124,7 +124,7 @@ bool CTFBotPurchaseUpgrades_Update(int actor)
 			else if(TF2_GetPlayerClass(actor) == TFClass_Medic)
 				ChangeAction(actor, ACTION_MEDIC_HEAL, "Medic: Start heal mission.");
 			else
-				StartMainAction(actor, true);
+				ChangeAction(actor, ACTION_MOVE_TO_FRONT, "Finished upgrading; Move to front and press F4"); 
 			
 			//Engineer presses F4 once done setting up buildings.
 			if(TF2_GetPlayerClass(actor) != TFClass_Engineer)

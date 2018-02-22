@@ -46,7 +46,7 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 	PF_SetGoalVector(actor, GetAbsOrigin(m_hintEntity[actor]));
 	g_bPath[actor] = true;
 	
-	if(range_to_hint > 60.0)
+	if(range_to_hint > 70.0)
 		return false;
 	
 	g_bUpdateLookingAroundForEnemies[actor] = false;

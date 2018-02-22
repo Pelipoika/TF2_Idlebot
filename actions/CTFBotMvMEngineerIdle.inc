@@ -47,7 +47,7 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 	
 	EquipWeaponSlot(actor, TFWeaponSlot_Melee);
 	
-	if (m_hHintNest[actor] == INVALID_ENT_REFERENCE || CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(actor)) 
+	if (m_hHintNest[actor] == INVALID_ENT_REFERENCE/* || CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(actor)*/) 
 	{
 		//HasStarted && !IsElapsed
 		if (m_ctFindNestHint[actor] > 0.0 && m_ctFindNestHint[actor] > GetGameTime()) 
@@ -76,7 +76,7 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 		SetOwnerEntity(h_nest, actor);
 		
 		m_hHintSentry[actor] = GetSentryHint(m_hHintNest[actor]);
-		//TakeOverStaleNest(m_hHintSentry[actor], actor);
+		TakeOverStaleNest(m_hHintSentry[actor], actor);
 	}
 	
 	int sentry = INVALID_ENT_REFERENCE;

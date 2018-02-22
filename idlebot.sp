@@ -77,7 +77,6 @@ char g_szBotModels[][] =
 
 #include <actions/utility>
 
-
 #include <actions/CTFBotAttack>
 #include <actions/CTFBotMarkGiant>
 #include <actions/CTFBotCollectMoney>
@@ -101,6 +100,9 @@ Handle g_hHudInfo;
 //https://github.com/danielmm8888/TF2Classic/blob/d070129a436a8a070659f0267f6e63564a519a47/src/game/shared/tf/tf_gamemovement.cpp#L953
 //https://github.com/sigsegv-mvm/mvm-reversed/blob/b2a43a54093fca4e16068e64e567b871bd7d875e/server/tf/bot/behavior/tf_bot_behavior.cpp#L270-L301
 //Reverse CTFBotVision AFTER you have implemented IVision into extension
+
+//Reverse void CTFBotEngineerMoveToBuild::SelectBuildLocation(CTFBot *actor)
+//Reverse void CTFBotEngineerMoveToBuild::CollectBuildAreas(CTFBot *actor)
 
 //Reverse void CTFBot::EquipBestWeaponForThreat(CKnownEntity const*)
 //	Mainly for soldiers shotgun handling

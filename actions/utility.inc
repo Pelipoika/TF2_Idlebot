@@ -314,10 +314,12 @@ stock bool GetBombInfo(JSONObject info)
 		}
 		
 		NavArea area = TheNavMesh.GetNearestNavArea_Vec(flag_pos);
+		if(area == NavArea_Null)
+			continue;
 		
 		float m_flBombTargetDistance = view_as<float>(LoadFromAddress(view_as<Address>(area) + view_as<Address>(g_iBombTargetDistance), NumberType_Int32));
 		
-		if (area != NavArea_Null && m_flBombTargetDistance < hatch_dist) 
+		if (m_flBombTargetDistance < hatch_dist) 
 		{
 			closest_flag = flag;
 			hatch_dist = m_flBombTargetDistance;
@@ -327,11 +329,11 @@ stock bool GetBombInfo(JSONObject info)
 	
 	bool success = (closest_flag != INVALID_ENT_REFERENCE);
 	
-	float range_back = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_backward_range").FloatValue;
-	float range_fwd  = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_forward_range").FloatValue;
+	//float range_back = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_backward_range").FloatValue;
+	//float range_fwd  = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_forward_range").FloatValue;
 	
-	//float range_fwd   = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_backward_range").FloatValue;
-	//float range_back  = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_forward_range").FloatValue;
+	float range_fwd   = 0.0;
+	float range_back  = 3000.0;
 	
 	info.SetFloat("closest_pos_x", closest_flag_pos[0]);
 	info.SetFloat("closest_pos_y", closest_flag_pos[1]);
