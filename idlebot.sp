@@ -82,7 +82,6 @@ char g_szBotModels[][] =
 #include <actions/CTFBotMarkGiant>
 #include <actions/CTFBotCollectMoney>
 #include <actions/CTFBotGoToUpgradeStation>
-#include <actions/CTFBotUpgrade>
 #include <actions/CTFBotGetAmmo>
 #include <actions/CTFBotGetHealth>
 #include <actions/CTFBotMoveToFront>
@@ -92,6 +91,7 @@ char g_szBotModels[][] =
 #include <actions/CTFBotMeleeAttack>
 #include <actions/CTFBotMvMEngineerIdle>
 #include <actions/CTFBotMvMEngineerBuildSentryGun>
+#include <actions/CTFBotUpgrade>
 
 Handle g_hHudInfo;
 
@@ -510,7 +510,7 @@ stock void StartMainAction(int client, bool pretend = false)
 	
 	if(!bCanCheck)
 		return;
-		
+
 	SetHudTextParams(0.05, 0.05, 1.1, 255, 255, 200, 255, 0, 0.0, 0.0, 0.0);
 	ShowSyncHudText(client, g_hHudInfo, "%s\nRouteType %s\nPathing %s\nRetreating %s\nLookAroundForEnemies %s\nWeapon %s #%i\n\nThe server plays for you while you are away.\nPress any key to take control\n ", 
 										CurrentActionToName(g_iCurrentAction[client]), 
@@ -522,14 +522,17 @@ stock void StartMainAction(int client, bool pretend = false)
 										GetWeaponID(GetActiveWeapon(client)));
 	
 	if(g_RoundState == RoundState_BetweenRounds && !pretend)
-	{
+	{	
 		if(CTFBotCollectMoney_IsPossible(client))
 		{
 			ChangeAction(client, ACTION_COLLECT_MONEY, "CTFBotCollectMoney is possible");
 			m_iRouteType[client] = FASTEST_ROUTE;
 		}
-		else if(!IsStandingAtUpgradeStation(client) && g_iCurrentAction[client] != ACTION_MOVE_TO_FRONT && !GameRules_GetProp("m_bPlayerReady", 1, client))
-		{
+		else if(!IsStandingAtUpgradeStation(client) && !GameRules_GetProp("m_bPlayerReady", 1, client)
+			&& g_iCurrentAction[client] != ACTION_MOVE_TO_FRONT 
+			&& g_iCurrentAction[client] != ACTION_MVM_ENGINEER_IDLE
+			&& g_iCurrentAction[client] != ACTION_MVM_ENGINEER_BUILD_SENTRYGUN)
+		{		
 			ChangeAction(client, ACTION_GOTO_UPGRADE, "!IsStandingAtUpgradeStation && RoundState_BetweenRounds");
 			m_iRouteType[client] = DEFAULT_ROUTE;
 		}
@@ -567,7 +570,9 @@ stock void StartMainAction(int client, bool pretend = false)
 		SetEntProp(client, Prop_Data, "m_bLagCompensation", false);
 		SetEntProp(client, Prop_Data, "m_bPredictWeapons", false);
 		
-	
+		if(g_iCurrentAction[client] == ACTION_MVM_ENGINEER_BUILD_SENTRYGUN)
+			return;
+
 		if(g_iCurrentAction[client] != ACTION_USE_ITEM
 		&& g_iCurrentAction[client] != ACTION_MELEE_ATTACK)
 		{
@@ -575,56 +580,56 @@ stock void StartMainAction(int client, bool pretend = false)
 			{
 				case TFClass_Medic:
 				{
-					ChangeAction(client, ACTION_MEDIC_HEAL, "Medic: Start heal mission");
+					ChangeAction(client, ACTION_MEDIC_HEAL, "StartMainAction Medic: Start heal mission");
 					m_iRouteType[client] = FASTEST_ROUTE;
 				}
 				case TFClass_Scout:
 				{
 					if(CTFBotCollectMoney_IsPossible(client))
 					{
-						ChangeAction(client, ACTION_COLLECT_MONEY, "Scout: Collecting money.");
+						ChangeAction(client, ACTION_COLLECT_MONEY, "StartMainAction Scout: Collecting money.");
 						m_iRouteType[client] = FASTEST_ROUTE;
 					}
 					else if(CTFBotMarkGiant_IsPossible(client))
 					{
-						ChangeAction(client, ACTION_MARK_GIANT, "Scout: Marking giant.");	
+						ChangeAction(client, ACTION_MARK_GIANT, "StartMainAction Scout: Marking giant.");	
 						m_iRouteType[client] = SAFEST_ROUTE;
 					}
 					else if(CTFBotAttack_IsPossible(client))
 					{
-						ChangeAction(client, ACTION_ATTACK, "Scout: Attacking robots.");
+						ChangeAction(client, ACTION_ATTACK, "StartMainAction Scout: Attacking robots.");
 						m_iRouteType[client] = DEFAULT_ROUTE;
 					}
 					else
 					{
-						ChangeAction(client, ACTION_IDLE, "Scout: Nothing to do.");
+						ChangeAction(client, ACTION_IDLE, "StartMainAction Scout: Nothing to do.");
 						m_iRouteType[client] = DEFAULT_ROUTE;
 					}
 				}
 				case TFClass_Sniper:
 				{
-					ChangeAction(client, ACTION_SNIPER_LURK, "Sniper: wants to lurk.");	
+					ChangeAction(client, ACTION_SNIPER_LURK, "StartMainAction Sniper: wants to lurk.");	
 					m_iRouteType[client] = SAFEST_ROUTE;
 				}
 				case TFClass_Engineer:
 				{
-					ChangeAction(client, ACTION_MVM_ENGINEER_IDLE, "Engineer: Start building.");
+					ChangeAction(client, ACTION_MVM_ENGINEER_IDLE, "StartMainAction Engineer: Start building.");
 				}
 				default:
 				{
 					if(CTFBotAttack_IsPossible(client))
 					{
-						ChangeAction(client, ACTION_ATTACK, "CTFBotAttack_IsPossible");
+						ChangeAction(client, ACTION_ATTACK, "StartMainAction CTFBotAttack_IsPossible");
 						m_iRouteType[client] = FASTEST_ROUTE;
 					}
 					else if(CTFBotCollectMoney_IsPossible(client))
 					{
-						ChangeAction(client, ACTION_COLLECT_MONEY, "CTFBotCollectMoney_IsPossible");
+						ChangeAction(client, ACTION_COLLECT_MONEY, "StartMainAction CTFBotCollectMoney_IsPossible");
 						m_iRouteType[client] = SAFEST_ROUTE;
 					}
 					else
 					{
-						ChangeAction(client, ACTION_IDLE, "Nothing to do.");
+						ChangeAction(client, ACTION_IDLE, "StartMainAction Nothing to do.");
 						m_iRouteType[client] = DEFAULT_ROUTE;
 					}
 				}
@@ -796,6 +801,9 @@ stock bool RunCurrentAction(int client)
 
 stock void UpdateLookingAroundForEnemies(int client)
 {
+	if(!g_bUpdateLookingAroundForEnemies[client])
+		return;
+
 	int iTarget = -1;
 
 	//Don't constantly switch target as sniper.
@@ -812,9 +820,6 @@ stock void UpdateLookingAroundForEnemies(int client)
 	}
 	else
 	{
-		if(!g_bUpdateLookingAroundForEnemies[client])
-			return;
-	
 		m_hAimTarget[client] = -1;
 		
 		if(g_flNextLookTime[client] > GetGameTime())

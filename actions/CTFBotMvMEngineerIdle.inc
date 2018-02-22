@@ -1,7 +1,7 @@
 
 float m_ctSentrySafe[MAXPLAYERS + 1];               // +0x4814
 float m_ctSentryCooldown[MAXPLAYERS + 1];           // +0x4820
-float m_ctTeleCooldown[MAXPLAYERS + 1];             // +0x482c
+//float m_ctTeleCooldown[MAXPLAYERS + 1];             // +0x482c
 float m_ctFindNestHint[MAXPLAYERS + 1];             // +0x4838
 float m_ctAdvanceNestSpot[MAXPLAYERS + 1];          // +0x4844
 
@@ -28,10 +28,6 @@ bool CTFBotMvMEngineerIdle_IsPossible(int actor)
 bool CTFBotMvMEngineerIdle_OnStart(int actor)
 {
 	g_bUpdateLookingAroundForEnemies[actor] = false;
-	
-	m_hHintSentry[actor] = INVALID_ENT_REFERENCE;
-	m_hHintTele[actor]   = INVALID_ENT_REFERENCE;
-	m_hHintNest[actor]   = INVALID_ENT_REFERENCE;
 	
 	m_ctFindNestHint[actor] = 0.0;
 	m_ctRecomputePathMvMEngiIdle[actor] = 0.0;
@@ -80,7 +76,7 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 		SetOwnerEntity(h_nest, actor);
 		
 		m_hHintSentry[actor] = GetSentryHint(m_hHintNest[actor]);
-		TakeOverStaleNest(m_hHintSentry[actor], actor);
+		//TakeOverStaleNest(m_hHintSentry[actor], actor);
 	}
 	
 	int sentry = INVALID_ENT_REFERENCE;
@@ -93,28 +89,24 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 			m_ctSentryCooldown[actor] = GetGameTime() + 3.0;
 			
 			sentry = GetOwnerEntity(m_hHintSentry[actor]);
-			SetOwnerEntity(sentry, actor);
 		}
 		else 
 		{
 			/* do not have a sentry; retreat for a few seconds if we had a
 			 * sentry before this; then build a new sentry */
-			
 			if (m_ctSentryCooldown[actor] < GetGameTime()) 
 			{
 				m_ctSentryCooldown[actor] = GetGameTime() + 3.0;
 				
-				//Importantte
 				ChangeAction(actor, ACTION_MVM_ENGINEER_BUILD_SENTRYGUN, "No sentry - building a new one");
-				//m_hintEntity[actor] = m_hHintSentry[actor];
 				CTFBotMvMEngineerBuildSentryGun_OnStart(actor, m_hHintSentry[actor]);
 				
 				return true;
 			}
-			//else 
-			//{
-				//return ActionResult<CTFBot>::SuspendFor(new CTFBotRetreatToCover(1.0), "Lost my sentry - retreat!");
-			//}
+		/*	else 
+			{
+				return ActionResult<CTFBot>::SuspendFor(new CTFBotRetreatToCover(1.0), "Lost my sentry - retreat!");
+			}*/
 		}
 		
 		if (sentry != INVALID_ENT_REFERENCE
@@ -123,8 +115,7 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 		{
 			m_ctSentrySafe[actor] = GetGameTime() + 3.0;
 		}
-	}
-	
+	}	
 	
 	//TODO: Tele stuff here
 	//https://github.com/sigsegv-mvm/mvm-reversed/blob/master/server/tf/bot/behavior/engineer/mvm_engineer/tf_bot_mvm_engineer_idle.cpp#L150-L200
@@ -148,7 +139,7 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 			goal[1] -= (50.0 * dir[1]);
 			goal[2] -= (50.0 * dir[2]);
 			
-			PrintToServer("%f %f %f", goal[0], goal[1], goal[2]);
+			//PrintToServer("%f %f %f", goal[0], goal[1], goal[2]);
 			
 			PF_SetGoalVector(actor, goal);
 			m_iRouteType[actor] = SAFEST_ROUTE;
@@ -160,6 +151,7 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 		
 		if (dist < 75.0) 
 		{
+			g_bUpdateLookingAroundForEnemies[actor] = false;
 			BotAim(actor).AimHeadTowards(WorldSpaceCenter(sentry), CRITICAL, 1.0, "Work on my Sentry");
 			BotAim(actor).PressFireButton();
 		}
@@ -167,6 +159,8 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 		//this->TryToDetonateStaleNest();
 		//return ActionResult<CTFBot>::Continue();
 	}
+	
+	//PrintToServer("CTFBotMvMEngineerIdle m_hHintTele %i m_hHintSentry %i m_hHintNest %i", m_hHintTele[actor], m_hHintSentry[actor], m_hHintNest[actor]);
 	
 	return true;
 }

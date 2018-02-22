@@ -112,8 +112,23 @@ bool CTFBotPurchaseUpgrades_Update(int actor)
 		else 
 		{
 			g_flNextUpdate[actor] = 0.0;
-			StartMainAction(actor, true);
-			FakeClientCommand(actor, "tournament_player_readystate 1");
+			
+			if(TF2_GetPlayerClass(actor) == TFClass_Engineer)
+			{
+				m_hHintSentry[actor] = INVALID_ENT_REFERENCE;
+				m_hHintTele[actor]   = INVALID_ENT_REFERENCE;
+				m_hHintNest[actor]   = INVALID_ENT_REFERENCE;
+				
+				ChangeAction(actor, ACTION_MVM_ENGINEER_IDLE, "Engineer: Start building.");
+			}
+			else if(TF2_GetPlayerClass(actor) == TFClass_Medic)
+				ChangeAction(actor, ACTION_MEDIC_HEAL, "Medic: Start heal mission.");
+			else
+				StartMainAction(actor, true);
+			
+			//Engineer presses F4 once done setting up buildings.
+			if(TF2_GetPlayerClass(actor) != TFClass_Engineer)
+				FakeClientCommand(actor, "tournament_player_readystate 1");
 			
 			delete info;
 			return false;
@@ -213,16 +228,26 @@ void CollectUpgrades(int client)
 	iArraySlots.Push(-1);	//Always buy player upgrades
 	
 	bool bDemoKnight = (HasDemoShieldEquipped(client) && (!IsValidEntity(GetPlayerWeaponSlot(client, TFWeaponSlot_Primary)) || HasParachuteEquipped(client)));
+	bool bEngineer = (TF2_GetPlayerClass(client) == TFClass_Engineer);
 	
-	//Demoknight doesn't buy primary weapon upgrades.
-	if(bDemoKnight)
-		iArraySlots.Push(TF_LOADOUT_SLOT_MELEE);
-	else
-		iArraySlots.Push(TF_LOADOUT_SLOT_PRIMARY);
-	
-	if(IsValidEntity(GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary)))
+	if(bEngineer)
 	{
-		iArraySlots.Push(TF_LOADOUT_SLOT_SECONDARY);
+		iArraySlots.Push(TF_LOADOUT_SLOT_MELEE);
+		iArraySlots.Push(TF_LOADOUT_SLOT_BUILDING);
+		iArraySlots.Push(TF_LOADOUT_SLOT_PDA);
+	}
+	else
+	{	
+		//Demoknight doesn't buy primary weapon upgrades.
+		if(bDemoKnight)
+			iArraySlots.Push(TF_LOADOUT_SLOT_MELEE);
+		else
+			iArraySlots.Push(TF_LOADOUT_SLOT_PRIMARY);
+	
+		if(IsValidEntity(GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary)))
+		{
+			iArraySlots.Push(TF_LOADOUT_SLOT_SECONDARY);
+		}
 	}
 
 	for (int i = 0; i < iArraySlots.Length; i++)

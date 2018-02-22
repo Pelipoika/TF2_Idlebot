@@ -17,7 +17,10 @@ bool CTFBotGetHealth_IsPossible(int actor)
 	
 	//Skip lag.
 	if(m_hHealth[actor] != -1 && IsValidHealth(m_hHealth[actor]))
+	{
+		g_bUpdateLookingAroundForEnemies[actor] = true;
 		return true;
+	}
 
 //	PrintToServer("ratio %f max_range %f", ratio, max_range);
 
@@ -48,6 +51,8 @@ bool CTFBotGetHealth_IsPossible(int actor)
 	}
 	
 	delete ammo;
+	
+	g_bUpdateLookingAroundForEnemies[actor] = true;
 	return bPossible;
 }
 

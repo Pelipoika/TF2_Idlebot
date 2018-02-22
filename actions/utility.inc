@@ -327,11 +327,11 @@ stock bool GetBombInfo(JSONObject info)
 	
 	bool success = (closest_flag != INVALID_ENT_REFERENCE);
 	
-	//float range_back = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_backward_range").FloatValue;
-	//float range_fwd  = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_forward_range").FloatValue;
+	float range_back = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_backward_range").FloatValue;
+	float range_fwd  = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_forward_range").FloatValue;
 	
-	float range_fwd   = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_backward_range").FloatValue;
-	float range_back  = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_forward_range").FloatValue;
+	//float range_fwd   = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_backward_range").FloatValue;
+	//float range_back  = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_forward_range").FloatValue;
 	
 	info.SetFloat("closest_pos_x", closest_flag_pos[0]);
 	info.SetFloat("closest_pos_y", closest_flag_pos[1]);
@@ -993,6 +993,9 @@ stock float GetMaxAttackRange(int client)
 
 stock bool IsAmmoLow(int client)
 {
+	if(g_iCurrentAction[client] == ACTION_MVM_ENGINEER_BUILD_SENTRYGUN && !CTFBotMvMEngineerBuildSentryGun_IsPossible(client))
+		return true;
+
 	int Primary = GetPlayerWeaponSlot(client, TFWeaponSlot_Primary);
 
 	if(IsValidEntity(Primary) && !HasAmmo(Primary))
@@ -1216,6 +1219,7 @@ stock char CurrentActionToName(int action)
 		case ACTION_MEDIC_HEAL:    name = "MEDIC HEAL";
 		case ACTION_MELEE_ATTACK:  name = "MELEE ATTACK";
 		case ACTION_MVM_ENGINEER_IDLE:  name = "MVM ENGINEER IDLE";
+		case ACTION_MVM_ENGINEER_BUILD_SENTRYGUN:  name = "MVM ENGINEER BUILD SENTRY";
 	}
 	
 	return name;

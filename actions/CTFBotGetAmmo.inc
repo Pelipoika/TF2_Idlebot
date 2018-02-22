@@ -76,9 +76,11 @@ bool CTFBotGetAmmo_OnStart(int actor)
 	
 	if(m_hAmmo[actor] != -1)
 	{
+		g_bUpdateLookingAroundForEnemies[actor] = true;
 		return true;
 	}
 
+	g_bUpdateLookingAroundForEnemies[actor] = true;
 	return false;
 }
 
