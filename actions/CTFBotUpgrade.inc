@@ -111,28 +111,9 @@ bool CTFBotPurchaseUpgrades_Update(int actor)
 		}
 		else 
 		{
-			//PrintToServer("No more upgrades to buy.");
-			
-			if(TF2_GetPlayerClass(actor) == TFClass_Medic)
-			{
-				ChangeAction(actor, ACTION_MEDIC_HEAL, "Finished upgrading, start healing");
-				FakeClientCommand(actor, "tournament_player_readystate 1");
-			}
-			if(TF2_GetPlayerClass(actor) == TFClass_Sniper)
-			{
-				//If we have a sniper rifle start lurking
-				ChangeAction(actor, ACTION_SNIPER_LURK, "Finished upgrading, start lurking");
-				FakeClientCommand(actor, "tournament_player_readystate 1");
-			}
-			else if(CTFBotMoveToFront_IsPossible(actor))
-			{
-				ChangeAction(actor, ACTION_MOVE_TO_FRONT, "Finished upgrading, move to front");
-			}
-			else
-			{
-				ChangeAction(actor, ACTION_ATTACK, "Finished upgrading, Attack");
-				FakeClientCommand(actor, "tournament_player_readystate 1");
-			}
+			g_flNextUpdate[actor] = 0.0;
+			StartMainAction(actor, true);
+			FakeClientCommand(actor, "tournament_player_readystate 1");
 			
 			delete info;
 			return false;

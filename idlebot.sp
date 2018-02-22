@@ -72,6 +72,7 @@ char g_szBotModels[][] =
 #define ACTION_SNIPER_LURK 10
 #define ACTION_MEDIC_HEAL 11
 #define ACTION_MELEE_ATTACK 12
+#define ACTION_MVM_ENGINEER_IDLE 13
 
 #include <actions/utility>
 
@@ -88,6 +89,7 @@ char g_szBotModels[][] =
 #include <actions/CTFBotSniperLurk>
 #include <actions/CTFBotMedicHeal>
 #include <actions/CTFBotMeleeAttack>
+#include <actions/CTFBotMvMEngineerIdle>
 
 Handle g_hHudInfo;
 
@@ -500,7 +502,7 @@ bool l_is_above_ground(int actor, float min_height)
 	return !PF_IsPotentiallyTraversable(actor, from, to, IMMEDIATELY, NULL_FLOAT);
 }
 
-stock void StartMainAction(int client)
+stock void StartMainAction(int client, bool pretend = false)
 {
 	bool bCanCheck = g_flNextUpdate[client] < GetGameTime();
 	
@@ -517,7 +519,7 @@ stock void StartMainAction(int client)
 										CurrentWeaponIDToName(client),
 										GetWeaponID(GetActiveWeapon(client)));
 	
-	if(g_RoundState == RoundState_BetweenRounds)
+	if(g_RoundState == RoundState_BetweenRounds && !pretend)
 	{
 		if(CTFBotCollectMoney_IsPossible(client))
 		{
@@ -530,7 +532,7 @@ stock void StartMainAction(int client)
 			m_iRouteType[client] = DEFAULT_ROUTE;
 		}
 	}
-	else if(g_RoundState == RoundState_RoundRunning)
+	else if(g_RoundState == RoundState_RoundRunning || pretend)
 	{
 		OpportunisticallyUseWeaponAbilities(client);
 	
@@ -602,6 +604,10 @@ stock void StartMainAction(int client)
 					ChangeAction(client, ACTION_SNIPER_LURK, "Sniper: wants to lurk.");	
 					m_iRouteType[client] = SAFEST_ROUTE;
 				}
+				case TFClass_Engineer:
+				{
+					ChangeAction(client, ACTION_MVM_ENGINEER_IDLE, "Engineer: Start building.");
+				}
 				default:
 				{
 					if(CTFBotAttack_IsPossible(client))
@@ -664,18 +670,19 @@ stock void StopCurrentAction(int client)
 {
 	switch(g_iCurrentAction[client])
 	{
-		case ACTION_MARK_GIANT:    CTFBotMarkGiant_OnEnd(client);
-		case ACTION_COLLECT_MONEY: CTFBotCollectMoney_OnEnd(client);
-		case ACTION_UPGRADE:       CTFBotPurchaseUpgrades_OnEnd(client);
-		case ACTION_GOTO_UPGRADE:  CTFBotGoToUpgradeStation_OnEnd(client);
-		case ACTION_ATTACK:        CTFBotAttack_OnEnd(client);
-		case ACTION_GET_AMMO:      CTFBotGetAmmo_OnEnd(client);
-		case ACTION_GET_HEALTH:    CTFBotGetHealth_OnEnd(client);
-		case ACTION_MOVE_TO_FRONT: CTFBotMoveToFront_OnEnd(client);
-		case ACTION_USE_ITEM:      CTFBotUseItem_OnEnd(client);
-		case ACTION_SNIPER_LURK:   CTFBotSniperLurk_OnEnd(client);
-		case ACTION_MEDIC_HEAL:    CTFBotMedicHeal_OnEnd(client);
-		case ACTION_MELEE_ATTACK:  CTFBotMeleeAttack_OnEnd(client);
+		case ACTION_MARK_GIANT:         CTFBotMarkGiant_OnEnd(client);
+		case ACTION_COLLECT_MONEY:      CTFBotCollectMoney_OnEnd(client);
+		case ACTION_UPGRADE:            CTFBotPurchaseUpgrades_OnEnd(client);
+		case ACTION_GOTO_UPGRADE:       CTFBotGoToUpgradeStation_OnEnd(client);
+		case ACTION_ATTACK:             CTFBotAttack_OnEnd(client);
+		case ACTION_GET_AMMO:           CTFBotGetAmmo_OnEnd(client);
+		case ACTION_GET_HEALTH:         CTFBotGetHealth_OnEnd(client);
+		case ACTION_MOVE_TO_FRONT:      CTFBotMoveToFront_OnEnd(client);
+		case ACTION_USE_ITEM:           CTFBotUseItem_OnEnd(client);
+		case ACTION_SNIPER_LURK:        CTFBotSniperLurk_OnEnd(client);
+		case ACTION_MEDIC_HEAL:         CTFBotMedicHeal_OnEnd(client);
+		case ACTION_MELEE_ATTACK:       CTFBotMeleeAttack_OnEnd(client);
+		case ACTION_MVM_ENGINEER_IDLE:  CTFBotMvMEngineerIdle_OnEnd(client);
 	}
 }
 
@@ -683,19 +690,20 @@ stock void StartNewAction(int client, int new_action)
 {
 	switch(new_action)
 	{
-		case ACTION_IDLE:          g_bPath[client] = false;
-		case ACTION_MARK_GIANT:    g_bStartedAction[client] = CTFBotMarkGiant_OnStart(client);
-		case ACTION_COLLECT_MONEY: g_bStartedAction[client] = CTFBotCollectMoney_OnStart(client);
-		case ACTION_UPGRADE:       g_bStartedAction[client] = CTFBotPurchaseUpgrades_OnStart(client);
-		case ACTION_GOTO_UPGRADE:  g_bStartedAction[client] = CTFBotGoToUpgradeStation_OnStart(client);
-		case ACTION_ATTACK:        g_bStartedAction[client] = CTFBotAttack_OnStart(client);
-		case ACTION_GET_AMMO:      g_bStartedAction[client] = CTFBotGetAmmo_OnStart(client);
-		case ACTION_GET_HEALTH:    g_bStartedAction[client] = CTFBotGetHealth_OnStart(client);
-		case ACTION_MOVE_TO_FRONT: g_bStartedAction[client] = CTFBotMoveToFront_OnStart(client);
-		case ACTION_USE_ITEM:      g_bStartedAction[client] = CTFBotUseItem_OnStart(client);
-		case ACTION_SNIPER_LURK:   g_bStartedAction[client] = CTFBotSniperLurk_OnStart(client);
-		case ACTION_MEDIC_HEAL:    g_bStartedAction[client] = CTFBotMedicHeal_OnStart(client);
-		case ACTION_MELEE_ATTACK:  g_bStartedAction[client] = CTFBotMeleeAttack_OnStart(client);
+		case ACTION_IDLE:               g_bPath[client] = false;
+		case ACTION_MARK_GIANT:         g_bStartedAction[client] = CTFBotMarkGiant_OnStart(client);
+		case ACTION_COLLECT_MONEY:      g_bStartedAction[client] = CTFBotCollectMoney_OnStart(client);
+		case ACTION_UPGRADE:            g_bStartedAction[client] = CTFBotPurchaseUpgrades_OnStart(client);
+		case ACTION_GOTO_UPGRADE:       g_bStartedAction[client] = CTFBotGoToUpgradeStation_OnStart(client);
+		case ACTION_ATTACK:             g_bStartedAction[client] = CTFBotAttack_OnStart(client);
+		case ACTION_GET_AMMO:           g_bStartedAction[client] = CTFBotGetAmmo_OnStart(client);
+		case ACTION_GET_HEALTH:         g_bStartedAction[client] = CTFBotGetHealth_OnStart(client);
+		case ACTION_MOVE_TO_FRONT:      g_bStartedAction[client] = CTFBotMoveToFront_OnStart(client);
+		case ACTION_USE_ITEM:           g_bStartedAction[client] = CTFBotUseItem_OnStart(client);
+		case ACTION_SNIPER_LURK:        g_bStartedAction[client] = CTFBotSniperLurk_OnStart(client);
+		case ACTION_MEDIC_HEAL:         g_bStartedAction[client] = CTFBotMedicHeal_OnStart(client);
+		case ACTION_MELEE_ATTACK:       g_bStartedAction[client] = CTFBotMeleeAttack_OnStart(client);
+		case ACTION_MVM_ENGINEER_IDLE:  g_bStartedAction[client] = CTFBotMvMEngineerIdle_OnStart(client);
 	}
 }
 
@@ -704,18 +712,19 @@ stock bool RunCurrentAction(int client)
 	//Update
 	switch(g_iCurrentAction[client])
 	{
-		case ACTION_MARK_GIANT:    g_bStartedAction[client] = CTFBotMarkGiant_Update(client);
-		case ACTION_COLLECT_MONEY: g_bStartedAction[client] = CTFBotCollectMoney_Update(client);
-		case ACTION_UPGRADE:       g_bStartedAction[client] = CTFBotPurchaseUpgrades_Update(client);
-		case ACTION_GOTO_UPGRADE:  g_bStartedAction[client] = CTFBotGoToUpgradeStation_Update(client);
-		case ACTION_ATTACK:        g_bStartedAction[client] = CTFBotAttack_Update(client);
-		case ACTION_GET_AMMO:      g_bStartedAction[client] = CTFBotGetAmmo_Update(client);
-		case ACTION_MOVE_TO_FRONT: g_bStartedAction[client] = CTFBotMoveToFront_Update(client);
-		case ACTION_GET_HEALTH:    g_bStartedAction[client] = CTFBotGetHealth_Update(client);
-		case ACTION_USE_ITEM:      g_bStartedAction[client] = CTFBotUseItem_Update(client);
-		case ACTION_SNIPER_LURK:   g_bStartedAction[client] = CTFBotSniperLurk_Update(client);
-		case ACTION_MEDIC_HEAL:    g_bStartedAction[client] = CTFBotMedicHeal_Update(client);
-		case ACTION_MELEE_ATTACK:  g_bStartedAction[client] = CTFBotMeleeAttack_Update(client);
+		case ACTION_MARK_GIANT:         g_bStartedAction[client] = CTFBotMarkGiant_Update(client);
+		case ACTION_COLLECT_MONEY:      g_bStartedAction[client] = CTFBotCollectMoney_Update(client);
+		case ACTION_UPGRADE:            g_bStartedAction[client] = CTFBotPurchaseUpgrades_Update(client);
+		case ACTION_GOTO_UPGRADE:       g_bStartedAction[client] = CTFBotGoToUpgradeStation_Update(client);
+		case ACTION_ATTACK:             g_bStartedAction[client] = CTFBotAttack_Update(client);
+		case ACTION_GET_AMMO:           g_bStartedAction[client] = CTFBotGetAmmo_Update(client);
+		case ACTION_MOVE_TO_FRONT:      g_bStartedAction[client] = CTFBotMoveToFront_Update(client);
+		case ACTION_GET_HEALTH:         g_bStartedAction[client] = CTFBotGetHealth_Update(client);
+		case ACTION_USE_ITEM:           g_bStartedAction[client] = CTFBotUseItem_Update(client);
+		case ACTION_SNIPER_LURK:        g_bStartedAction[client] = CTFBotSniperLurk_Update(client);
+		case ACTION_MEDIC_HEAL:         g_bStartedAction[client] = CTFBotMedicHeal_Update(client);
+		case ACTION_MELEE_ATTACK:       g_bStartedAction[client] = CTFBotMeleeAttack_Update(client);
+		case ACTION_MVM_ENGINEER_IDLE:  g_bStartedAction[client] = CTFBotMvMEngineerIdle_Update(client);	
 	}
 
 	switch(g_iCurrentAction[client])
@@ -1002,7 +1011,7 @@ stock void Dodge(int actor)
 	NormalizeVector(side_dir, side_dir);
 	
 	int random = GetRandomInt(0, 100);
-	if (random < 33) 
+	if (random < 20) 
 	{
 		float strafe_left[3]; strafe_left = GetAbsOrigin(actor);
 		strafe_left[0] += 25.0 * side_dir[0];
@@ -1015,7 +1024,7 @@ stock void Dodge(int actor)
 			m_ctVelocityLeft[actor] = GetGameTime() + 0.5;
 		}
 	} 
-	else if (random > 66) 
+	else if (random > 80) 
 	{
 		float strafe_right[3]; strafe_right = GetAbsOrigin(actor);
 		strafe_right[0] += 25.0 * side_dir[0];
@@ -1217,29 +1226,16 @@ public void PluginBot_OnActorEmoted(int bot_entidx, int who, int concept)
 		
 		if (IsValidClientIndex(patient) && who == patient)
 		{
-			//int medigun = GetActiveTFWeapon(bot_entidx);
-			//if (IsReadyToDeployUber(medigun)) 
-			//{
 			BotAim(bot_entidx).PressAltFireButton();
-			//}
 		}
 	}
 }
 
 public void PluginBot_MoveToSuccess(int bot_entidx, Address path)
-{
-	if(g_iCurrentAction[bot_entidx] != ACTION_SNIPER_LURK 
-	&& g_iCurrentAction[bot_entidx] != ACTION_UPGRADE
-	&& g_iCurrentAction[bot_entidx] != ACTION_GOTO_UPGRADE
-	&& g_iCurrentAction[bot_entidx] != ACTION_GET_HEALTH
-	&& g_iCurrentAction[bot_entidx] != ACTION_MOVE_TO_FRONT
-	&& g_iCurrentAction[bot_entidx] != ACTION_USE_ITEM
-	&& g_iCurrentAction[bot_entidx] != ACTION_MEDIC_HEAL
-	&& g_iCurrentAction[bot_entidx] != ACTION_MELEE_ATTACK)
-		ChangeAction(bot_entidx, ACTION_IDLE, "PluginBot_MoveToSuccess: Reached path goal.");
-}
-
-stock bool ShouldLookAround(int client)
-{
+{	
+	if(g_iCurrentAction[bot_entidx] != ACTION_MOVE_TO_FRONT
+	|| g_iCurrentAction[bot_entidx] != ACTION_GOTO_UPGRADE)
+		return;
 	
+	ChangeAction(bot_entidx, ACTION_IDLE, "PluginBot_MoveToSuccess: Reached path goal.");
 }

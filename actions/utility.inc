@@ -55,6 +55,9 @@ Handle g_hGetAmmoCount;
 Handle g_hGetItemSchema;
 Handle g_hGetAttributeDefinitionByName;
 
+Handle g_hIsStaleNest;
+Handle g_hGetSentryHint;
+
 //CTFGameRules
 Handle g_hCanUpgradeWithAttrib;
 Handle g_hGetCostForUpgrade;
@@ -62,7 +65,6 @@ Handle g_hGetUpgradeTier;
 Handle g_hIsUpgradeTierEnabled;
 
 Address g_MannVsMachineUpgrades;
-Address g_pGameRules;
 Address TheNavAreas;
 Address navarea_count;
 
@@ -209,12 +211,24 @@ void InitGamedata()
 	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);	//Returns address of CEconItemAttributeDefinition
 	if ((g_hGetAttributeDefinitionByName = EndPrepSDKCall()) == null) SetFailState("Failed to create SDKCall for CEconItemSchema::GetAttributeDefinitionByName signature!"); 
 	
+	
+	//Random 
+	
+	//bool CTFBotHintEngineerNest::IsStaleNest() const
+	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetFromConf(hConf, SDKConf_Signature, "CTFBotHintEngineerNest::IsStaleNest");
+	PrepSDKCall_SetReturnInfo(SDKType_Bool, SDKPass_ByValue);	//Returns true/false
+	if ((g_hIsStaleNest = EndPrepSDKCall()) == null) SetFailState("Failed to create SDKCall for IsStaleNest signature!"); 
+	
+	//CTFBotHintSentrygun *CTFBotHintEngineerNest::GetSentryHint() const
+	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetFromConf(hConf, SDKConf_Signature, "CTFBotHintEngineerNest::GetSentryHint");
+	PrepSDKCall_SetReturnInfo(SDKType_CBaseEntity, SDKPass_Pointer);
+	if ((g_hGetSentryHint = EndPrepSDKCall()) == null) SetFailState("Failed to create SDKCall for GetSentryHint signature!"); 
+
+	
 	g_MannVsMachineUpgrades = GameConfGetAddress(hConf, "MannVsMachineUpgrades");
 	PrintToServer("Found \"g_MannVsMachineUpgrades\" @ 0x%X", g_MannVsMachineUpgrades);
-	
-	g_pGameRules = GameConfGetAddress(hConf, "GameRules");
-	PrintToServer("Found \"g_pGameRules\" @ 0x%X", g_pGameRules);
-
 
 	navarea_count = GameConfGetAddress(hConf, "navarea_count");
 	PrintToServer("Found \"navarea_count\" @ 0x%X", navarea_count);
@@ -224,7 +238,7 @@ void InitGamedata()
 	PrintToServer("Found \"TheNavAreas\" @ 0x%X", TheNavAreas);
 	
 	
-	JSONObject BombInfo = new JSONObject();
+/*	JSONObject BombInfo = new JSONObject();
 	bool success = GetBombInfo(BombInfo);
 	
 	char strJSON[5028];
@@ -233,7 +247,7 @@ void InitGamedata()
 	PrintToServer("\nsuccess ? %s\n%s\n", success ? "Yes" : "No", strJSON);
 
 	delete BombInfo;
-	
+	*/
 
 	delete hConf;
 }
@@ -286,8 +300,8 @@ stock bool GetBombInfo(JSONObject info)
 			continue;
 		
 		//Ignore bombs not on our team
-		if (GetEntProp(flag, Prop_Send, "m_iTeamNum") != view_as<int>(TFTeam_Blue))
-			continue;
+		//if (GetEntProp(flag, Prop_Send, "m_iTeamNum") != view_as<int>(TFTeam_Blue))
+			//continue;
 			
 		float flag_pos[3];
 		
@@ -313,8 +327,11 @@ stock bool GetBombInfo(JSONObject info)
 	
 	bool success = (closest_flag != INVALID_ENT_REFERENCE);
 	
-	float range_back = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_backward_range").FloatValue;
-	float range_fwd  = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_forward_range").FloatValue;
+	//float range_back = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_backward_range").FloatValue;
+	//float range_fwd  = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_forward_range").FloatValue;
+	
+	float range_fwd   = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_backward_range").FloatValue;
+	float range_back  = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_forward_range").FloatValue;
 	
 	info.SetFloat("closest_pos_x", closest_flag_pos[0]);
 	info.SetFloat("closest_pos_y", closest_flag_pos[1]);
@@ -323,6 +340,48 @@ stock bool GetBombInfo(JSONObject info)
 	info.SetFloat("hatch_dist_fwd",  hatch_dist - range_fwd);
 	
 	return success;
+}
+
+stock bool IsStaleNest(int nest)
+{
+	return SDKCall(g_hIsStaleNest, nest);
+}
+
+stock int GetSentryHint(int nest)
+{
+	return SDKCall(g_hGetSentryHint, nest);
+}
+
+stock float[] GetTurretAngles(int sentry)
+{
+	if(!IsBaseObject(sentry))
+		return NULL_VECTOR;
+	
+	float angle[3];
+	
+	int offset = FindSendPropInfo("CObjectSentrygun", "m_iAmmoRockets");
+	int iAngleOffset = (offset - 16);
+	
+	angle[0] = GetEntDataFloat(sentry, iAngleOffset + 0);
+	angle[1] = GetEntDataFloat(sentry, iAngleOffset + 4);
+	angle[2] = GetEntDataFloat(sentry, iAngleOffset + 8);
+	
+	return angle;
+}
+
+stock int TF2_GetObjectCount(int client, TFObjectType type)
+{
+	int iObject = -1, iCount = 0;
+	while ((iObject = FindEntityByClassname(iObject, "obj_*")) != -1)
+	{
+		TFObjectType iObjType = TF2_GetObjectType(iObject);
+		if(GetEntPropEnt(iObject, Prop_Send, "m_hBuilder") == client && iObjType == type)
+		{
+			iCount++;
+		}
+	}
+	
+	return iCount;
 }
 
 stock void SnapEyeAngles(int client, float viewAngles[3])
@@ -1156,6 +1215,7 @@ stock char CurrentActionToName(int action)
 		case ACTION_SNIPER_LURK:   name = "SNIPER LURK";
 		case ACTION_MEDIC_HEAL:    name = "MEDIC HEAL";
 		case ACTION_MELEE_ATTACK:  name = "MELEE ATTACK";
+		case ACTION_MVM_ENGINEER_IDLE:  name = "MVM ENGINEER IDLE";
 	}
 	
 	return name;
@@ -1673,7 +1733,7 @@ stock void DisguiseAsMemberOfEnemyTeam(int client)
 {
 	TF2_DisguisePlayer(client, GetEnemyTeam(client), view_as<TFClassType>(GetRandomInt(1, 9)));
 }
-
+/*
 stock bool IsAnyEnemySentryAbleToAttackMe(int client)
 {
 	int v5; // edi@6
@@ -1721,7 +1781,7 @@ stock bool IsAnyEnemySentryAbleToAttackMe(int client)
 	}
 	return (unsigned __int8)v9;
 }
-
+*/
 stock bool UTIL_IsVisibleToTeam(float vecPos[3], int team)
 {
     for (int i = 1; i <= MaxClients; i++)
