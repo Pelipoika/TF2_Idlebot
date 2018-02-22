@@ -73,6 +73,7 @@ char g_szBotModels[][] =
 #define ACTION_MEDIC_HEAL 11
 #define ACTION_MELEE_ATTACK 12
 #define ACTION_MVM_ENGINEER_IDLE 13
+#define ACTION_MVM_ENGINEER_BUILD_SENTRYGUN 14
 
 #include <actions/utility>
 
@@ -90,6 +91,7 @@ char g_szBotModels[][] =
 #include <actions/CTFBotMedicHeal>
 #include <actions/CTFBotMeleeAttack>
 #include <actions/CTFBotMvMEngineerIdle>
+#include <actions/CTFBotMvMEngineerBuildSentryGun>
 
 Handle g_hHudInfo;
 
@@ -683,6 +685,7 @@ stock void StopCurrentAction(int client)
 		case ACTION_MEDIC_HEAL:         CTFBotMedicHeal_OnEnd(client);
 		case ACTION_MELEE_ATTACK:       CTFBotMeleeAttack_OnEnd(client);
 		case ACTION_MVM_ENGINEER_IDLE:  CTFBotMvMEngineerIdle_OnEnd(client);
+		case ACTION_MVM_ENGINEER_BUILD_SENTRYGUN: CTFBotMvMEngineerBuildSentryGun_OnEnd(client);
 	}
 }
 
@@ -704,6 +707,7 @@ stock void StartNewAction(int client, int new_action)
 		case ACTION_MEDIC_HEAL:         g_bStartedAction[client] = CTFBotMedicHeal_OnStart(client);
 		case ACTION_MELEE_ATTACK:       g_bStartedAction[client] = CTFBotMeleeAttack_OnStart(client);
 		case ACTION_MVM_ENGINEER_IDLE:  g_bStartedAction[client] = CTFBotMvMEngineerIdle_OnStart(client);
+		case ACTION_MVM_ENGINEER_BUILD_SENTRYGUN: g_bStartedAction[client] = CTFBotMvMEngineerBuildSentryGun_OnStart(client);	
 	}
 }
 
@@ -725,6 +729,7 @@ stock bool RunCurrentAction(int client)
 		case ACTION_MEDIC_HEAL:         g_bStartedAction[client] = CTFBotMedicHeal_Update(client);
 		case ACTION_MELEE_ATTACK:       g_bStartedAction[client] = CTFBotMeleeAttack_Update(client);
 		case ACTION_MVM_ENGINEER_IDLE:  g_bStartedAction[client] = CTFBotMvMEngineerIdle_Update(client);	
+		case ACTION_MVM_ENGINEER_BUILD_SENTRYGUN: g_bStartedAction[client] = CTFBotMvMEngineerBuildSentryGun_Update(client);	
 	}
 
 	switch(g_iCurrentAction[client])

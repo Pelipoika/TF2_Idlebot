@@ -103,10 +103,13 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 			if (m_ctSentryCooldown[actor] < GetGameTime()) 
 			{
 				m_ctSentryCooldown[actor] = GetGameTime() + 3.0;
-				PrintToServer("Build sentry");
 				
-				//return ActionResult<CTFBot>::SuspendFor(
-					//new CTFBotMvMEngineerBuildSentryGun(m_hHintSentry[actor]), "No sentry - building a new one");
+				//Importantte
+				ChangeAction(actor, ACTION_MVM_ENGINEER_BUILD_SENTRYGUN, "No sentry - building a new one");
+				//m_hintEntity[actor] = m_hHintSentry[actor];
+				CTFBotMvMEngineerBuildSentryGun_OnStart(actor, m_hHintSentry[actor]);
+				
+				return true;
 			}
 			//else 
 			//{

@@ -1448,6 +1448,16 @@ stock float[] GetAbsOrigin(int client)
 	return v;
 }
 
+stock float[] GetAbsAngles(int client)
+{
+	if(client <= 0)
+		return NULL_VECTOR;
+
+	float v[3];
+	GetEntPropVector(client, Prop_Data, "m_angRotation", v);
+	return v;
+}
+
 stock float[] GetEyePosition(int client)
 {
 	if(client <= 0)
