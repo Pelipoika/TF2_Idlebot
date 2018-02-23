@@ -261,9 +261,9 @@ stock bool CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(int actor)
 	//m_flBombTargetDistance
 	float m_flBombTargetDistance = view_as<float>(LoadFromAddress(view_as<Address>(hint_area) + view_as<Address>(g_iBombTargetDistance), NumberType_Int32));
 	
-	bool bigger = (m_flBombTargetDistance < bombinfo.GetFloat("hatch_dist_fwd"));
+	bool bigger = (m_flBombTargetDistance > bombinfo.GetFloat("hatch_dist_back"));
 
-	//PrintToServer("m_flBombTargetDistance %f > bombinfo.hatch_dist_fwd %f = %s", m_flBombTargetDistance, bombinfo.GetFloat("hatch_dist_fwd"), bigger ? "Yes" : "No");
+	//PrintToServer("m_flBombTargetDistance %f > bombinfo.hatch_dist_back %f = %s", m_flBombTargetDistance, bombinfo.GetFloat("hatch_dist_back"), bigger ? "Yes" : "No");
 
 	delete bombinfo;
 	return bigger;
