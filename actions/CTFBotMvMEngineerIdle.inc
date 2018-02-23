@@ -1,7 +1,9 @@
 
 float m_ctSentrySafe[MAXPLAYERS + 1];               // +0x4814
+
 float m_ctSentryCooldown[MAXPLAYERS + 1];           // +0x4820
 //float m_ctTeleCooldown[MAXPLAYERS + 1];             // +0x482c
+
 float m_ctFindNestHint[MAXPLAYERS + 1];             // +0x4838
 float m_ctAdvanceNestSpot[MAXPLAYERS + 1];          // +0x4844
 
@@ -47,7 +49,7 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 	
 	EquipWeaponSlot(actor, TFWeaponSlot_Melee);
 	
-	if (m_hHintNest[actor] == INVALID_ENT_REFERENCE/* || CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(actor)*/) 
+	if (m_hHintNest[actor] == INVALID_ENT_REFERENCE || CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(actor)) 
 	{
 		//HasStarted && !IsElapsed
 		if (m_ctFindNestHint[actor] > 0.0 && m_ctFindNestHint[actor] > GetGameTime()) 
@@ -58,11 +60,8 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 		//Start
 		m_ctFindNestHint[actor] = GetGameTime() + (GetRandomFloat(1.0, 2.0));
 		
-		bool box_check       = false;
-		bool out_of_range_ok = true;
-		
 		int h_nest;
-		if (!CTFBotMvMEngineerIdle_FindHint(box_check, out_of_range_ok, h_nest)) 
+		if (!CTFBotMvMEngineerIdle_FindHint(true, h_nest)) 
 		{
 			return false;
 		}
@@ -239,7 +238,8 @@ stock bool CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(int actor)
 		}
 	}
 	
-	if (m_ctAdvanceNestSpot[actor] < GetGameTime()) 
+	//IsElapsed
+	if (GetGameTime() > m_ctAdvanceNestSpot[actor])
 	{
 		m_ctAdvanceNestSpot[actor] = -1.0;
 	}
@@ -261,14 +261,16 @@ stock bool CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(int actor)
 	//m_flBombTargetDistance
 	float m_flBombTargetDistance = view_as<float>(LoadFromAddress(view_as<Address>(hint_area) + view_as<Address>(g_iBombTargetDistance), NumberType_Int32));
 	
-	bool bigger = (m_flBombTargetDistance > bombinfo.GetFloat("hatch_dist_fwd"));
+	bool bigger = (m_flBombTargetDistance < bombinfo.GetFloat("hatch_dist_fwd"));
+
+	//PrintToServer("m_flBombTargetDistance %f > bombinfo.hatch_dist_fwd %f = %s", m_flBombTargetDistance, bombinfo.GetFloat("hatch_dist_fwd"), bigger ? "Yes" : "No");
 
 	delete bombinfo;
 	return bigger;
 }
 
 
-stock bool CTFBotMvMEngineerIdle_FindHint(bool box_check, bool out_of_range_ok, int &the_hint)
+stock bool CTFBotMvMEngineerIdle_FindHint(bool out_of_range_ok, int &the_hint)
 {
 	ArrayList hints = new ArrayList();
 	
@@ -306,15 +308,6 @@ stock bool CTFBotMvMEngineerIdle_FindHint(bool box_check, bool out_of_range_ok, 
 		if (dist > bomb_info.GetFloat("hatch_dist_fwd") 
 		 && dist < bomb_info.GetFloat("hatch_dist_back")) 
 		{
-		/*	CBaseEntity *pList[256];
-			if (box_check && UTIL_EntitiesInBox(pList, 256,
-				hint->GetAbsOrigin() + VEC_HULL_MIN,
-				hint->GetAbsOrigin() + VEC_HULL_MAX,
-				FL_OBJECT | FL_FAKECLIENT) > 0) 
-			{
-				continue;
-			}*/
-			
 			if (IsStaleNest(hint))
 			{
 				hints1.Push(hint);
@@ -326,10 +319,9 @@ stock bool CTFBotMvMEngineerIdle_FindHint(bool box_check, bool out_of_range_ok, 
 				closest_pos[1] = bomb_info.GetFloat("closest_pos_y");
 				closest_pos[2] = bomb_info.GetFloat("closest_pos_z");
 			
-				if (GetVectorDistance(GetAbsOrigin(hint), closest_pos) >= FindConVar("tf_bot_engineer_mvm_hint_min_distance_from_bomb").FloatValue) 
-				{
-					hints2.Push(hint);
-				}
+				//if (GetVectorDistance(GetAbsOrigin(hint), closest_pos) >= FindConVar("tf_bot_engineer_mvm_hint_min_distance_from_bomb").FloatValue) 
+				
+				hints2.Push(hint);
 			}
 		} 
 		else if (dist > bomb_info.GetFloat("hatch_dist_back")) 

@@ -101,11 +101,25 @@ Handle g_hHudInfo;
 //https://github.com/sigsegv-mvm/mvm-reversed/blob/b2a43a54093fca4e16068e64e567b871bd7d875e/server/tf/bot/behavior/tf_bot_behavior.cpp#L270-L301
 //Reverse CTFBotVision AFTER you have implemented IVision into extension
 
+//CTFNavMesh stuff, maybe put in PathFollower_Nav
+//
+//	364 windows | 368 linux
+//		CUtlVector<CTFNavArea *> m_InvasionAreas[4];
+//
+//	548 windows | 552 linux
+//		m_flBombTargetDistance 
+
+
+//Make UpdateLookingAroundForEnemies not shit
+
 //Reverse void CTFBotEngineerMoveToBuild::SelectBuildLocation(CTFBot *actor)
 //Reverse void CTFBotEngineerMoveToBuild::CollectBuildAreas(CTFBot *actor)
 
 //Reverse void CTFBot::EquipBestWeaponForThreat(CKnownEntity const*)
 //	Mainly for soldiers shotgun handling
+//	Seems to just switch to shotgun if target is closer than 750.0 units
+//	and ran out of rocketlauncher ammo
+//	switches back once shotgun is empty
 
 //Figure out what "tf_bot_mvm_show_engineer_hint_region" is doing
 //	https://gist.github.com/sigsegv-mvm/a1f103ae79bbb0a5c5ff7dcd4a378958
@@ -868,7 +882,7 @@ stock void UpdateLookingAroundForEnemies(int client)
 							return;	
 						
 						int iTeamNum = view_as<int>(GetEnemyTeam(client));
-						
+												
 						int eax = (iTeamNum + iTeamNum * 4); //eax
 						int edi = view_as<int>(lastArea) + eax * 4 + 364;  //edi
 						

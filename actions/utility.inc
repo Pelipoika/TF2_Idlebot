@@ -262,7 +262,7 @@ struct BombInfo_t
 */
 
 //TODO Gamedata me
-const int g_iBombTargetDistance = 548;	//0x224h
+const int g_iBombTargetDistance = 548;	//windows 0x224h | 0x228h linux
 
 stock bool GetBombInfo(JSONObject info)
 {
@@ -332,7 +332,7 @@ stock bool GetBombInfo(JSONObject info)
 	//float range_back = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_backward_range").FloatValue;
 	//float range_fwd  = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_forward_range").FloatValue;
 	
-	float range_fwd   = 0.0;
+	float range_fwd   = 2300.0;
 	float range_back  = 3000.0;
 	
 	info.SetFloat("closest_pos_x", closest_flag_pos[0]);
