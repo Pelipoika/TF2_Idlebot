@@ -100,6 +100,7 @@ Handle g_hHudInfo;
 //https://github.com/danielmm8888/TF2Classic/blob/d070129a436a8a070659f0267f6e63564a519a47/src/game/shared/tf/tf_gamemovement.cpp#L953
 //https://github.com/sigsegv-mvm/mvm-reversed/blob/b2a43a54093fca4e16068e64e567b871bd7d875e/server/tf/bot/behavior/tf_bot_behavior.cpp#L270-L301
 //Reverse CTFBotVision AFTER you have implemented IVision into extension
+//FIX Engineer not building anything after map change
 
 //CTFNavMesh stuff, maybe put in PathFollower_Nav
 //
@@ -108,6 +109,11 @@ Handle g_hHudInfo;
 //
 //	548 windows | 552 linux
 //		m_flBombTargetDistance 
+//
+//What is 348 w or 352 l
+//	Some SpotEncounterVector shit
+//	OR prior incursion area shit
+//	OR incursion flow shit
 
 
 //Make UpdateLookingAroundForEnemies not shit
@@ -166,6 +172,13 @@ public void OnClientPutInServer(int client)
 	g_flNextUpdate[client] = GetGameTime();
 	g_flLastInput[client] = GetGameTime();
 	g_bIdle[client] = false;
+	
+	m_hHintSentry[client] = INVALID_ENT_REFERENCE;
+	m_hHintTele[client]   = INVALID_ENT_REFERENCE;
+	m_hHintNest[client]   = INVALID_ENT_REFERENCE;
+	
+	m_hintEntity[client] = INVALID_ENT_REFERENCE;
+	m_hSentry[client] = INVALID_ENT_REFERENCE;
 	
 	m_ctVelocityLeft[client] = 0.0;
 	m_ctVelocityRight[client] = 0.0;
@@ -586,9 +599,6 @@ stock void StartMainAction(int client, bool pretend = false)
 		SetEntProp(client, Prop_Data, "m_bLagCompensation", false);
 		SetEntProp(client, Prop_Data, "m_bPredictWeapons", false);
 		
-		if(g_iCurrentAction[client] == ACTION_MVM_ENGINEER_BUILD_SENTRYGUN)
-			return;
-
 		if(g_iCurrentAction[client] != ACTION_USE_ITEM
 		&& g_iCurrentAction[client] != ACTION_MELEE_ATTACK)
 		{
@@ -629,7 +639,20 @@ stock void StartMainAction(int client, bool pretend = false)
 				}
 				case TFClass_Engineer:
 				{
-					ChangeAction(client, ACTION_MVM_ENGINEER_IDLE, "StartMainAction Engineer: Start building.");
+				/*	if(!CTFBotMvMEngineerBuildSentryGun_IsPossible(client))
+					{
+						ChangeAction(client, ACTION_GET_AMMO, "No sentry - But can't build one because we dont have enough metal; get some."); 
+						m_iRouteType[client] = FASTEST_ROUTE;
+					}
+					else 
+					{
+						ChangeAction(client, ACTION_MVM_ENGINEER_BUILD_SENTRYGUN, "StartMainAction Engineer: Start building.");
+						m_iRouteType[client] = FASTEST_ROUTE;
+						CTFBotMvMEngineerBuildSentryGun_OnStart(client, m_hHintSentry[client]);
+					}*/
+					
+					if(g_iCurrentAction[client] != ACTION_MVM_ENGINEER_BUILD_SENTRYGUN)
+						ChangeAction(client, ACTION_MVM_ENGINEER_IDLE, "StartMainAction Engineer: Start building.");
 				}
 				default:
 				{
@@ -653,7 +676,7 @@ stock void StartMainAction(int client, bool pretend = false)
 		}
 	}
 	
-	g_flNextUpdate[client] = GetGameTime() + 1.0;
+	g_flNextUpdate[client] = GetGameTime() + 0.5;
 }
 
 //Stop whatever current action we're doing properly, and change to another.

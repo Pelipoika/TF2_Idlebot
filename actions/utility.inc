@@ -333,7 +333,7 @@ stock bool GetBombInfo(JSONObject info)
 	//float range_fwd  = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_forward_range").FloatValue;
 	
 	float range_fwd   = 2300.0;
-	float range_back  = 3000.0;
+	float range_back  = 1000.0;
 	
 	info.SetFloat("closest_pos_x", closest_flag_pos[0]);
 	info.SetFloat("closest_pos_y", closest_flag_pos[1]);

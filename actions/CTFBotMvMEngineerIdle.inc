@@ -9,9 +9,9 @@ float m_ctAdvanceNestSpot[MAXPLAYERS + 1];          // +0x4844
 
 float m_ctRecomputePathMvMEngiIdle[MAXPLAYERS + 1];
 
-int m_hHintTele[MAXPLAYERS + 1];   					// +0x4858
-int m_hHintSentry[MAXPLAYERS + 1]; 					// +0x485c
-int m_hHintNest[MAXPLAYERS + 1];   					// +0x4860
+int m_hHintTele[MAXPLAYERS + 1] = {INVALID_ENT_REFERENCE, ...};   					// +0x4858
+int m_hHintSentry[MAXPLAYERS + 1] = {INVALID_ENT_REFERENCE, ...}; 					// +0x485c
+int m_hHintNest[MAXPLAYERS + 1] = {INVALID_ENT_REFERENCE, ...};   					// +0x4860
 
 bool m_bTriedToDetonateStaleNest[MAXPLAYERS + 1];   // +0x4864
 
@@ -49,7 +49,19 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 	
 	EquipWeaponSlot(actor, TFWeaponSlot_Melee);
 	
-	if (m_hHintNest[actor] == INVALID_ENT_REFERENCE || CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(actor)) 
+	bool bShouldAdvance = CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(actor);
+/*	if(bShouldAdvance)
+	{	
+		SetOwnerEntity(m_hHintNest[actor], INVALID_ENT_REFERENCE);
+		m_hHintNest[actor] = INVALID_ENT_REFERENCE;
+		
+		m_hHintSentry[actor] = INVALID_ENT_REFERENCE;
+		
+		//RIGHT NOW
+		m_ctFindNestHint[actor] = GetGameTime();
+	}*/
+	
+	if (m_hHintNest[actor] == INVALID_ENT_REFERENCE || bShouldAdvance) 
 	{
 		//HasStarted && !IsElapsed
 		if (m_ctFindNestHint[actor] > 0.0 && m_ctFindNestHint[actor] > GetGameTime()) 
@@ -60,14 +72,16 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 		//Start
 		m_ctFindNestHint[actor] = GetGameTime() + (GetRandomFloat(1.0, 2.0));
 		
+		//DO NOT INITIALIZE THIS VALUE OR YOU WILL NECK.
 		int h_nest;
+		
+		//TODO Make the server not fuckign die if you set the 1st param to false.
 		if (!CTFBotMvMEngineerIdle_FindHint(true, h_nest)) 
 		{
 			return false;
 		}
 		
-		if (m_hHintNest[actor] != INVALID_ENT_REFERENCE) 
-		{
+		if (m_hHintNest[actor] != INVALID_ENT_REFERENCE) {
 			SetOwnerEntity(m_hHintNest[actor], INVALID_ENT_REFERENCE);
 		}
 		
@@ -158,8 +172,6 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 		//this->TryToDetonateStaleNest();
 		//return ActionResult<CTFBot>::Continue();
 	}
-	
-	//PrintToServer("CTFBotMvMEngineerIdle m_hHintTele %i m_hHintSentry %i m_hHintNest %i", m_hHintTele[actor], m_hHintSentry[actor], m_hHintNest[actor]);
 	
 	return true;
 }
@@ -258,7 +270,6 @@ stock bool CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(int actor)
 		return false;
 	}
 	
-	//m_flBombTargetDistance
 	float m_flBombTargetDistance = view_as<float>(LoadFromAddress(view_as<Address>(hint_area) + view_as<Address>(g_iBombTargetDistance), NumberType_Int32));
 	
 	bool bigger = (m_flBombTargetDistance > bombinfo.GetFloat("hatch_dist_back"));
@@ -277,7 +288,7 @@ stock bool CTFBotMvMEngineerIdle_FindHint(bool out_of_range_ok, int &the_hint)
 	int iEnt = -1;
 	while((iEnt = FindEntityByClassname(iEnt, "bot_hint_engineer_nest")) != -1)
 	{
-		if (!GetEntProp(iEnt, Prop_Data, "m_isDisabled") && GetOwnerEntity(iEnt) == INVALID_ENT_REFERENCE) 
+		if (/*!GetEntProp(iEnt, Prop_Data, "m_isDisabled") && */GetOwnerEntity(iEnt) == INVALID_ENT_REFERENCE) 
 		{
 			hints.Push(iEnt);
 		}

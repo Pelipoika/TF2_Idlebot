@@ -1,8 +1,8 @@
 //https://github.com/sigsegv-mvm/mvm-reversed/blob/master/server/tf/bot/behavior/engineer/mvm_engineer/tf_bot_mvm_engineer_build_sentry.cpp
 //https://github.com/sigsegv-mvm/mvm-reversed/blob/master/server/tf/bot/behavior/engineer/mvm_engineer/tf_bot_mvm_engineer_build_sentry.h
 
-int m_hintEntity[MAXPLAYERS + 1]; // +0x0034
-int m_hSentry[MAXPLAYERS + 1];    // +0x0038
+int m_hintEntity[MAXPLAYERS + 1] = {INVALID_ENT_REFERENCE, ...}; // +0x0034
+int m_hSentry[MAXPLAYERS + 1] = {INVALID_ENT_REFERENCE, ...};    // +0x0038
 
 bool CTFBotMvMEngineerBuildSentryGun_IsPossible(int actor)
 {
@@ -15,7 +15,6 @@ bool CTFBotMvMEngineerBuildSentryGun_OnStart(int actor, int hint = INVALID_ENT_R
 	m_hintEntity[actor] = hint;
 	
 	//Start building a sentry
-	FakeClientCommand(actor, "destroy 2");
 	FakeClientCommand(actor, "build 2");
 	
 	return true;
@@ -29,14 +28,22 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 		return false;
 	}
 	
-	//Start building a sentry
-	if(!IsWeapon(actor, TF_WEAPON_BUILDER))
-		FakeClientCommand(actor, "build 2");
+	//Bail.
+	if(CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(actor))
+	{
+		FakeClientCommand(actor, "destroy 2");
+		ChangeAction(actor, ACTION_MVM_ENGINEER_IDLE, "The spot we were planning to build at is now too far back.");
+		return true;
+	}
 	
 	float range_to_hint = GetVectorDistance(GetAbsOrigin(actor), GetAbsOrigin(m_hintEntity[actor]));
 	
 	if (range_to_hint < 200.0) 
 	{
+		//Start building a sentry
+		if(!IsWeapon(actor, TF_WEAPON_BUILDER))
+			FakeClientCommand(actor, "build 2");
+	
 		g_bUpdateLookingAroundForEnemies[actor] = false;
 		
 		g_iAdditionalButtons[actor] |= IN_DUCK;
@@ -47,13 +54,19 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 	g_bPath[actor] = true;
 	
 	if(range_to_hint > 70.0)
+	{
+		if(range_to_hint > 200.0)
+		{
+			//Fuck em up.
+			EquipWeaponSlot(actor, TFWeaponSlot_Melee);
+		}
+	
+		g_bUpdateLookingAroundForEnemies[actor] = true;
+		
 		return false;
+	}
 	
-	g_bUpdateLookingAroundForEnemies[actor] = false;
 	g_bPath[actor] = false;
-	
-	//actor->DetonateObjectOfType(OBJ_SENTRYGUN, 0, true);
-	FakeClientCommand(actor, "destroy 2");
 	
 	BotAim(actor).PressFireButton();
 	
@@ -64,7 +77,7 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 		return false;
 	
 	DispatchKeyValueVector(m_hSentry[actor], "origin", GetAbsOrigin(m_hintEntity[actor]));
-	DispatchKeyValueVector(m_hSentry[actor], "angles", GetAbsAngles(m_hintEntity[actor]));
+	//DispatchKeyValueVector(m_hSentry[actor], "angles", GetAbsAngles(m_hintEntity[actor]));
 	
 	char name[64];
 	GetEntPropString(m_hintEntity[actor], Prop_Data, "m_iName", name, sizeof(name));
