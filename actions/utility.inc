@@ -362,7 +362,7 @@ stock float[] GetTurretAngles(int sentry)
 	float angle[3];
 	
 	int offset = FindSendPropInfo("CObjectSentrygun", "m_iAmmoRockets");
-	int iAngleOffset = (offset - 16);
+	int iAngleOffset = (offset - 36);
 	
 	angle[0] = GetEntDataFloat(sentry, iAngleOffset + 0);
 	angle[1] = GetEntDataFloat(sentry, iAngleOffset + 4);
@@ -1504,8 +1504,8 @@ stock void EyeVectors(int client, float fw[3] = NULL_VECTOR, float right[3] = NU
 	GetAngleVectors(GetEyeAngles(client), fw, right, up);
 }
 
-
-//Useless
+/*
+//Useless; it's the same as teammate pushaway, except bots use this.
 stock void AvoidPlayers(int client, float &forwardmove, float &sidemove)
 {
 	float vForward[3], vLeft[3];
@@ -1558,7 +1558,7 @@ stock void AvoidPlayers(int client, float &forwardmove, float &sidemove)
 	 || origin[1] <= -0.0099999998 || origin[1] >= 0.0099999998
 	 || origin[2] <= -0.0099999998 || origin[2] >= 0.0099999998)
 	{
-		//*(CTFBot + 6880) = 1;                   // m_bAvoiding
+		*(CTFBot + 6880) = 1;                   // m_bAvoiding
 		float v15 = (((origin[2] * origin[2]) + (origin[0] * origin[0])) + 0.000000001) + (origin[1] * origin[1]);
 		float v16 = SquareRoot(v15);
 		float v17 = (1.0 / v16) * ((3.0 - (((1.0 / v16) * (1.0 / v16)) * v15)) * 0.5);
@@ -1567,14 +1567,81 @@ stock void AvoidPlayers(int client, float &forwardmove, float &sidemove)
 		float v20 = v17 * origin[2];
 		float v21 = vLeft[0] * v18;
 		float v23 = v18 * vForward[0];
-		//*(CTFBot + 1721) = v18 * 50.0;
-		//*(CTFBot + 1722) = v19 * 50.0;
-		//*(CTFBot + 1723) = v20 * 50.0;
+		*(CTFBot + 1721) = v18 * 50.0;
+		*(CTFBot + 1722) = v19 * 50.0;
+		*(CTFBot + 1723) = v20 * 50.0;
 		forwardmove = ((((vLeft[1] * v19) + v21) + (vLeft[2] * v20)) * 50.0)       + forwardmove;
 		sidemove    = ((((v19 * vForward[1]) + v23) + (v20 * vForward[2])) * 50.0) + sidemove;
 		
 		//PrintToServer("forwardmove %f sidemove %f", v24, v25);
 	}
+}*/
+
+//There's a skill check in here too right at the start, but we don't care about it
+//if ( actor + 2411) > 1 ) // m_iSkill 
+stock bool AvoidBumpingEnemies(int actor, float[3] out)
+{
+	if(TF2_GetPlayerClass(actor) != TFClass_Spy)
+		return false;
+
+	int ClosestPlayer = 0;
+	float flClosestDistance = 200.0;
+	
+	TFTeam iTeam = GetEnemyTeam(actor);
+	
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (!IsClientInGame(i))
+			continue;
+		
+		if (!IsPlayerAlive(i))
+			continue;
+		
+		if (TF2_GetClientTeam(i) != iTeam)
+			continue;
+		
+		// Bumping into stealthed enemies is cool beacuse we can't see them!
+		if (IsStealthed(i))
+			continue;
+		
+		// Bumping into disguised enemies is cool.
+		if (TF2_IsPlayerInCondition(i, TFCond_Disguised))
+			continue;
+		
+		float flDistance = GetVectorDistance(GetAbsOrigin(actor), GetAbsOrigin(i));
+		if (flClosestDistance > flDistance)
+		{
+			flClosestDistance = flDistance;
+			ClosestPlayer = i;
+		}
+	}
+	
+	if (ClosestPlayer)
+	{
+		/*if (IsHindrance(actor, player) == ANSWER_UNDEFINED)
+		{
+			BotAim(actor).ReleaseForwardButton();
+			BotAim(actor).ReleaseLeftButton();
+			BotAim(actor).ReleaseRightButton();
+			BotAim(actor).ReleaseBackwardButton();
+
+			float vecActorFeet[3]; vecActorFeet = //ILocomotion::GetFeet()
+			
+			float vecTarget[3]; 
+			vecTarget[0] = (vecActorOrigin.x + vecActorFeet.x) - vecPlayerOrigin.x;
+			vecTarget[1] = (vecActorOrigin.y + vecActorFeet.y) - vecPlayerOrigin.y;
+			vecTarget[2] = (vecActorOrigin.z + vecActorFeet.z) - vecPlayerOrigin.z;
+			
+			Approach(vecTarget, 1.0);
+		}*/
+		
+		//float vecTarget[3]; 
+		SubtractVectors(GetAbsOrigin(actor), GetAbsOrigin(ClosestPlayer), out);
+		
+		return true;
+	}
+	
+	return false;
 }
 
 stock TFTeam GetEnemyTeam(int ent)

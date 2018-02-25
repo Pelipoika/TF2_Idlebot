@@ -12,6 +12,8 @@ bool CTFBotGoToUpgradeStation_OnStart(int actor)
 		return false;
 	}
 	
+	g_bUpdateLookingAroundForEnemies[actor] = false;
+	
 	m_ctUpgradeTimeout[actor] = GetGameTime() + 50.0;
 	
 	BotAim(actor).ReleaseFireButton();

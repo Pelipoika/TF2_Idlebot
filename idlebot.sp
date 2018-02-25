@@ -115,9 +115,7 @@ Handle g_hHudInfo;
 //	OR prior incursion area shit
 //	OR incursion flow shit
 
-
-//Make UpdateLookingAroundForEnemies not shit
-
+//Reverse CTFBotTacticalMonitor::AvoidBumpingEnemies
 //Reverse void CTFBotEngineerMoveToBuild::SelectBuildLocation(CTFBot *actor)
 //Reverse void CTFBotEngineerMoveToBuild::CollectBuildAreas(CTFBot *actor)
 
@@ -370,23 +368,23 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 	RunCurrentAction(client);
 	
 	Dodge(client);
-	
+		
 	if(g_bPath[client])
 	{
 		PF_StartPathing(client);
 		
+		float vecDir[3];
+		bool bAvoiding = AvoidBumpingEnemies(client, vecDir);
+		if(bAvoiding)
+		{
+			AddVectors(g_vecCurrentGoal[client], vecDir, g_vecCurrentGoal[client]);
+		}
+		
+	
 		float flDistance = GetVectorDistance(g_vecCurrentGoal[client], WorldSpaceCenter(client));
 		if(flDistance > 10.0)
 		{
-			if(TF2_GetPlayerClass(client) == TFClass_Sniper && IsSniperRifle(client))
-			{
-				m_iRouteType[client] = SAFEST_ROUTE;
-				
-				if(!TF2_IsPlayerInCondition(client, TFCond_Slowed))
-					TF2_MoveTo(client, g_vecCurrentGoal[client], fVel, fAng);
-			}
-			else
-				TF2_MoveTo(client, g_vecCurrentGoal[client], fVel, fAng);
+			TF2_MoveTo(client, g_vecCurrentGoal[client], fVel, fAng);
 				
 			bChanged = true;
 		}

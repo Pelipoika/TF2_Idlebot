@@ -152,8 +152,6 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 			goal[1] -= (50.0 * dir[1]);
 			goal[2] -= (50.0 * dir[2]);
 			
-			//PrintToServer("%f %f %f", goal[0], goal[1], goal[2]);
-			
 			PF_SetGoalVector(actor, goal);
 			m_iRouteType[actor] = SAFEST_ROUTE;
 			g_bPath[actor] = true;

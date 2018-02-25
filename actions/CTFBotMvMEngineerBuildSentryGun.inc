@@ -43,7 +43,7 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 		//Start building a sentry
 		if(!IsWeapon(actor, TF_WEAPON_BUILDER))
 			FakeClientCommand(actor, "build 2");
-	
+		
 		g_bUpdateLookingAroundForEnemies[actor] = false;
 		
 		g_iAdditionalButtons[actor] |= IN_DUCK;
@@ -55,7 +55,7 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 	
 	if(range_to_hint > 70.0)
 	{
-		if(range_to_hint > 200.0)
+		if(range_to_hint > 300.0)
 		{
 			//Fuck em up.
 			EquipWeaponSlot(actor, TFWeaponSlot_Melee);
