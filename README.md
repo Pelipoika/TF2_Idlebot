@@ -8,8 +8,8 @@ Currently can only play MvM
 - [x] Pyro
 - [x] Demoman
 - [x] Heavy
-- [ ] Engineer
-- [ ] Medic
+- [x] Engineer
+- [x] Medic
 - [x] Sniper
 - [ ] Spy
 
@@ -27,7 +27,7 @@ Currently can only play MvM
 | CTFBotMoveToFront | Move to frontline and then press F4              | Done |
 | CTFBotUseItem | Use an item (Sandvich, Banners, Crit-a-Cola)         | Done |
 | CTFBotSniperLurk | Hang around sniper advantage positions            | Done |
-| CTFBotMedicHeal | Search and heal players W.I.P                      | W.I.P |
+| CTFBotMedicHeal | Search and heal players W.I.P                      | W.I.P Basic target healing done |
 | CTFBotSpyInfiltrate | Disguise, Sap, Stab, Hide                      | W.I.P |
-| CTFBotPreWave | N/A                                                  | N/A |
-| CTFBotSeekAndDestroye | N/A                                          | N/A |
+| CTFBotMvMEngineerIdle | Construct and maintaint a sentry nest.       | Can build a sentry and advance when target is too far away |
+| CTFBotMvMEngineerBuildSentryGun | Build at sentrygun at a hint       | Done |
