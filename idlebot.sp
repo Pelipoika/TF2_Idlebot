@@ -176,7 +176,6 @@ public void OnClientPutInServer(int client)
 	m_hHintNest[client]   = INVALID_ENT_REFERENCE;
 	
 	m_hintEntity[client] = INVALID_ENT_REFERENCE;
-	m_hSentry[client] = INVALID_ENT_REFERENCE;
 	
 	m_ctVelocityLeft[client] = 0.0;
 	m_ctVelocityRight[client] = 0.0;

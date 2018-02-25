@@ -47,19 +47,17 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 		return false;
 	}
 	
-	EquipWeaponSlot(actor, TFWeaponSlot_Melee);
-	
 	bool bShouldAdvance = CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(actor);
-/*	if(bShouldAdvance)
-	{	
-		SetOwnerEntity(m_hHintNest[actor], INVALID_ENT_REFERENCE);
+	if(bShouldAdvance)
+	{
+		FakeClientCommand(actor, "destroy 2");
+	
 		m_hHintNest[actor] = INVALID_ENT_REFERENCE;
-		
 		m_hHintSentry[actor] = INVALID_ENT_REFERENCE;
 		
 		//RIGHT NOW
 		m_ctFindNestHint[actor] = GetGameTime();
-	}*/
+	}
 	
 	if (m_hHintNest[actor] == INVALID_ENT_REFERENCE || bShouldAdvance) 
 	{
@@ -75,33 +73,32 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 		//DO NOT INITIALIZE THIS VALUE OR YOU WILL NECK.
 		int h_nest;
 		
-		//TODO Make the server not fuckign die if you set the 1st param to false.
-		if (!CTFBotMvMEngineerIdle_FindHint(true, h_nest)) 
-		{
+		if (!CTFBotMvMEngineerIdle_FindHint(false, h_nest)) 
 			return false;
-		}
 		
-		if (m_hHintNest[actor] != INVALID_ENT_REFERENCE) {
-			SetOwnerEntity(m_hHintNest[actor], INVALID_ENT_REFERENCE);
-		}
+		if(h_nest <= 0)
+			return false;
 		
 		m_hHintNest[actor] = h_nest;
-		SetOwnerEntity(h_nest, actor);
+		PrintToServer("m_hHintNest %i", h_nest);
 		
 		m_hHintSentry[actor] = GetSentryHint(m_hHintNest[actor]);
-		TakeOverStaleNest(m_hHintSentry[actor], actor);
+		PrintToServer("m_hHintSentry %i", m_hHintSentry[actor]);
 	}
 	
-	int sentry = INVALID_ENT_REFERENCE;
+	int sentry = TF2_GetObject(actor, TFObject_Sentry);
 	
 	if (m_hHintSentry[actor] != INVALID_ENT_REFERENCE) 
 	{
-		if (GetOwnerEntity(m_hHintSentry[actor]) != INVALID_ENT_REFERENCE
-		 && IsBaseObject(GetOwnerEntity(m_hHintSentry[actor])))
+		if (sentry != INVALID_ENT_REFERENCE)
 		{
-			m_ctSentryCooldown[actor] = GetGameTime() + 3.0;
+			if(GetEntProp(sentry, Prop_Send, "m_iMaxHealth") >= GetEntProp(sentry, Prop_Send, "m_iHealth") 
+			&& !GetEntProp(sentry, Prop_Send, "m_bBuilding"))
+			{
+				m_ctSentrySafe[actor] = GetGameTime() + 3.0;
+			}
 			
-			sentry = GetOwnerEntity(m_hHintSentry[actor]);
+			m_ctSentryCooldown[actor] = GetGameTime() + 3.0;	
 		}
 		else 
 		{
@@ -121,13 +118,6 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 				return ActionResult<CTFBot>::SuspendFor(new CTFBotRetreatToCover(1.0), "Lost my sentry - retreat!");
 			}*/
 		}
-		
-		if (sentry != INVALID_ENT_REFERENCE
-		&& GetEntProp(sentry, Prop_Send, "m_iMaxHealth") >= GetEntProp(sentry, Prop_Send, "m_iHealth") 
-		&& !GetEntProp(sentry, Prop_Send, "m_bBuilding")) 
-		{
-			m_ctSentrySafe[actor] = GetGameTime() + 3.0;
-		}
 	}	
 	
 	//TODO: Tele stuff here
@@ -141,7 +131,8 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 			g_iAdditionalButtons[actor] |= IN_DUCK;
 		}
 		
-		if (m_ctRecomputePathMvMEngiIdle[actor] < GetGameTime()) {
+		if (m_ctRecomputePathMvMEngiIdle[actor] < GetGameTime()) 
+		{
 			m_ctRecomputePathMvMEngiIdle[actor] = GetGameTime() + GetRandomFloat(1.0, 2.0);
 			
 			float dir[3];
@@ -153,22 +144,20 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 			goal[2] -= (50.0 * dir[2]);
 			
 			PF_SetGoalVector(actor, goal);
+			
 			m_iRouteType[actor] = SAFEST_ROUTE;
 			g_bPath[actor] = true;
-			
-			//CTFBotPathCost cost_func(actor, SAFEST_ROUTE);
-			//this->m_PathFollower.Compute(actor, goal, cost_func, 0.0f, true);
 		}
 		
 		if (dist < 75.0) 
 		{
+			EquipWeaponSlot(actor, TFWeaponSlot_Melee);
+			
 			g_bUpdateLookingAroundForEnemies[actor] = false;
+			
 			BotAim(actor).AimHeadTowards(WorldSpaceCenter(sentry), CRITICAL, 1.0, "Work on my Sentry");
 			BotAim(actor).PressFireButton();
 		}
-		
-		//this->TryToDetonateStaleNest();
-		//return ActionResult<CTFBot>::Continue();
 	}
 	
 	return true;
@@ -183,45 +172,6 @@ void CTFBotMvMEngineerIdle_OnEnd(int actor)
 {
 	//Something here so we don't get a compile warning
 	m_bTriedToDetonateStaleNest[actor] = false;
-}
-
-stock void TakeOverStaleNest(int hint, int actor)
-{
-	if (hint == INVALID_ENT_REFERENCE || OwnerObjectHasNoOwner(hint)) {
-		return;
-	}
-	
-	int obj = GetOwnerEntity(hint);
-	if(obj == INVALID_ENT_REFERENCE)
-		return;
-	
-	SetOwnerEntity(obj, actor);
-	
-	SetEntPropEnt(obj, Prop_Send, "m_hBuilder", -1);
-	AcceptEntityInput(obj, "SetBuilder", actor);
-	SetEntPropEnt(obj, Prop_Send, "m_hBuilder", actor);
-	
-	//actor->AddObject(obj);
-}
-
-stock bool OwnerObjectHasNoOwner(int hint)
-{
-	int obj = GetOwnerEntity(hint);
-	if (obj == INVALID_ENT_REFERENCE) {
-		return false;
-	}
-	
-	if (GetEntPropEnt(obj, Prop_Send, "m_hBuilder") == INVALID_ENT_REFERENCE) {
-		return true;
-	}
-	
-	if (TF2_GetPlayerClass(GetEntPropEnt(obj, Prop_Send, "m_hBuilder")) != TFClass_Engineer)
-	{
-		 //BUG: spelling, lack of newline
-		PrintToServer("Object has an owner that's not engineer.");
-	}
-	
-	return false;
 }
 
 stock bool CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(int actor)
@@ -328,8 +278,6 @@ stock bool CTFBotMvMEngineerIdle_FindHint(bool out_of_range_ok, int &the_hint)
 				closest_pos[1] = bomb_info.GetFloat("closest_pos_y");
 				closest_pos[2] = bomb_info.GetFloat("closest_pos_z");
 			
-				//if (GetVectorDistance(GetAbsOrigin(hint), closest_pos) >= FindConVar("tf_bot_engineer_mvm_hint_min_distance_from_bomb").FloatValue) 
-				
 				hints2.Push(hint);
 			}
 		} 
@@ -361,7 +309,7 @@ stock bool CTFBotMvMEngineerIdle_FindHint(bool out_of_range_ok, int &the_hint)
 		}
 	}
 	
-	if (the_hint != INVALID_ENT_REFERENCE) 
+	if (hint != INVALID_ENT_REFERENCE) 
 	{
 		the_hint = hint;
 	}
@@ -386,6 +334,8 @@ int CTFBotMvMEngineerIdle_SelectOutOfRangeNest(ArrayList nests)
 	for (int i = 0; i < nests.Length - 1; i++)
 	{
 		int nest = nests.Get(i);
+		
+		PrintToServer("CALLING IsStaleNest ON %i", nest);
 		
 		if (IsStaleNest(nest)) {
 			return nest;

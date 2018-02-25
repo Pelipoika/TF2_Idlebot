@@ -2,7 +2,6 @@
 //https://github.com/sigsegv-mvm/mvm-reversed/blob/master/server/tf/bot/behavior/engineer/mvm_engineer/tf_bot_mvm_engineer_build_sentry.h
 
 int m_hintEntity[MAXPLAYERS + 1] = {INVALID_ENT_REFERENCE, ...}; // +0x0034
-int m_hSentry[MAXPLAYERS + 1] = {INVALID_ENT_REFERENCE, ...};    // +0x0038
 
 bool CTFBotMvMEngineerBuildSentryGun_IsPossible(int actor)
 {
@@ -47,6 +46,7 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 		g_bUpdateLookingAroundForEnemies[actor] = false;
 		
 		g_iAdditionalButtons[actor] |= IN_DUCK;
+		
 		BotAim(actor).AimHeadTowards(GetAbsOrigin(m_hintEntity[actor]), OVERRIDE_ALL, 0.1, "Placing sentry");
 	}
 	
@@ -70,27 +70,16 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 	
 	BotAim(actor).PressFireButton();
 	
-	m_hSentry[actor] = TF2_GetObject(actor, TFObject_Sentry);
+	int sentry = TF2_GetObject(actor, TFObject_Sentry);
 	
-	//int ent = SpawnSentry(actor, GetAbsOrigin(m_hintEntity[actor]), GetAbsAngles(m_hintEntity[actor]));
-	if(m_hSentry[actor] == INVALID_ENT_REFERENCE)
+	if(sentry == INVALID_ENT_REFERENCE)
 		return false;
 	
-	DispatchKeyValueVector(m_hSentry[actor], "origin", GetAbsOrigin(m_hintEntity[actor]));
-	//DispatchKeyValueVector(m_hSentry[actor], "angles", GetAbsAngles(m_hintEntity[actor]));
-	
-	char name[64];
-	GetEntPropString(m_hintEntity[actor], Prop_Data, "m_iName", name, sizeof(name));
-	DispatchKeyValue(m_hSentry[actor], "targetname", name);
-	
-	SetOwnerEntity(m_hintEntity[actor], m_hSentry[actor]);
-	
-	m_hSentry[actor] = INVALID_ENT_REFERENCE;
+	DispatchKeyValueVector(sentry, "origin", GetAbsOrigin(m_hintEntity[actor]));
+	//DispatchKeyValueVector(sentry, "angles", GetAbsAngles(m_hintEntity[actor]));
 	
 	ChangeAction(actor, ACTION_MVM_ENGINEER_IDLE, "Built a sentry");
 	FakeClientCommand(actor, "tournament_player_readystate 1");
-	
-	//PrintToServer("CTFBotMvMEngineerBuildSentryGun m_hHintTele %i m_hHintSentry %i m_hHintNest %i", m_hHintTele[actor], m_hHintSentry[actor], m_hHintNest[actor]);
 	
 	return true;
 }
@@ -112,12 +101,5 @@ stock int TF2_GetObject(int client, TFObjectType type)
 
 void CTFBotMvMEngineerBuildSentryGun_OnEnd(int actor)
 {
-	//Something here so we don't get a compile warning
-	if (m_hSentry[actor] != INVALID_ENT_REFERENCE) 
-	{
-		//m_hSentry[actor]->DropCarriedObject(actor);
-		//UTIL_Remove(this->m_hSentry);
-		//AcceptEntityInput(m_hSentry[actor], "Kill");
-	}
-	m_hSentry[actor] = INVALID_ENT_REFERENCE;
+	g_bUpdateLookingAroundForEnemies[actor] = true;
 }
