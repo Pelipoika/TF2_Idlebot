@@ -645,7 +645,7 @@ methodmap BotAim
 		
 		if (IsWeapon(this.index, TF_WEAPON_COMPOUND_BOW))
 		{
-	//		PrintCenterText(this.index, "%f", GetCurrentCharge(GetActiveWeapon(this.index)));
+			//PrintCenterText(this.index, "%f", GetCurrentCharge(GetActiveWeapon(this.index)));
 			
 			if (GetCurrentCharge(GetActiveWeapon(this.index)) >= 0.5 && IsLineOfFireClear(GetEyePosition(this.index), WorldSpaceCenter(threat)))
 			{

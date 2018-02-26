@@ -102,6 +102,25 @@ Handle g_hHudInfo;
 //Reverse CTFBotVision AFTER you have implemented IVision into extension
 //FIX Engineer not building anything after map change
 
+//enum CTFNavArea
+//{
+//	
+//
+//
+//
+//	CUtlVector<CTFNavArea *> m_InvasionAreas[4];
+//
+//	TFNavAttributeType m_nAttributes;
+//	CUtlVector<CBaseCombatCharacter *> m_PVActors[4]; 
+//
+//	IntervalTimer m_itCombat; +1C4h
+//	+ 224h
+//	+ 218h
+//	float m_flBombTargetDistance; +228h
+//	+ 220h
+//	+ 1C0h
+//}	Size 22Ch
+
 //CTFNavMesh stuff, maybe put in PathFollower_Nav
 //
 //	364 windows | 368 linux
@@ -110,16 +129,45 @@ Handle g_hHudInfo;
 //	548 windows | 552 linux
 //		m_flBombTargetDistance 
 //
+
+//What is 544 l
+//	mark
+//	Appears in CTFNavArea::IsTFMarked and 
+//	is compared agains CTFNavArea::m_masterTFMark
+
+//What is 468 l
+//	Appears in CTFNavArea::IsPotentiallyVisibleToTeam
+
 //What is 348 w or 352 l
-//	Some SpotEncounterVector shit
-//	OR prior incursion area shit
-//	OR incursion flow shit
+//	Appears at the start of 
+//	CTFNavArea::CollectPriorIncursionAreas 
+//	AND CTFNavArea::CollectNextIncursionAreas
+//	I think 352 is GetNextIncursionArea
 
-//Reverse CTFBotTacticalMonitor::AvoidBumpingEnemies
-//Reverse void CTFBotEngineerMoveToBuild::SelectBuildLocation(CTFBot *actor)
-//Reverse void CTFBotEngineerMoveToBuild::CollectBuildAreas(CTFBot *actor)
+//452 l = m_nAttributes
 
-//Reverse void CTFBot::EquipBestWeaponForThreat(CKnownEntity const*)
+//What is 456 l and 448 l
+//	Both appear in CTFNavArea::AddPotentiallyVisibleActor
+
+//Some CombatIntensity shit 
+//https://mxr.alliedmods.net/hl2sdk-sdk2013/source/game/shared/util_shared.h#531
+//l 536 = IntervalTimer m_timestamp
+//l 540 = IntervalTimer m_startTime
+
+//CTFNavArea::OnCombat
+//	m_timestamp = Min(tf_nav_combat_build_rate + m_timestamp, 1.0);
+//
+//CTFNavArea::GetCombatIntensity
+//	if(m_startTime > 0.0)
+//	{
+//		return Max(m_timestamp - ((GetGameTime() - m_startTime) * tf_nav_combat_decay_rate), 0.0);
+//	}
+
+
+//Reverse void CTFBotTacticalMonitor::AvoidBumpingEnemies                    DONE
+//Reverse void CTFBotEngineerMoveToBuild::SelectBuildLocation(CTFBot *actor) WIP
+//Reverse void CTFBotEngineerMoveToBuild::CollectBuildAreas(CTFBot *actor)   WIP
+//Reverse void CTFBot::EquipBestWeaponForThreat(CKnownEntity const*)         WIP
 //	Mainly for soldiers shotgun handling
 //	Seems to just switch to shotgun if target is closer than 750.0 units
 //	and ran out of rocketlauncher ammo
@@ -631,8 +679,15 @@ stock void StartMainAction(int client, bool pretend = false)
 				}
 				case TFClass_Sniper:
 				{
-					ChangeAction(client, ACTION_SNIPER_LURK, "StartMainAction Sniper: wants to lurk.");	
-					m_iRouteType[client] = SAFEST_ROUTE;
+					if(IsSniperRifle(client))
+					{
+						m_iRouteType[client] = SAFEST_ROUTE;
+						ChangeAction(client, ACTION_SNIPER_LURK, "StartMainAction Sniper: wants to lurk."); 
+					}
+					else
+					{
+						ChangeAction(client, ACTION_ATTACK, "StartMainAction Sniper: Attacking robots.");
+					}
 				}
 				case TFClass_Engineer:
 				{
