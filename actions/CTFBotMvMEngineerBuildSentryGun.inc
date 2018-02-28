@@ -11,10 +11,9 @@ bool CTFBotMvMEngineerBuildSentryGun_IsPossible(int actor)
 bool CTFBotMvMEngineerBuildSentryGun_OnStart(int actor, int hint = INVALID_ENT_REFERENCE)
 {
 	g_bUpdateLookingAroundForEnemies[actor] = true;
-	m_hintEntity[actor] = EntIndexToEntRef(hint);
 	
-	//Start building a sentry
-	FakeClientCommand(actor, "build 2");
+	if(hint != INVALID_ENT_REFERENCE)
+		m_hintEntity[actor] = EntIndexToEntRef(hint);
 	
 	return true;
 }
@@ -30,7 +29,6 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 	//Bail.
 	if(CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(actor))
 	{
-		FakeClientCommand(actor, "destroy 2");
 		ChangeAction(actor, ACTION_MVM_ENGINEER_IDLE, "The spot we were planning to build at is now too far back.");
 		return true;
 	}
