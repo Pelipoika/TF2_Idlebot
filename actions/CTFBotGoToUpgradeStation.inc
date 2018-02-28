@@ -75,19 +75,39 @@ bool CTFBotGoToUpgradeStation_Update(int actor)
 	{
 		PrintToServer("[%8.3f] CTFBotGoToUpgradeStation(#%d): Timeout elapsed!", GetGameTime(), actor);
 		
-		NavArea area = TheNavMesh.GetNearestNavArea_Vec(WorldSpaceCenter(actor), true, 4000.0, false, false, GetClientTeam(actor));
-		if(area == NavArea_Null)
+		float there[3];
+		bool bYes = false;
+		
+		if (PF_GetFutureSegment(actor, 1, there)) 
+		{ 
+			bYes = true; 
+		}
+		else if(PF_GetFutureSegment(actor, 0, there)) 
+		{ 
+			bYes = true; 
+		}
+		
+		if(bYes)
 		{
-			ChangeAction(actor, ACTION_IDLE, "Cannot reach upgrade station.");
+			there[2] += 18.0;
+			TeleportEntity(actor, there, NULL_VECTOR, NULL_VECTOR);
 		}
 		else
-		{
-			float center[3];
-			area.GetCenter(center);
-			
-			center[2] += GetEntPropFloat(actor, Prop_Send, "m_flStepSize");
-			
-			TeleportEntity(actor, center, NULL_VECTOR, NULL_VECTOR);
+		{		
+			NavArea area = TheNavMesh.GetNearestNavArea_Vec(WorldSpaceCenter(actor), true, 4000.0, false, false, GetClientTeam(actor));
+			if(area == NavArea_Null)
+			{
+				ChangeAction(actor, ACTION_IDLE, "Cannot reach upgrade station.");
+			}
+			else
+			{
+				float center[3];
+				area.GetCenter(center);
+				
+				center[2] += GetEntPropFloat(actor, Prop_Send, "m_flStepSize");
+				
+				TeleportEntity(actor, center, NULL_VECTOR, NULL_VECTOR);
+			}
 		}
 		
 		m_ctUpgradeTimeout[actor] = GetGameTime() + 30.0;
