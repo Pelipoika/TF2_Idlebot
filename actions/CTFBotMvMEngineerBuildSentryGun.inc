@@ -11,7 +11,7 @@ bool CTFBotMvMEngineerBuildSentryGun_IsPossible(int actor)
 bool CTFBotMvMEngineerBuildSentryGun_OnStart(int actor, int hint = INVALID_ENT_REFERENCE)
 {
 	g_bUpdateLookingAroundForEnemies[actor] = true;
-	m_hintEntity[actor] = hint;
+	m_hintEntity[actor] = EntIndexToEntRef(hint);
 	
 	//Start building a sentry
 	FakeClientCommand(actor, "build 2");
@@ -21,7 +21,7 @@ bool CTFBotMvMEngineerBuildSentryGun_OnStart(int actor, int hint = INVALID_ENT_R
 
 bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 {
-	if (m_hintEntity[actor] == INVALID_ENT_REFERENCE) 
+	if (EntRefToEntIndex(m_hintEntity[actor]) == INVALID_ENT_REFERENCE) 
 	{
 		ChangeAction(actor, ACTION_IDLE, "No hint entity");
 		return false;
@@ -35,7 +35,7 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 		return true;
 	}
 	
-	float range_to_hint = GetVectorDistance(GetAbsOrigin(actor), GetAbsOrigin(m_hintEntity[actor]));
+	float range_to_hint = GetVectorDistance(GetAbsOrigin(actor), GetAbsOrigin(EntRefToEntIndex(m_hintEntity[actor])));
 	
 	if (range_to_hint < 200.0) 
 	{
@@ -47,14 +47,14 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 		
 		g_iAdditionalButtons[actor] |= IN_DUCK;
 		
-		BotAim(actor).AimHeadTowards(GetAbsOrigin(m_hintEntity[actor]), OVERRIDE_ALL, 0.1, "Placing sentry");
+		BotAim(actor).AimHeadTowards(GetAbsOrigin(EntRefToEntIndex(m_hintEntity[actor])), OVERRIDE_ALL, 0.1, "Placing sentry");
 	}
-	
-	PF_SetGoalVector(actor, GetAbsOrigin(m_hintEntity[actor]));
-	g_bPath[actor] = true;
 	
 	if(range_to_hint > 70.0)
 	{
+		PF_SetGoalVector(actor, GetAbsOrigin(EntRefToEntIndex(m_hintEntity[actor])));
+		g_bPath[actor] = true;
+	
 		if(range_to_hint > 300.0)
 		{
 			//Fuck em up.
@@ -71,12 +71,11 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 	BotAim(actor).PressFireButton();
 	
 	int sentry = TF2_GetObject(actor, TFObject_Sentry);
-	
 	if(sentry == INVALID_ENT_REFERENCE)
 		return false;
 	
-	DispatchKeyValueVector(sentry, "origin", GetAbsOrigin(m_hintEntity[actor]));
-	//DispatchKeyValueVector(sentry, "angles", GetAbsAngles(m_hintEntity[actor]));
+	DispatchKeyValueVector(sentry, "origin", GetAbsOrigin(EntRefToEntIndex(m_hintEntity[actor])));
+	//DispatchKeyValueVector(sentry, "angles", GetAbsAngles(EntRefToEntIndex(m_hintEntity[actor])));
 	
 	ChangeAction(actor, ACTION_MVM_ENGINEER_IDLE, "Built a sentry");
 	FakeClientCommand(actor, "tournament_player_readystate 1");

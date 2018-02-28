@@ -154,7 +154,7 @@ Handle g_hHudInfo;
 //l 536 = IntervalTimer m_timestamp
 //l 540 = IntervalTimer m_startTime
 
-//CTFNavArea::OnCombat
+//CTFNavArea::OnCombat doesnt make sense
 //	m_timestamp = Min(tf_nav_combat_build_rate + m_timestamp, 1.0);
 //
 //CTFNavArea::GetCombatIntensity
@@ -163,6 +163,21 @@ Handle g_hHudInfo;
 //		return Max(m_timestamp - ((GetGameTime() - m_startTime) * tf_nav_combat_decay_rate), 0.0);
 //	}
 
+//CTFNavMesh offsets organized
+//	float unknown;										l 352	
+//	float unknown; 										l 356	
+//	float m_flIncursionDistanceRed; 					l 360	tf_nav_show_incursion_distance 
+//	float m_flIncursionDistanceBlu;						l 364	tf_nav_show_incursion_distance 
+//	CUtlVector<CTFNavArea *> m_InvasionAreas[4];		l 368	
+//	CUtlVector<CBaseCombatCharacter *> m_PVActors[4];	l 448	CTFNavArea::AddPotentiallyVisibleActor
+//	TFNavAttributeType m_nAttributes;					l 452	
+//	CTFNavArea::AddPotentiallyVisibleActor 				l 456	
+//	CTFNavArea::IsPotentiallyVisibleToTeam				l 468	
+//	IntervalTimer m_timestamp							l 536	GetCombatIntensity
+//	IntervalTimer m_startTime							l 540	GetCombatIntensity
+//	CTFNavArea::IsTFMarked mark 						l 544
+//	m_flBombTargetDistance						 		l 552	tf_nav_show_bomb_target_distance
+//size 0x238 w
 
 //Reverse void CTFBotTacticalMonitor::AvoidBumpingEnemies                    DONE
 //Reverse void CTFBotEngineerMoveToBuild::SelectBuildLocation(CTFBot *actor) WIP

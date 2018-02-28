@@ -1,6 +1,5 @@
 
 float m_ctSentrySafe[MAXPLAYERS + 1];               // +0x4814
-
 float m_ctSentryCooldown[MAXPLAYERS + 1];           // +0x4820
 //float m_ctTeleCooldown[MAXPLAYERS + 1];             // +0x482c
 
@@ -59,7 +58,7 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 		m_ctFindNestHint[actor] = GetGameTime();
 	}
 	
-	if (m_hHintNest[actor] == INVALID_ENT_REFERENCE || bShouldAdvance) 
+	if (EntRefToEntIndex(m_hHintNest[actor]) == INVALID_ENT_REFERENCE || bShouldAdvance) 
 	{
 		//HasStarted && !IsElapsed
 		if (m_ctFindNestHint[actor] > 0.0 && m_ctFindNestHint[actor] > GetGameTime()) 
@@ -79,16 +78,16 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 		if(h_nest <= 0)
 			return false;
 		
-		m_hHintNest[actor] = h_nest;
+		m_hHintNest[actor] = EntIndexToEntRef(h_nest);
 		PrintToServer("m_hHintNest %i", h_nest);
 		
-		m_hHintSentry[actor] = GetSentryHint(m_hHintNest[actor]);
-		PrintToServer("m_hHintSentry %i", m_hHintSentry[actor]);
+		m_hHintSentry[actor] = EntIndexToEntRef(GetSentryHint(EntRefToEntIndex(m_hHintNest[actor])));
+		PrintToServer("m_hHintSentry %i", EntRefToEntIndex(m_hHintSentry[actor]));
 	}
 	
 	int sentry = TF2_GetObject(actor, TFObject_Sentry);
 	
-	if (m_hHintSentry[actor] != INVALID_ENT_REFERENCE) 
+	if (EntRefToEntIndex(m_hHintSentry[actor]) != INVALID_ENT_REFERENCE) 
 	{
 		if (sentry != INVALID_ENT_REFERENCE)
 		{
@@ -109,7 +108,7 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 				m_ctSentryCooldown[actor] = GetGameTime() + 3.0;
 				
 				ChangeAction(actor, ACTION_MVM_ENGINEER_BUILD_SENTRYGUN, "No sentry - building a new one");
-				CTFBotMvMEngineerBuildSentryGun_OnStart(actor, m_hHintSentry[actor]);
+				CTFBotMvMEngineerBuildSentryGun_OnStart(actor, EntRefToEntIndex(m_hHintSentry[actor]));
 				
 				return true;
 			}
@@ -176,7 +175,7 @@ void CTFBotMvMEngineerIdle_OnEnd(int actor)
 
 stock bool CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(int actor)
 {
-	if (m_hHintNest[actor] == INVALID_ENT_REFERENCE) 
+	if (EntRefToEntIndex(m_hHintNest[actor]) == INVALID_ENT_REFERENCE) 
 		return false;
 	
 	if (m_ctAdvanceNestSpot[actor] <= 0.0)
@@ -211,7 +210,7 @@ stock bool CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(int actor)
 		return false;
 	}
 	
-	NavArea hint_area = TheNavMesh.GetNearestNavArea_Vec(GetAbsOrigin(m_hHintNest[actor]), false, 1000.0);
+	NavArea hint_area = TheNavMesh.GetNearestNavArea_Vec(GetAbsOrigin(EntRefToEntIndex(m_hHintNest[actor])), false, 1000.0);
 	if (hint_area == NavArea_Null)
 	{
 		delete bombinfo;
