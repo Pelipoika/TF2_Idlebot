@@ -102,25 +102,6 @@ Handle g_hHudInfo;
 //Reverse CTFBotVision AFTER you have implemented IVision into extension
 //FIX Engineer not building anything after map change
 
-//enum CTFNavArea
-//{
-//	
-//
-//
-//
-//	CUtlVector<CTFNavArea *> m_InvasionAreas[4];
-//
-//	TFNavAttributeType m_nAttributes;
-//	CUtlVector<CBaseCombatCharacter *> m_PVActors[4]; 
-//
-//	IntervalTimer m_itCombat; +1C4h
-//	+ 224h
-//	+ 218h
-//	float m_flBombTargetDistance; +228h
-//	+ 220h
-//	+ 1C0h
-//}	Size 22Ch
-
 //CTFNavMesh stuff, maybe put in PathFollower_Nav
 //
 //	364 windows | 368 linux
@@ -172,7 +153,21 @@ Handle g_hHudInfo;
 //	CUtlVector<CBaseCombatCharacter *> m_PVActors[4];	l 448	CTFNavArea::AddPotentiallyVisibleActor
 //	TFNavAttributeType m_nAttributes;					l 452	
 //	CTFNavArea::AddPotentiallyVisibleActor 				l 456	
-//	CTFNavArea::IsPotentiallyVisibleToTeam				l 468	
+//	CTFNavArea::IsPotentiallyVisibleToTeam				l 468
+//															l 452
+//															l 456
+//															l 460
+//															l 464
+//															l 468
+//															l 472
+//															l 476
+//															l 480
+//															l 484
+//															l 488
+//															l 492
+//															l 496
+//															l 500
+//
 //	IntervalTimer m_timestamp							l 536	GetCombatIntensity
 //	IntervalTimer m_startTime							l 540	GetCombatIntensity
 //	CTFNavArea::IsTFMarked mark 						l 544
@@ -234,11 +229,7 @@ public void OnClientPutInServer(int client)
 	g_flLastInput[client] = GetGameTime();
 	g_bIdle[client] = false;
 	
-	m_hHintSentry[client] = INVALID_ENT_REFERENCE;
-	m_hHintTele[client]   = INVALID_ENT_REFERENCE;
-	m_hHintNest[client]   = INVALID_ENT_REFERENCE;
-	
-	m_hintEntity[client] = INVALID_ENT_REFERENCE;
+	m_aNestArea[client] = NavArea_Null;
 	
 	m_ctVelocityLeft[client] = 0.0;
 	m_ctVelocityRight[client] = 0.0;
@@ -1323,6 +1314,7 @@ public float PluginBot_PathCost(int bot_entidx, NavArea area, NavArea from_area,
 public void PluginBot_PathFail(int bot_entidx)
 {
 	ChangeAction(bot_entidx, ACTION_IDLE, "Path construction failed.");
+	m_aNestArea[bot_entidx] = NavArea_Null;
 }
 
 public void PluginBot_OnActorEmoted(int bot_entidx, int who, int concept)

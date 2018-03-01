@@ -1,21 +1,26 @@
 //https://github.com/sigsegv-mvm/mvm-reversed/blob/master/server/tf/bot/behavior/engineer/mvm_engineer/tf_bot_mvm_engineer_build_sentry.cpp
 //https://github.com/sigsegv-mvm/mvm-reversed/blob/master/server/tf/bot/behavior/engineer/mvm_engineer/tf_bot_mvm_engineer_build_sentry.h
 
+int m_hintEntity[MAXPLAYERS + 1] = {INVALID_ENT_REFERENCE, ...}; // +0x0034
+
 bool CTFBotMvMEngineerBuildSentryGun_IsPossible(int actor)
 {
 	return TF2_GetPlayerClass(actor) == TFClass_Engineer && GetAmmoCount(actor, TF_AMMO_METAL) >= 130;
 }
 
-bool CTFBotMvMEngineerBuildSentryGun_OnStart(int actor)
+bool CTFBotMvMEngineerBuildSentryGun_OnStart(int actor, int hint = INVALID_ENT_REFERENCE)
 {
 	g_bUpdateLookingAroundForEnemies[actor] = true;
+	
+	if(hint != INVALID_ENT_REFERENCE)
+		m_hintEntity[actor] = EntIndexToEntRef(hint);
 	
 	return true;
 }
 
 bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 {
-	if (m_aNestArea[actor] == NavArea_Null) 
+	if (EntRefToEntIndex(m_hintEntity[actor]) == INVALID_ENT_REFERENCE) 
 	{
 		ChangeAction(actor, ACTION_IDLE, "No hint entity");
 		return false;
@@ -24,17 +29,11 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 	//Bail.
 	if(CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(actor))
 	{
-		m_aNestArea[actor] = NavArea_Null;
-		FakeClientCommand(actor, "destroy 2");
-		
 		ChangeAction(actor, ACTION_MVM_ENGINEER_IDLE, "The spot we were planning to build at is now too far back.");
 		return true;
 	}
 	
-	float areaCenter[3];
-	m_aNestArea[actor].GetCenter(areaCenter);
-	
-	float range_to_hint = GetVectorDistance(GetAbsOrigin(actor), areaCenter);
+	float range_to_hint = GetVectorDistance(GetAbsOrigin(actor), GetAbsOrigin(EntRefToEntIndex(m_hintEntity[actor])));
 	
 	if (range_to_hint < 200.0) 
 	{
@@ -46,14 +45,12 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 		
 		g_iAdditionalButtons[actor] |= IN_DUCK;
 		
-		BotAim(actor).AimHeadTowards(areaCenter, OVERRIDE_ALL, 0.1, "Placing sentry");
+		BotAim(actor).AimHeadTowards(GetAbsOrigin(EntRefToEntIndex(m_hintEntity[actor])), OVERRIDE_ALL, 0.1, "Placing sentry");
 	}
 	
 	if(range_to_hint > 70.0)
 	{
-		PrintToServer("%f %f %f", areaCenter[0], areaCenter[1], areaCenter[2]);
-	
-		PF_SetGoalVector(actor, areaCenter);
+		PF_SetGoalVector(actor, GetAbsOrigin(EntRefToEntIndex(m_hintEntity[actor])));
 		g_bPath[actor] = true;
 	
 		if(range_to_hint > 300.0)
@@ -75,7 +72,7 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 	if(sentry == INVALID_ENT_REFERENCE)
 		return false;
 	
-	//DispatchKeyValueVector(sentry, "origin", areaCenter);
+	DispatchKeyValueVector(sentry, "origin", GetAbsOrigin(EntRefToEntIndex(m_hintEntity[actor])));
 	//DispatchKeyValueVector(sentry, "angles", GetAbsAngles(EntRefToEntIndex(m_hintEntity[actor])));
 	
 	ChangeAction(actor, ACTION_MVM_ENGINEER_IDLE, "Built a sentry");

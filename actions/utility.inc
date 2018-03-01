@@ -327,8 +327,6 @@ stock bool GetBombInfo(JSONObject info)
 		}
 	}
 	
-	bool success = (closest_flag != INVALID_ENT_REFERENCE);
-	
 	//float range_back = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_backward_range").FloatValue;
 	//float range_fwd  = FindConVar("tf_bot_engineer_mvm_sentry_hint_bomb_forward_range").FloatValue;
 	
@@ -341,7 +339,106 @@ stock bool GetBombInfo(JSONObject info)
 	info.SetFloat("hatch_dist_back", hatch_dist + range_back);
 	info.SetFloat("hatch_dist_fwd",  hatch_dist - range_fwd);
 	
-	return success;
+	return (closest_flag != INVALID_ENT_REFERENCE);
+}
+
+stock NavArea PickBuildArea(int client)
+{
+	int iAreaCount = LoadFromAddress(navarea_count, NumberType_Int32);
+
+	//Check that this map has any nav areas
+	if ( iAreaCount <= 0 )
+		return NavArea_Null;
+
+	JSONObject bombinfo = new JSONObject();
+	if (!GetBombInfo(bombinfo)) 
+	{
+		delete bombinfo;
+		return NavArea_Null;
+	}
+	
+	float vecTargetPos[3];
+	vecTargetPos[0] = bombinfo.GetFloat("closest_pos_x");
+	vecTargetPos[1] = bombinfo.GetFloat("closest_pos_y");
+	vecTargetPos[2] = bombinfo.GetFloat("closest_pos_z");
+	
+	NavArea bombArea = TheNavMesh.GetNearestNavArea_Vec(vecTargetPos, false, 500.0, true, true);
+	if(bombArea == NavArea_Null)
+	{
+		delete bombinfo;
+		return NavArea_Null;
+	}
+	
+	if(HasTFAttributes(bombArea, (BLUE_SPAWN_ROOM | RED_SPAWN_ROOM)))
+	{
+		bombArea = TheNavMesh.GetNearestNavArea_Vec(vecTargetPos, false, 5000.0, true, true, GetClientTeam(client));
+	}
+
+	//int iValidAreas = 0;
+	//int iSkippedAreas = 0;
+	ArrayList ForwardAreas = new ArrayList();
+	
+	for (int i = 0; i < iAreaCount; i++)
+	{	
+		NavArea area = view_as<NavArea>(LoadFromAddress(TheNavAreas + view_as<Address>(4 * i), NumberType_Int32));
+		if(area == NavArea_Null)
+			continue;
+		
+		if (HasTFAttributes(area, (BLUE_SPAWN_ROOM | RED_SPAWN_ROOM)))
+			continue;
+		
+		float m_flBombTargetDistanceAtArea = view_as<float>(LoadFromAddress(view_as<Address>(area) + view_as<Address>(g_iBombTargetDistance), NumberType_Int32));
+		float m_flBombTargetDistanceAtBomb = view_as<float>(LoadFromAddress(view_as<Address>(bombArea) + view_as<Address>(g_iBombTargetDistance), NumberType_Int32));
+		
+		bool bForwardOfBomb = (m_flBombTargetDistanceAtArea < m_flBombTargetDistanceAtBomb);
+		if(!bForwardOfBomb)
+		{
+			//iSkippedAreas++;
+			continue;
+		}
+		
+		float center[3];
+		area.GetCenter(center);
+		center[2] += 60.0;
+		
+		float flDistance = GetVectorDistance(center, vecTargetPos);
+		
+		//Skip areas too close and too far
+		if(flDistance <= 750.0 || flDistance >= 1300.0)
+		{
+			//iSkippedAreas++;
+			continue;
+		}
+		
+		if (IsLineOfFireClear(center, vecTargetPos))
+		{
+			//iValidAreas++;
+			ForwardAreas.Push(area);
+		}
+	}
+	
+	//PrintToServer("%i / %i areas potentially visible! skipped %i areas", iValidAreas, iAreaCount, iSkippedAreas);
+	
+	NavArea randomArea = bombArea;
+	
+	if(ForwardAreas.Length > 0)
+		randomArea = ForwardAreas.Get(GetRandomInt(0, ForwardAreas.Length - 1));
+	
+	delete bombinfo;
+	delete ForwardAreas;
+	
+	return randomArea;
+}
+
+//CTFNavArea::IsPotentiallyVisibleToTeam
+stock bool IsPotentiallyVisibleToTeam(NavArea area, int team)
+{
+	int eax = (team + team * 4); //eax
+	int edi = view_as<int>(area) + eax * 4 + 0x1D0;  //edi
+
+	int count = LoadFromAddress(edi, NumberType_Int32);
+	
+	return team <= 3 && count > 0;
 }
 
 stock bool IsStaleNest(int nest)

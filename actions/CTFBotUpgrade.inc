@@ -115,10 +115,6 @@ bool CTFBotPurchaseUpgrades_Update(int actor)
 			
 			if(TF2_GetPlayerClass(actor) == TFClass_Engineer)
 			{
-				m_hHintSentry[actor] = INVALID_ENT_REFERENCE;
-				m_hHintTele[actor]   = INVALID_ENT_REFERENCE;
-				m_hHintNest[actor]   = INVALID_ENT_REFERENCE;
-				
 				ChangeAction(actor, ACTION_MVM_ENGINEER_IDLE, "Engineer: Start building.");
 			}
 			else if(TF2_GetPlayerClass(actor) == TFClass_Medic)
