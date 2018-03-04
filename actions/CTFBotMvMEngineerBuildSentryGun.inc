@@ -51,7 +51,7 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 	
 	if(range_to_hint > 70.0)
 	{
-		PrintToServer("%f %f %f", areaCenter[0], areaCenter[1], areaCenter[2]);
+		//PrintToServer("%f %f %f", areaCenter[0], areaCenter[1], areaCenter[2]);
 	
 		PF_SetGoalVector(actor, areaCenter);
 		g_bPath[actor] = true;

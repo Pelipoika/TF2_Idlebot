@@ -1159,9 +1159,17 @@ public void PluginBot_Approach(int bot_entidx, const float vec[3])
 
 public bool PluginBot_IsEntityTraversable(int bot_entidx, int other_entidx) 
 {
+	//Can't walk through our own buildings unfortunately :/
+	if(IsBaseObject(other_entidx) && GetEntPropEnt(other_entidx, Prop_Send, "m_hBuilder") == bot_entidx)
+	{
+		return false;
+	}
+	
 	//Traversing "teammates" is okay.
 	if(IsValidClientIndex(other_entidx) && GetTeamNumber(bot_entidx) == GetTeamNumber(other_entidx))
+	{
 		return true;
+	}
 	
 	//Traversing our target should always be possible in order for PF_IsPotentiallyTraversable to work in PredictSubjectPosition.
 	return (m_hAttackTarget[bot_entidx] == other_entidx) ? true : false; 
@@ -1341,6 +1349,12 @@ public void PluginBot_OnActorEmoted(int bot_entidx, int who, int concept)
 
 public void PluginBot_MoveToSuccess(int bot_entidx, Address path)
 {	
+	if(g_bRetreat[bot_entidx])
+	{
+		g_bPath[bot_entidx] = false;
+		g_bRetreat[bot_entidx] = false;
+	}
+
 	if(g_iCurrentAction[bot_entidx] != ACTION_MOVE_TO_FRONT
 	|| g_iCurrentAction[bot_entidx] != ACTION_GOTO_UPGRADE)
 		return;

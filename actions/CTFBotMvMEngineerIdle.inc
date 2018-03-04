@@ -38,7 +38,9 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 		PrintToServer("ADVANCE");
 	}
 	
-	if (m_aNestArea[actor] == NavArea_Null || bShouldAdvance)
+	int sentry = TF2_GetObject(actor, TFObject_Sentry);
+	
+	if ((m_aNestArea[actor] == NavArea_Null || bShouldAdvance) || sentry == INVALID_ENT_REFERENCE)
 	{
 		//HasStarted && !IsElapsed
 		if (m_ctFindNestHint[actor] > 0.0 && m_ctFindNestHint[actor] > GetGameTime()) 
@@ -51,8 +53,6 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 		
 		m_aNestArea[actor] = PickBuildArea(actor);
 	}
-	
-	int sentry = TF2_GetObject(actor, TFObject_Sentry);
 	
 	if (m_aNestArea[actor] != NavArea_Null)
 	{
