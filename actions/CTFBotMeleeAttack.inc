@@ -45,6 +45,7 @@ bool CTFBotMeleeAttack_Update(int actor)
 	BotAim(actor).AimHeadTowardsEntity(bot_nearest_to_me, OVERRIDE_ALL, 0.1, "Aim at nearby melee target.");
 	BotAim(actor).PressFireButton();
 	
+	g_bPath[actor] = true;
 	PF_SetGoalEntity(actor, bot_nearest_to_me);
 	
 	return true;

@@ -24,10 +24,10 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 	//Bail.
 	if(CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(actor))
 	{
-		m_aNestArea[actor] = NavArea_Null;
+		m_aNestArea[actor] = PickBuildArea(actor);
 		FakeClientCommand(actor, "destroy 2");
 		
-		ChangeAction(actor, ACTION_MVM_ENGINEER_IDLE, "The spot we were planning to build at is now too far back.");
+		//ChangeAction(actor, ACTION_MVM_ENGINEER_IDLE, "The spot we were planning to build at is now too far back.");
 		return true;
 	}
 	

@@ -105,6 +105,7 @@ bool CTFBotGetHealth_OnStart(int actor)
 	
 	if(m_hHealth[actor] != -1)
 	{
+		g_bPath[actor] = true;
 		return true;
 	}
 

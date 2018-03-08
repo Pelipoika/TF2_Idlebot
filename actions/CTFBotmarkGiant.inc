@@ -110,6 +110,8 @@ bool CTFBotMarkGiant_Update(int actor)
 	
 	PF_SetGoalEntity(actor, m_hTarget[actor]);
 	
+	g_bPath[actor] = true;
+	
 	float dist_to_target = GetVectorDistance(GetAbsOrigin(actor), GetAbsOrigin(m_hTarget[actor]));
 	if (dist_to_target < 512.0)
 	{

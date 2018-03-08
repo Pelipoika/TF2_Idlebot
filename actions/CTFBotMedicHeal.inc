@@ -22,6 +22,8 @@ bool CTFBotMedicHeal_OnStart(int actor)
 	
 	QueryClientConVar(actor, "tf_medigun_autoheal", OnMedigunModeGet, GetClientUserId(actor));
 	
+	g_bPath[actor] = true;
+	
 	return true;
 }
 

@@ -88,6 +88,8 @@ bool CTFBotPurchaseUpgrades_OnStart(int actor)
 	
 	g_bUpdateLookingAroundForEnemies[actor] = false;
 	
+	g_bPath[actor] = false;
+	
 	return true;
 }
 

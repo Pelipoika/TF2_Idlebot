@@ -66,6 +66,9 @@ bool CTFBotGoToUpgradeStation_OnStart(int actor)
 	TR_GetEndPosition(center);
 	
 	PF_SetGoalVector(actor, center);
+	
+	g_bPath[actor] = true;
+	
 	return true;
 }
 

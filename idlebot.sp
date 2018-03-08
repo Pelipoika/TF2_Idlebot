@@ -277,7 +277,9 @@ stock bool SetDefender(int client, bool bEnabled)
 		ShowVGUIPanel(client, "class_blue", _, false);
 		ShowVGUIPanel(client, "class_red", _, false);
 	}
-
+	
+	KV_MvM_UpgradesDone(client);
+	
 	if(!bEnabled && g_bEmulate[client])
 	{
 		SetVariantString("");
@@ -834,63 +836,36 @@ stock bool RunCurrentAction(int client)
 		case ACTION_MVM_ENGINEER_BUILD_SENTRYGUN: g_bStartedAction[client] = CTFBotMvMEngineerBuildSentryGun_Update(client);	
 	}
 
-	switch(g_iCurrentAction[client])
+	if(g_iCurrentAction[client] == ACTION_GET_HEALTH
+	|| g_iCurrentAction[client] == ACTION_GET_AMMO)
 	{
-		case ACTION_IDLE, ACTION_UPGRADE:
-		{
-			g_bPath[client] = false;
-		}
-		case ACTION_ATTACK, ACTION_SNIPER_LURK, ACTION_MOVE_TO_FRONT, ACTION_USE_ITEM, ACTION_GOTO_UPGRADE, ACTION_MEDIC_HEAL:
-		{
-			//Return early
-			if(g_iCurrentAction[client] == ACTION_ATTACK || g_iCurrentAction[client] == ACTION_SNIPER_LURK 
-			|| g_iCurrentAction[client] == ACTION_MEDIC_HEAL)
-				return false;
-			
-			//Unzoom when no target and not lurking.
-			if(TF2_GetPlayerClass(client) == TFClass_Sniper && !IsValidClientIndex(m_hAimTarget[client]))
-			{
-				if (TF2_IsPlayerInCondition(client, TFCond_Zoomed)) 
-				{
-					BotAim(client).PressAltFireButton();
-				}
-			}
-			
-			g_bPath[client] = true;	
-		}
-		case ACTION_GET_HEALTH, ACTION_GET_AMMO:
-		{
-			//Unzoom when no target because we arent allowed to move if zoomed.
-			if(IsSniperRifle(client) && !IsValidClientIndex(m_hAimTarget[client]))
-			{
-				if (TF2_IsPlayerInCondition(client, TFCond_Zoomed)) 
-				{
-					BotAim(client).PressAltFireButton();
-				}
-			}
+		bool bHealedByDispenser = false;
 		
-			bool bHealedByDispenser = false;
-			
-			for (int i = 0; i < GetEntProp(client, Prop_Send, "m_nNumHealers"); i++)
-			{
-				int iHealerIndex = GetHealerByIndex(client, i);
-				
-				//Skip player healers, we want to know if we are healed by a dispenser.
-				if(IsValidClientIndex(iHealerIndex))
-					continue;
-				
-				//If we are being healed by a non player entity it's propably a dispenser.
-				bHealedByDispenser = true;
-				break;
-			}
-			
-			//Path if not healed by dispenser.
-			g_bPath[client] = !bHealedByDispenser;
-		}
-		default:
+		for (int i = 0; i < GetEntProp(client, Prop_Send, "m_nNumHealers"); i++)
 		{
-			g_bPath[client] = true;	
+			int iHealerIndex = GetHealerByIndex(client, i);
+			
+			//Skip player healers, we want to know if we are healed by a dispenser.
+			if(IsValidClientIndex(iHealerIndex))
+				continue;
+			
+			//If we are being healed by a non player entity it's propably a dispenser.
+			bHealedByDispenser = true;
+			break;
 		}
+		
+		//Unzoom when no target and not healed by dispenser because we arent allowed to move if zoomed.
+		if(TF2_GetPlayerClass(client) == TFClass_Sniper && !IsValidClientIndex(m_hAimTarget[client]))
+		{
+			if (TF2_IsPlayerInCondition(client, TFCond_Zoomed) && !bHealedByDispenser)
+			{
+				BotAim(client).PressAltFireButton();
+			}
+		}
+	
+		
+		//Path if not healed by dispenser.
+		g_bPath[client] = !bHealedByDispenser;
 	}
 
 	return g_bStartedAction[client];
@@ -1349,15 +1324,17 @@ public void PluginBot_OnActorEmoted(int bot_entidx, int who, int concept)
 
 public void PluginBot_MoveToSuccess(int bot_entidx, Address path)
 {	
-	if(g_bRetreat[bot_entidx])
+/*	if(g_bRetreat[bot_entidx])
 	{
 		g_bPath[bot_entidx] = false;
-		g_bRetreat[bot_entidx] = false;
 	}
 
 	if(g_iCurrentAction[bot_entidx] != ACTION_MOVE_TO_FRONT
 	|| g_iCurrentAction[bot_entidx] != ACTION_GOTO_UPGRADE)
 		return;
-	
 	ChangeAction(bot_entidx, ACTION_IDLE, "PluginBot_MoveToSuccess: Reached path goal.");
+	*/
+	
+	g_bRetreat[bot_entidx] = false;
+	g_bPath[bot_entidx] = false;
 }

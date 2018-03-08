@@ -362,7 +362,8 @@ stock NavArea PickBuildArea(int client)
 	vecTargetPos[1] = bombinfo.GetFloat("closest_pos_y");
 	vecTargetPos[2] = bombinfo.GetFloat("closest_pos_z");
 	
-	NavArea bombArea = TheNavMesh.GetNearestNavArea_Vec(vecTargetPos, false, 500.0, true, true);
+	//GetNearestNavArea_Vec(const float pos[3], bool anyZ = false, float maxDist = 10000.0, bool checkLOS = false, bool checkGround = true, int team = TEAM_ANY);
+	NavArea bombArea = TheNavMesh.GetNearestNavArea_Vec(vecTargetPos, false, 90000.0, false, true, 1);
 	if(bombArea == NavArea_Null)
 	{
 		delete bombinfo;
@@ -371,7 +372,8 @@ stock NavArea PickBuildArea(int client)
 	
 	if(HasTFAttributes(bombArea, (BLUE_SPAWN_ROOM | RED_SPAWN_ROOM)))
 	{
-		bombArea = TheNavMesh.GetNearestNavArea_Vec(vecTargetPos, false, 5000.0, true, true, GetClientTeam(client));
+		delete bombinfo;
+		return NavArea_Null;
 	}
 
 	//int iValidAreas = 0;
@@ -387,7 +389,7 @@ stock NavArea PickBuildArea(int client)
 		if (HasTFAttributes(area, (BLUE_SPAWN_ROOM | RED_SPAWN_ROOM)))
 			continue;
 		
-		float m_flBombTargetDistanceAtArea = view_as<float>(LoadFromAddress(view_as<Address>(area) + view_as<Address>(g_iBombTargetDistance), NumberType_Int32));
+		float m_flBombTargetDistanceAtArea = view_as<float>(LoadFromAddress(view_as<Address>(area)     + view_as<Address>(g_iBombTargetDistance), NumberType_Int32));
 		float m_flBombTargetDistanceAtBomb = view_as<float>(LoadFromAddress(view_as<Address>(bombArea) + view_as<Address>(g_iBombTargetDistance), NumberType_Int32));
 		
 		bool bForwardOfBomb = (m_flBombTargetDistanceAtArea < m_flBombTargetDistanceAtBomb);

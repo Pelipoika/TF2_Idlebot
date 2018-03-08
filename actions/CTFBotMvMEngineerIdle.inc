@@ -30,6 +30,7 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 	bool bShouldAdvance = CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(actor);
 	if(bShouldAdvance)
 	{
+		m_aNestArea[actor] = PickBuildArea(actor);
 		FakeClientCommand(actor, "destroy 2");
 		
 		//RIGHT NOW
@@ -40,6 +41,8 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 	
 	int sentry = TF2_GetObject(actor, TFObject_Sentry);
 	
+	//PrintToServer("%X | %i | NavArea_Null = %i", m_aNestArea[actor], m_aNestArea[actor], NavArea_Null);
+
 	if ((m_aNestArea[actor] == NavArea_Null || bShouldAdvance) || sentry == INVALID_ENT_REFERENCE)
 	{
 		//HasStarted && !IsElapsed
@@ -73,7 +76,7 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 			if (m_ctSentryCooldown[actor] < GetGameTime()) 
 			{
 				m_ctSentryCooldown[actor] = GetGameTime() + 3.0;
-				
+
 				ChangeAction(actor, ACTION_MVM_ENGINEER_BUILD_SENTRYGUN, "No sentry - building a new one");
 				
 				return true;
@@ -123,6 +126,11 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 			BotAim(actor).AimHeadTowards(WorldSpaceCenter(sentry), CRITICAL, 1.0, "Work on my Sentry");
 			BotAim(actor).PressFireButton();
 		}
+	}
+	
+	if(m_aNestArea[actor] == NavArea_Null)
+	{
+		g_bPath[actor] = false;
 	}
 	
 	return true;
@@ -178,24 +186,4 @@ stock bool CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(int actor)
 
 	delete bombinfo;
 	return bigger;
-}
-
-int CTFBotMvMEngineerIdle_SelectOutOfRangeNest(ArrayList nests)
-{
-	if (nests.Length <= 0) {
-		return INVALID_ENT_REFERENCE;
-	}
-	
-	for (int i = 0; i < nests.Length - 1; i++)
-	{
-		int nest = nests.Get(i);
-		
-		PrintToServer("CALLING IsStaleNest ON %i", nest);
-		
-		if (IsStaleNest(nest)) {
-			return nest;
-		}
-	}
-	
-	return nests.Get(GetRandomInt(0, nests.Length - 1));
 }

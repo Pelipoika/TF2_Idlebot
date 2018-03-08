@@ -14,7 +14,7 @@ bool CTFBotMoveToFront_OnStart(int actor)
 		if(GetTeamNumber(spawn) == GetTeamNumber(actor))
 			continue;
 		
-		PrintToServer("[%8.3f] CTFBotMoveToFront_OnStart(#%d): spawn == %i", GetGameTime(), actor, spawn);
+		//PrintToServer("[%8.3f] CTFBotMoveToFront_OnStart(#%d): spawn == %i", GetGameTime(), actor, spawn);
 		
 		break;
 	}
@@ -55,7 +55,7 @@ bool CTFBotMoveToFront_OnStart(int actor)
 		ChangeAction(actor, ACTION_IDLE, "CTFBotMoveToFront_OnStart: Cannot path to target hologram from whereever we are. Pressing F4");
 		FakeClientCommand(actor, "tournament_player_readystate 1");
 		
-		PrintToServer("[%8.3f] CTFBotMoveToFront_OnStart(#%d): iBestEnt == -1", GetGameTime(), actor);
+		//PrintToServer("[%8.3f] CTFBotMoveToFront_OnStart(#%d): iBestEnt == -1", GetGameTime(), actor);
 		return false;
 	}
 	
@@ -63,10 +63,11 @@ bool CTFBotMoveToFront_OnStart(int actor)
 	NavArea area = TheNavMesh.GetNearestNavArea_Vec(WorldSpaceCenter(iBestEnt), true, 1000.0, true, true, GetClientTeam(actor));
 	if(area == NavArea_Null)
 	{
-		PrintToServer("[%8.3f] CTFBotMoveToFront_OnStart(#%d): Area == NavArea_Null!", GetGameTime(), actor);
+		//PrintToServer("[%8.3f] CTFBotMoveToFront_OnStart(#%d): Area == NavArea_Null!", GetGameTime(), actor);
 		return false;
 	}
 	
+	g_bPath[actor] = true;
 	area.GetRandomPoint(m_vecGoalArea[actor]);
 	//EquipWeaponSlot(actor, TFWeaponSlot_Melee);
 	m_ctMoveTimeout[actor] = GetGameTime() + 50.0;
@@ -100,7 +101,10 @@ void CTFBotMoveToFront_OnEnd(int actor)
 {
 	if(IsValidClientIndex(actor))
 		EquipWeaponSlot(actor, TFWeaponSlot_Primary);
+		
 	m_vecGoalArea[actor] = NULL_VECTOR;
+	
+	g_bPath[actor] = false;
 }
 
 bool CTFBotMoveToFront_IsPossible(int actor)

@@ -17,6 +17,8 @@ bool CTFBotCollectMoney_OnStart(int actor)
 	
 	BotAim(actor).ReleaseFireButton();
 
+	g_bPath[actor] = true;
+
 	return true;
 }
 
