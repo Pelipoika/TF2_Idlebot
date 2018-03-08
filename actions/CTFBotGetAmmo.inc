@@ -93,6 +93,7 @@ bool CTFBotGetAmmo_Update(int actor)
 		return false;
 	}
 	
+	g_bPath[actor] = true;
 	PF_SetGoalVector(actor, WorldSpaceCenter(m_hAmmo[actor]));
 	
 	return true;

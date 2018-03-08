@@ -17,8 +17,6 @@ bool CTFBotCollectMoney_OnStart(int actor)
 	
 	BotAim(actor).ReleaseFireButton();
 
-	g_bPath[actor] = true;
-
 	return true;
 }
 
@@ -30,6 +28,7 @@ bool CTFBotCollectMoney_Update(int actor)
 	}
 	
 	PF_SetGoalVector(actor, WorldSpaceCenter(m_hCurrencyPack[actor]));
+	g_bPath[actor] = true;
 
 	return true;
 }

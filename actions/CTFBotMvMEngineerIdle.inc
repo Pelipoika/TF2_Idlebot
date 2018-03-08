@@ -1,7 +1,7 @@
 
 float m_ctSentrySafe[MAXPLAYERS + 1];               // +0x4814
 float m_ctSentryCooldown[MAXPLAYERS + 1];           // +0x4820
-//float m_ctTeleCooldown[MAXPLAYERS + 1];             // +0x482c
+float m_ctTeleCooldown[MAXPLAYERS + 1];             // +0x482c
 
 float m_ctFindNestHint[MAXPLAYERS + 1];             // +0x4838
 float m_ctAdvanceNestSpot[MAXPLAYERS + 1];          // +0x4844
@@ -17,7 +17,7 @@ bool CTFBotMvMEngineerIdle_IsPossible(int actor)
 
 bool CTFBotMvMEngineerIdle_OnStart(int actor)
 {
-	g_bUpdateLookingAroundForEnemies[actor] = false;
+	//g_bUpdateLookingAroundForEnemies[actor] = false;
 	
 	m_ctFindNestHint[actor] = 0.0;
 	m_ctRecomputePathMvMEngiIdle[actor] = 0.0;
@@ -31,6 +31,7 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 	if(bShouldAdvance)
 	{
 		m_aNestArea[actor] = PickBuildArea(actor);
+		
 		FakeClientCommand(actor, "destroy 2");
 		
 		//RIGHT NOW
@@ -40,9 +41,6 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 	}
 	
 	int sentry = TF2_GetObject(actor, TFObject_Sentry);
-	
-	//PrintToServer("%X | %i | NavArea_Null = %i", m_aNestArea[actor], m_aNestArea[actor], NavArea_Null);
-
 	if ((m_aNestArea[actor] == NavArea_Null || bShouldAdvance) || sentry == INVALID_ENT_REFERENCE)
 	{
 		//HasStarted && !IsElapsed
@@ -61,8 +59,9 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 	{
 		if (sentry != INVALID_ENT_REFERENCE)
 		{
-			if(GetEntProp(sentry, Prop_Send, "m_iMaxHealth") >= GetEntProp(sentry, Prop_Send, "m_iHealth") 
-			&& !GetEntProp(sentry, Prop_Send, "m_bBuilding"))
+			if(GetEntProp(sentry, Prop_Send, "m_iMaxHealth") >= GetEntProp(sentry, Prop_Send, "m_iHealth") && !GetEntProp(sentry, Prop_Send, "m_bBuilding")
+			&& GetEntProp(sentry, Prop_Send, "m_iUpgradeLevel") >= 3
+			&& GetEntProp(sentry, Prop_Send, "m_iAmmoShells") > 0)
 			{
 				m_ctSentrySafe[actor] = GetGameTime() + 3.0;
 			}
@@ -78,6 +77,7 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 				m_ctSentryCooldown[actor] = GetGameTime() + 3.0;
 
 				ChangeAction(actor, ACTION_MVM_ENGINEER_BUILD_SENTRYGUN, "No sentry - building a new one");
+				FakeClientCommand(actor, "destroy 0");
 				
 				return true;
 			}
@@ -88,8 +88,69 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 		}
 	}	
 	
-	//TODO: Tele stuff here
+	//TODO: 
 	//https://github.com/sigsegv-mvm/mvm-reversed/blob/master/server/tf/bot/behavior/engineer/mvm_engineer/tf_bot_mvm_engineer_idle.cpp#L150-L200
+	int dispenser = TF2_GetObject(actor, TFObject_Dispenser);
+	if (m_aNestArea[actor] != NavArea_Null)
+	{
+		//Won't build a dispenser unless sentry is safe.
+		if(m_ctSentrySafe[actor] < GetGameTime())
+		{
+			m_ctTeleCooldown[actor] = GetGameTime() + 3.0;
+		}
+		
+		if(m_ctTeleCooldown[actor] < GetGameTime() && dispenser == INVALID_ENT_REFERENCE)
+		{
+			m_ctTeleCooldown[actor] = GetGameTime() + 3.0;
+			
+			ChangeAction(actor, ACTION_MVM_ENGINEER_BUILD_DISPENSER, "Sentry safe - No dispenser - building a dispenser");
+			
+			return true;
+		}
+	}
+	
+	if (dispenser != INVALID_ENT_REFERENCE && m_ctTeleCooldown[actor] < GetGameTime())
+	{
+		if(GetEntProp(dispenser, Prop_Send, "m_iUpgradeLevel") < 3 || GetEntProp(dispenser, Prop_Send, "m_iMaxHealth") < GetEntProp(dispenser, Prop_Send, "m_iHealth"))
+		{
+			float dist = GetVectorDistance(GetAbsOrigin(actor), GetAbsOrigin(dispenser));
+			
+			if (dist < 90.0) {
+				g_iAdditionalButtons[actor] |= IN_DUCK;
+			}
+			
+			if (m_ctRecomputePathMvMEngiIdle[actor] < GetGameTime()) 
+			{
+				m_ctRecomputePathMvMEngiIdle[actor] = GetGameTime() + GetRandomFloat(1.0, 2.0);
+				
+				float dir[3];
+				SubtractVectors(GetAbsAngles(dispenser), GetAbsOrigin(actor), dir);
+				NormalizeVector(dir, dir);
+				
+				float goal[3]; goal = GetAbsOrigin(dispenser);
+				goal[0] -= (50.0 * dir[0]);
+				goal[1] -= (50.0 * dir[1]);
+				goal[2] -= (50.0 * dir[2]);
+				
+				PF_SetGoalVector(actor, goal);
+				
+				m_iRouteType[actor] = SAFEST_ROUTE;
+				g_bPath[actor] = true;
+			}
+			
+			if (dist < 75.0) 
+			{
+				EquipWeaponSlot(actor, TFWeaponSlot_Melee);
+				
+				g_bUpdateLookingAroundForEnemies[actor] = false;
+				
+				BotAim(actor).AimHeadTowards(WorldSpaceCenter(dispenser), CRITICAL, 1.0, "Work on my Dispenser");
+				BotAim(actor).PressFireButton();
+			}
+			
+			return false;
+		}
+	}
 	
 	if (sentry != INVALID_ENT_REFERENCE) 
 	{

@@ -470,6 +470,21 @@ stock float[] GetTurretAngles(int sentry)
 	return angle;
 }
 
+stock int TF2_GetObject(int client, TFObjectType type)
+{
+	int iObject = INVALID_ENT_REFERENCE;
+	while ((iObject = FindEntityByClassname(iObject, "obj_*")) != -1)
+	{
+		TFObjectType iObjType = TF2_GetObjectType(iObject);
+		if(GetEntPropEnt(iObject, Prop_Send, "m_hBuilder") == client && iObjType == type && !GetEntProp(iObject, Prop_Send, "m_bPlacing"))
+		{
+			return iObject;
+		}
+	}
+	
+	return iObject;
+}
+
 stock int TF2_GetObjectCount(int client, TFObjectType type)
 {
 	int iObject = -1, iCount = 0;
@@ -1094,7 +1109,8 @@ stock float GetMaxAttackRange(int client)
 
 stock bool IsAmmoLow(int client)
 {
-	if(g_iCurrentAction[client] == ACTION_MVM_ENGINEER_BUILD_SENTRYGUN && !CTFBotMvMEngineerBuildSentryGun_IsPossible(client))
+	if(g_iCurrentAction[client] == ACTION_MVM_ENGINEER_BUILD_SENTRYGUN && !CTFBotMvMEngineerBuildSentryGun_IsPossible(client)
+	|| g_iCurrentAction[client] == ACTION_MVM_ENGINEER_BUILD_DISPENSER && !CTFBotMvMEngineerBuildDispenser_IsPossible(client))
 		return true;
 
 	int Primary = GetPlayerWeaponSlot(client, TFWeaponSlot_Primary);
@@ -1320,7 +1336,8 @@ stock char CurrentActionToName(int action)
 		case ACTION_MEDIC_HEAL:    name = "MEDIC HEAL";
 		case ACTION_MELEE_ATTACK:  name = "MELEE ATTACK";
 		case ACTION_MVM_ENGINEER_IDLE:  name = "MVM ENGINEER IDLE";
-		case ACTION_MVM_ENGINEER_BUILD_SENTRYGUN:  name = "MVM ENGINEER BUILD SENTRY";
+		case ACTION_MVM_ENGINEER_BUILD_SENTRYGUN: name = "MVM ENGINEER BUILD SENTRY";
+		case ACTION_MVM_ENGINEER_BUILD_DISPENSER: name = "MVM ENGINEER BUILD DISPENSER";
 	}
 	
 	return name;
@@ -2141,6 +2158,25 @@ void ComputeHealthAndAmmoVectors(int client, JSONArray array, float max_range)
 		
 			if(GetVectorDistance(WorldSpaceCenter(client), WorldSpaceCenter(ammo)) > max_range)
 				continue;
+			
+			
+			if (HasEntProp(ammo, Prop_Send, "m_bBuilding"))
+			{
+				//Can't get anything from still building buildings.
+				if(GetEntProp(ammo, Prop_Send, "m_bBuilding"))
+				{
+					continue;
+				}
+				
+				if(TF2_GetObjectType(ammo) == TFObject_Dispenser)
+				{
+					//Skip empty dispenser.
+					if(GetEntProp(ammo, Prop_Send, "m_iAmmoMetal") <= 0)
+					{
+						continue;
+					}
+				}
+			}
 			
 			float length;
 			if(!PF_IsPathToVectorPossible(client, WorldSpaceCenter(ammo), length))

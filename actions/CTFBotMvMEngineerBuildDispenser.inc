@@ -1,19 +1,19 @@
 //https://github.com/sigsegv-mvm/mvm-reversed/blob/master/server/tf/bot/behavior/engineer/mvm_engineer/tf_bot_mvm_engineer_build_sentry.cpp
 //https://github.com/sigsegv-mvm/mvm-reversed/blob/master/server/tf/bot/behavior/engineer/mvm_engineer/tf_bot_mvm_engineer_build_sentry.h
 
-bool CTFBotMvMEngineerBuildSentryGun_IsPossible(int actor)
+bool CTFBotMvMEngineerBuildDispenser_IsPossible(int actor)
 {
-	return TF2_GetPlayerClass(actor) == TFClass_Engineer && GetAmmoCount(actor, TF_AMMO_METAL) >= 130;
+	return TF2_GetPlayerClass(actor) == TFClass_Engineer && GetAmmoCount(actor, TF_AMMO_METAL) >= 100;
 }
 
-bool CTFBotMvMEngineerBuildSentryGun_OnStart(int actor)
+bool CTFBotMvMEngineerBuildDispenser_OnStart(int actor)
 {
 	g_bUpdateLookingAroundForEnemies[actor] = true;
 	
 	return true;
 }
 
-bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
+bool CTFBotMvMEngineerBuildDispenser_Update(int actor)
 {
 	if (m_aNestArea[actor] == NavArea_Null) 
 	{
@@ -25,28 +25,29 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 	if(CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(actor))
 	{
 		m_aNestArea[actor] = PickBuildArea(actor);
-		FakeClientCommand(actor, "destroy 2");
+		FakeClientCommand(actor, "destroy 0");
 		
-		//ChangeAction(actor, ACTION_MVM_ENGINEER_IDLE, "The spot we were planning to build at is now too far back.");
+		ChangeAction(actor, ACTION_MVM_ENGINEER_IDLE, "The spot we were planning to build at is now too far back.");
 		return true;
 	}
 	
 	float areaCenter[3];
-	m_aNestArea[actor].GetCenter(areaCenter);
+	m_aNestArea[actor].GetRandomPoint(areaCenter);
 	
 	float range_to_hint = GetVectorDistance(GetAbsOrigin(actor), areaCenter);
 	
 	if (range_to_hint < 200.0) 
 	{
-		//Start building a sentry
+		//Start building a dispenser
 		if(!IsWeapon(actor, TF_WEAPON_BUILDER))
-			FakeClientCommand(actor, "build 2");
+			FakeClientCommand(actor, "build 0");
 		
-		g_bUpdateLookingAroundForEnemies[actor] = false;
+		//Look in "random" directions in an attempt to find a place to fit a dispenser.
+		g_bUpdateLookingAroundForEnemies[actor] = true;
 		
 		g_iAdditionalButtons[actor] |= IN_DUCK;
 		
-		BotAim(actor).AimHeadTowards(areaCenter, OVERRIDE_ALL, 0.1, "Placing sentry");
+		//BotAim(actor).AimHeadTowards(areaCenter, OVERRIDE_ALL, 0.1, "Placing sentry");
 	}
 	
 	if(range_to_hint > 70.0)
@@ -56,11 +57,11 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 		PF_SetGoalVector(actor, areaCenter);
 		g_bPath[actor] = true;
 	
-		if(range_to_hint > 300.0)
-		{
+		//if(range_to_hint > 300.0)
+		//{
 			//Fuck em up.
-			EquipWeaponSlot(actor, TFWeaponSlot_Melee);
-		}
+			//EquipWeaponSlot(actor, TFWeaponSlot_Melee);
+		//}
 	
 		g_bUpdateLookingAroundForEnemies[actor] = true;
 		
@@ -71,20 +72,20 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 	
 	BotAim(actor).PressFireButton();
 	
-	int sentry = TF2_GetObject(actor, TFObject_Sentry);
+	int sentry = TF2_GetObject(actor, TFObject_Dispenser);
 	if(sentry == INVALID_ENT_REFERENCE)
 		return false;
 	
 	//DispatchKeyValueVector(sentry, "origin", areaCenter);
 	//DispatchKeyValueVector(sentry, "angles", GetAbsAngles(EntRefToEntIndex(m_hintEntity[actor])));
 	
-	ChangeAction(actor, ACTION_MVM_ENGINEER_IDLE, "Built a sentry");
+	ChangeAction(actor, ACTION_MVM_ENGINEER_IDLE, "Built a dispenser");
 	FakeClientCommand(actor, "tournament_player_readystate 1");
 	
 	return true;
 }
 
-void CTFBotMvMEngineerBuildSentryGun_OnEnd(int actor)
+void CTFBotMvMEngineerBuildDispenser_OnEnd(int actor)
 {
 	g_bUpdateLookingAroundForEnemies[actor] = true;
 }

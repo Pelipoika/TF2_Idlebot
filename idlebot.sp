@@ -74,6 +74,7 @@ char g_szBotModels[][] =
 #define ACTION_MELEE_ATTACK 12
 #define ACTION_MVM_ENGINEER_IDLE 13
 #define ACTION_MVM_ENGINEER_BUILD_SENTRYGUN 14
+#define ACTION_MVM_ENGINEER_BUILD_DISPENSER 15
 
 #include <actions/utility>
 
@@ -90,6 +91,7 @@ char g_szBotModels[][] =
 #include <actions/CTFBotMeleeAttack>
 #include <actions/CTFBotMvMEngineerIdle>
 #include <actions/CTFBotMvMEngineerBuildSentryGun>
+#include <actions/CTFBotMvMEngineerBuildDispenser>
 #include <actions/CTFBotUpgrade>
 
 Handle g_hHudInfo;
@@ -613,7 +615,8 @@ stock void StartMainAction(int client, bool pretend = false)
 		else if(!IsStandingAtUpgradeStation(client) && !GameRules_GetProp("m_bPlayerReady", 1, client)
 			&& g_iCurrentAction[client] != ACTION_MOVE_TO_FRONT 
 			&& g_iCurrentAction[client] != ACTION_MVM_ENGINEER_IDLE
-			&& g_iCurrentAction[client] != ACTION_MVM_ENGINEER_BUILD_SENTRYGUN)
+			&& g_iCurrentAction[client] != ACTION_MVM_ENGINEER_BUILD_SENTRYGUN
+			&& g_iCurrentAction[client] != ACTION_MVM_ENGINEER_BUILD_DISPENSER)
 		{		
 			ChangeAction(client, ACTION_GOTO_UPGRADE, "!IsStandingAtUpgradeStation && RoundState_BetweenRounds");
 			m_iRouteType[client] = DEFAULT_ROUTE;
@@ -699,20 +702,15 @@ stock void StartMainAction(int client, bool pretend = false)
 				}
 				case TFClass_Engineer:
 				{
-				/*	if(!CTFBotMvMEngineerBuildSentryGun_IsPossible(client))
+					if(g_iCurrentAction[client] == ACTION_GET_AMMO && !CTFBotMvMEngineerBuildSentryGun_IsPossible(client) && !CTFBotMvMEngineerBuildDispenser_IsPossible(client))
 					{
-						ChangeAction(client, ACTION_GET_AMMO, "No sentry - But can't build one because we dont have enough metal; get some."); 
-						m_iRouteType[client] = FASTEST_ROUTE;
+						return;
 					}
-					else 
-					{
-						ChangeAction(client, ACTION_MVM_ENGINEER_BUILD_SENTRYGUN, "StartMainAction Engineer: Start building.");
-						m_iRouteType[client] = FASTEST_ROUTE;
-						CTFBotMvMEngineerBuildSentryGun_OnStart(client, m_hHintSentry[client]);
-					}*/
 					
-					if(g_iCurrentAction[client] != ACTION_MVM_ENGINEER_BUILD_SENTRYGUN)
+					if(g_iCurrentAction[client] != ACTION_MVM_ENGINEER_BUILD_SENTRYGUN && g_iCurrentAction[client] != ACTION_MVM_ENGINEER_BUILD_DISPENSER)
+					{
 						ChangeAction(client, ACTION_MVM_ENGINEER_IDLE, "StartMainAction Engineer: Start building.");
+					}
 				}
 				default:
 				{
@@ -790,6 +788,7 @@ stock void StopCurrentAction(int client)
 		case ACTION_MELEE_ATTACK:       CTFBotMeleeAttack_OnEnd(client);
 		case ACTION_MVM_ENGINEER_IDLE:  CTFBotMvMEngineerIdle_OnEnd(client);
 		case ACTION_MVM_ENGINEER_BUILD_SENTRYGUN: CTFBotMvMEngineerBuildSentryGun_OnEnd(client);
+		case ACTION_MVM_ENGINEER_BUILD_DISPENSER: CTFBotMvMEngineerBuildDispenser_OnEnd(client);
 	}
 }
 
@@ -812,6 +811,7 @@ stock void StartNewAction(int client, int new_action)
 		case ACTION_MELEE_ATTACK:       g_bStartedAction[client] = CTFBotMeleeAttack_OnStart(client);
 		case ACTION_MVM_ENGINEER_IDLE:  g_bStartedAction[client] = CTFBotMvMEngineerIdle_OnStart(client);
 		case ACTION_MVM_ENGINEER_BUILD_SENTRYGUN: g_bStartedAction[client] = CTFBotMvMEngineerBuildSentryGun_OnStart(client);	
+		case ACTION_MVM_ENGINEER_BUILD_DISPENSER: g_bStartedAction[client] = CTFBotMvMEngineerBuildDispenser_OnStart(client);	
 	}
 }
 
@@ -834,6 +834,7 @@ stock bool RunCurrentAction(int client)
 		case ACTION_MELEE_ATTACK:       g_bStartedAction[client] = CTFBotMeleeAttack_Update(client);
 		case ACTION_MVM_ENGINEER_IDLE:  g_bStartedAction[client] = CTFBotMvMEngineerIdle_Update(client);	
 		case ACTION_MVM_ENGINEER_BUILD_SENTRYGUN: g_bStartedAction[client] = CTFBotMvMEngineerBuildSentryGun_Update(client);	
+		case ACTION_MVM_ENGINEER_BUILD_DISPENSER: g_bStartedAction[client] = CTFBotMvMEngineerBuildDispenser_Update(client);	
 	}
 
 	if(g_iCurrentAction[client] == ACTION_GET_HEALTH
