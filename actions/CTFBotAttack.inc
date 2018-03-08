@@ -107,10 +107,8 @@ int CTFBotAttack_SelectRandomReachableEnemy(int actor)
 			continue;
 		
 		//Cannot path into enemy spawn rooms
-	/*	! BROKEN
-		if ((opposingTFTeam == TFTeam_Red  && HasTFAttributes(lastKnownArea, RED_SPAWN_ROOM)) ||
-			(opposingTFTeam == TFTeam_Blue && HasTFAttributes(lastKnownArea, BLUE_SPAWN_ROOM)))
-			continue;*/
+		if (HasTFAttributes(lastKnownArea, RED_SPAWN_ROOM|BLUE_SPAWN_ROOM))
+			continue;
 		
 		//Ignore unpathable 
 		if (!PF_IsPathToEntityPossible(actor, i, NULL_FLOAT))
