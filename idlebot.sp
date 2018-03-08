@@ -850,8 +850,13 @@ stock bool RunCurrentAction(int client)
 			if(IsValidClientIndex(iHealerIndex))
 				continue;
 			
+			//We are on the hunt for ammo, this dispenser is empty, NEXT
+			if(g_iCurrentAction[client] == ACTION_GET_AMMO && GetEntProp(iHealerIndex, Prop_Send, "m_iAmmoMetal") <= 0)
+				continue;
+			
 			//If we are being healed by a non player entity it's propably a dispenser.
 			bHealedByDispenser = true;
+			
 			break;
 		}
 		
