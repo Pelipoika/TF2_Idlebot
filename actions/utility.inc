@@ -801,6 +801,15 @@ stock int TF2_FindBotNearestToBombNearestToHatch(int client)
 		if(TF2_IsBuster(i))
 			continue;
 		
+		//Where are you
+		NavArea lastKnownArea = PF_GetLastKnownArea(i);
+		if(lastKnownArea == NavArea_Null)
+			continue;
+		
+		//Cannot path into enemy spawn rooms
+		if (HasTFAttributes(lastKnownArea, RED_SPAWN_ROOM|BLUE_SPAWN_ROOM))
+			continue;
+		
 		float flDistance = GetVectorDistance(WorldSpaceCenter(i), flOrigin);
 		if(flDistance <= flBestDistance)
 		{

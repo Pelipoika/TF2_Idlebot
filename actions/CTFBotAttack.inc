@@ -101,7 +101,7 @@ int CTFBotAttack_SelectRandomReachableEnemy(int actor)
 			continue;
 		
 		//Where are you
-		PF_UpdateLastKnownArea(i)
+		//PF_UpdateLastKnownArea(i)
 		NavArea lastKnownArea = PF_GetLastKnownArea(i);
 		if(lastKnownArea == NavArea_Null)
 			continue;
