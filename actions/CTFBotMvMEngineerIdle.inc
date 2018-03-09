@@ -128,9 +128,9 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 				NormalizeVector(dir, dir);
 				
 				float goal[3]; goal = GetAbsOrigin(dispenser);
-				goal[0] -= (50.0 * dir[0]);
-				goal[1] -= (50.0 * dir[1]);
-				goal[2] -= (50.0 * dir[2]);
+				goal[0] -= (60.0 * dir[0]);
+				goal[1] -= (60.0 * dir[1]);
+				goal[2] -= (60.0 * dir[2]);
 				
 				PF_SetGoalVector(actor, goal);
 				
@@ -168,9 +168,9 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 			GetAngleVectors(GetTurretAngles(sentry), dir, NULL_VECTOR, NULL_VECTOR);
 			
 			float goal[3]; goal = GetAbsOrigin(sentry);
-			goal[0] -= (60.0 * dir[0]);
-			goal[1] -= (60.0 * dir[1]);
-			goal[2] -= (60.0 * dir[2]);
+			goal[0] -= (50.0 * dir[0]);
+			goal[1] -= (50.0 * dir[1]);
+			goal[2] -= (50.0 * dir[2]);
 			
 			PF_SetGoalVector(actor, goal);
 			

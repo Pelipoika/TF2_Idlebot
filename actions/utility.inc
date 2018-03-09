@@ -316,6 +316,9 @@ stock bool GetBombInfo(JSONObject info)
 		NavArea area = TheNavMesh.GetNearestNavArea_Vec(flag_pos);
 		if(area == NavArea_Null)
 			continue;
+			
+		if (HasTFAttributes(area, (BLUE_SPAWN_ROOM | RED_SPAWN_ROOM)))
+			continue;
 		
 		float m_flBombTargetDistance = view_as<float>(LoadFromAddress(view_as<Address>(area) + view_as<Address>(g_iBombTargetDistance), NumberType_Int32));
 		
@@ -347,12 +350,16 @@ stock NavArea PickBuildArea(int client)
 	int iAreaCount = LoadFromAddress(navarea_count, NumberType_Int32);
 
 	//Check that this map has any nav areas
-	if ( iAreaCount <= 0 )
+	if ( iAreaCount <= 0 ) {
 		return NavArea_Null;
-
+	}
+	
 	JSONObject bombinfo = new JSONObject();
+	
 	if (!GetBombInfo(bombinfo)) 
 	{
+		PrintToServer("!GetBombInfo");
+	
 		delete bombinfo;
 		return NavArea_Null;
 	}
@@ -363,22 +370,28 @@ stock NavArea PickBuildArea(int client)
 	vecTargetPos[2] = bombinfo.GetFloat("closest_pos_z");
 	
 	//GetNearestNavArea_Vec(const float pos[3], bool anyZ = false, float maxDist = 10000.0, bool checkLOS = false, bool checkGround = true, int team = TEAM_ANY);
-	NavArea bombArea = TheNavMesh.GetNearestNavArea_Vec(vecTargetPos, false, 90000.0, false, true, 1);
+	NavArea bombArea = TheNavMesh.GetNearestNavArea_Vec(vecTargetPos, false, 90000.0, false, true, TEAM_ANY);
 	if(bombArea == NavArea_Null)
 	{
+		PrintToServer("bombArea IS NULL");
+	
 		delete bombinfo;
 		return NavArea_Null;
 	}
 	
 	if(HasTFAttributes(bombArea, (BLUE_SPAWN_ROOM | RED_SPAWN_ROOM)))
 	{
+		PrintToServer("bombArea IN SPAWN");
+	
 		delete bombinfo;
 		return NavArea_Null;
 	}
 
-	//int iValidAreas = 0;
-	//int iSkippedAreas = 0;
+	int iValidAreas = 0;
+	int iSkippedAreas = 0;
+	
 	ArrayList ForwardAreas = new ArrayList();
+	ArrayList SemiGoodAreas = new ArrayList();
 	
 	for (int i = 0; i < iAreaCount; i++)
 	{	
@@ -392,13 +405,6 @@ stock NavArea PickBuildArea(int client)
 		float m_flBombTargetDistanceAtArea = view_as<float>(LoadFromAddress(view_as<Address>(area)     + view_as<Address>(g_iBombTargetDistance), NumberType_Int32));
 		float m_flBombTargetDistanceAtBomb = view_as<float>(LoadFromAddress(view_as<Address>(bombArea) + view_as<Address>(g_iBombTargetDistance), NumberType_Int32));
 		
-		bool bForwardOfBomb = (m_flBombTargetDistanceAtArea < m_flBombTargetDistanceAtBomb);
-		if(!bForwardOfBomb)
-		{
-			//iSkippedAreas++;
-			continue;
-		}
-		
 		float center[3];
 		area.GetCenter(center);
 		center[2] += 60.0;
@@ -406,28 +412,48 @@ stock NavArea PickBuildArea(int client)
 		float flDistance = GetVectorDistance(center, vecTargetPos);
 		
 		//Skip areas too close and too far
-		if(flDistance <= 750.0 || flDistance >= 1300.0)
+		if(flDistance <= 750.0)
 		{
-			//iSkippedAreas++;
+			SemiGoodAreas.Push(area);
+		
+			iSkippedAreas++;
+			continue;
+		}
+		
+		bool bForwardOfBomb = (m_flBombTargetDistanceAtArea < m_flBombTargetDistanceAtBomb);
+		if(!bForwardOfBomb)
+		{
+			SemiGoodAreas.Push(area);
+		
+			iSkippedAreas++;
+			continue;
+		}
+		
+		if(flDistance >= 1300.0)
+		{
+			iSkippedAreas++;
 			continue;
 		}
 		
 		if (IsLineOfFireClear(center, vecTargetPos))
 		{
-			//iValidAreas++;
+			iValidAreas++;
 			ForwardAreas.Push(area);
 		}
 	}
 	
-	//PrintToServer("%i / %i areas potentially visible! skipped %i areas", iValidAreas, iAreaCount, iSkippedAreas);
+	PrintToServer("%i / %i areas potentially visible! skipped %i areas", iValidAreas, iAreaCount, iSkippedAreas);
 	
 	NavArea randomArea = bombArea;
 	
 	if(ForwardAreas.Length > 0)
 		randomArea = ForwardAreas.Get(GetRandomInt(0, ForwardAreas.Length - 1));
+	else if(SemiGoodAreas.Length > 0)
+		randomArea = SemiGoodAreas.Get(GetRandomInt(0, SemiGoodAreas.Length - 1));
 	
 	delete bombinfo;
 	delete ForwardAreas;
+	delete SemiGoodAreas;
 	
 	return randomArea;
 }

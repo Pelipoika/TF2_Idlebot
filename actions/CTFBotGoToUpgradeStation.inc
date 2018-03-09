@@ -78,6 +78,9 @@ bool CTFBotGoToUpgradeStation_Update(int actor)
 	{
 		PrintToServer("[%8.3f] CTFBotGoToUpgradeStation(#%d): Timeout elapsed!", GetGameTime(), actor);
 		
+		//Try jump
+		g_iAdditionalButtons[actor] |= IN_JUMP;
+		
 		float there[3];
 		bool bYes = false;
 		

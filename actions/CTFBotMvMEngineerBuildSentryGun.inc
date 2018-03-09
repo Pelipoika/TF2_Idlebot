@@ -69,18 +69,31 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 	
 	g_bPath[actor] = false;
 	
-	BotAim(actor).PressFireButton();
+	if(IsWeapon(actor, TF_WEAPON_BUILDER))
+	{
+		int objBeingBuilt = GetEntPropEnt(GetActiveWeapon(actor), Prop_Send, "m_hObjectBeingBuilt");
+		
+		bool m_bPlacementOK = !!GetEntData(objBeingBuilt, FindSendPropInfo("CObjectSentrygun", "m_iKills") - 4);
+		
+		BotAim(actor).PressFireButton();
+		
+		if(!m_bPlacementOK && BotAim(actor).IsHeadAimingOnTarget() && BotAim(actor).GetHeadSteadyDuration() > 0.6 )
+		{
+			//That spot was no good.
+			//Time to pick a new spot.
+			m_aNestArea[actor] = PickBuildArea(actor);
+			
+			return false;
+		}
+	}
 	
 	int sentry = TF2_GetObject(actor, TFObject_Sentry);
 	if(sentry == INVALID_ENT_REFERENCE)
 		return false;
 	
-	//DispatchKeyValueVector(sentry, "origin", areaCenter);
-	//DispatchKeyValueVector(sentry, "angles", GetAbsAngles(EntRefToEntIndex(m_hintEntity[actor])));
-	
 	ChangeAction(actor, ACTION_MVM_ENGINEER_IDLE, "Built a sentry");
 	FakeClientCommand(actor, "tournament_player_readystate 1");
-	
+		
 	return true;
 }
 

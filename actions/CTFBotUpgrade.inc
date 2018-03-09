@@ -127,8 +127,8 @@ bool CTFBotPurchaseUpgrades_Update(int actor)
 				ChangeAction(actor, ACTION_MOVE_TO_FRONT, "Finished upgrading; Move to front and press F4"); 
 			
 			//Engineer presses F4 once done setting up buildings.
-			if(TF2_GetPlayerClass(actor) != TFClass_Engineer)
-				FakeClientCommand(actor, "tournament_player_readystate 1");
+			//if(TF2_GetPlayerClass(actor) != TFClass_Engineer)
+			FakeClientCommand(actor, "tournament_player_readystate 1");
 			
 			delete info;
 			return false;
@@ -239,7 +239,7 @@ void CollectUpgrades(int client)
 	else
 	{	
 		//Demoknight doesn't buy primary weapon upgrades.
-		if(bDemoKnight)
+		if(bDemoKnight || TF2_GetPlayerClass(client) == TFClass_Sniper)
 			iArraySlots.Push(TF_LOADOUT_SLOT_MELEE);
 		else
 			iArraySlots.Push(TF_LOADOUT_SLOT_PRIMARY);
