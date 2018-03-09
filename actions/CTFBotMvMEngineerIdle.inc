@@ -205,7 +205,6 @@ stock bool IsBaseObject(int entity)
 stock void CTFBotMvMEngineerIdle_OnEnd(int actor)
 {
 	//Something here so we don't get a compile warning
-	
 }
 
 stock bool CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(int actor)
@@ -247,4 +246,206 @@ stock bool CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(int actor)
 
 	delete bombinfo;
 	return bigger;
+}
+
+stock NavArea PickBuildArea(int client)
+{
+	int iAreaCount = LoadFromAddress(navarea_count, NumberType_Int32);
+
+	//Check that this map has any nav areas
+	if ( iAreaCount <= 0 ) {
+		return NavArea_Null;
+	}
+	
+	JSONObject bombinfo = new JSONObject();
+	
+	if (!GetBombInfo(bombinfo)) 
+	{	
+		delete bombinfo;
+		return PickBuildAreaPreRound(client);
+	}
+	
+	float vecTargetPos[3];
+	vecTargetPos[0] = bombinfo.GetFloat("closest_pos_x");
+	vecTargetPos[1] = bombinfo.GetFloat("closest_pos_y");
+	vecTargetPos[2] = bombinfo.GetFloat("closest_pos_z");
+	
+	//GetNearestNavArea_Vec(const float pos[3], bool anyZ = false, float maxDist = 10000.0, bool checkLOS = false, bool checkGround = true, int team = TEAM_ANY);
+	NavArea bombArea = TheNavMesh.GetNearestNavArea_Vec(vecTargetPos, false, 90000.0, false, true, TEAM_ANY);
+	if(bombArea == NavArea_Null)
+	{
+		//PrintToServer("bombArea IS NULL");
+	
+		delete bombinfo;
+		return NavArea_Null;
+	}
+	
+	if(HasTFAttributes(bombArea, (BLUE_SPAWN_ROOM | RED_SPAWN_ROOM)))
+	{
+		//PrintToServer("bombArea IN SPAWN");
+	
+		delete bombinfo;
+		return NavArea_Null;
+	}
+
+	int iValidAreas = 0;
+	int iSkippedAreas = 0;
+	
+	ArrayList ForwardAreas = new ArrayList();
+	ArrayList SemiGoodAreas = new ArrayList();
+	
+	for (int i = 0; i < iAreaCount; i++)
+	{	
+		NavArea area = view_as<NavArea>(LoadFromAddress(TheNavAreas + view_as<Address>(4 * i), NumberType_Int32));
+		if(area == NavArea_Null)
+			continue;
+		
+		if (HasTFAttributes(area, (BLUE_SPAWN_ROOM | RED_SPAWN_ROOM)))
+			continue;
+		
+		float m_flBombTargetDistanceAtArea = view_as<float>(LoadFromAddress(view_as<Address>(area)     + view_as<Address>(g_iBombTargetDistance), NumberType_Int32));
+		float m_flBombTargetDistanceAtBomb = view_as<float>(LoadFromAddress(view_as<Address>(bombArea) + view_as<Address>(g_iBombTargetDistance), NumberType_Int32));
+		
+		float center[3];
+		area.GetCenter(center);
+		center[2] += 60.0;
+		
+		float flDistance = GetVectorDistance(center, vecTargetPos);
+		
+		//Skip areas too close and too far
+		if(flDistance <= 750.0)
+		{
+			SemiGoodAreas.Push(area);
+		
+			iSkippedAreas++;
+			continue;
+		}
+		
+		bool bForwardOfBomb = (m_flBombTargetDistanceAtArea < m_flBombTargetDistanceAtBomb);
+		if(!bForwardOfBomb)
+		{
+			SemiGoodAreas.Push(area);
+		
+			iSkippedAreas++;
+			continue;
+		}
+		
+		if(flDistance >= 1300.0)
+		{
+			iSkippedAreas++;
+			continue;
+		}
+		
+		if (IsLineOfFireClear(center, vecTargetPos))
+		{
+			iValidAreas++;
+			ForwardAreas.Push(area);
+		}
+	}
+	
+	//PrintToServer("%i / %i areas potentially visible! skipped %i areas", iValidAreas, iAreaCount, iSkippedAreas);
+	
+	NavArea randomArea = bombArea;
+	
+	if(ForwardAreas.Length > 0)
+		randomArea = ForwardAreas.Get(GetRandomInt(0, ForwardAreas.Length - 1));
+	else if(SemiGoodAreas.Length > 0)
+		randomArea = SemiGoodAreas.Get(GetRandomInt(0, SemiGoodAreas.Length - 1));
+	
+	delete bombinfo;
+	delete ForwardAreas;
+	delete SemiGoodAreas;
+	
+	return randomArea;
+}
+
+//Returns a nav area visible to a random enemy respawn room exit.
+stock NavArea PickBuildAreaPreRound(int client)
+{
+	int iAreaCount = LoadFromAddress(navarea_count, NumberType_Int32);
+
+	//Check that this map has any nav areas
+	if ( iAreaCount <= 0 ) {
+		return NavArea_Null;
+	}
+
+	ArrayList EnemySpawnExits = new ArrayList();
+	//ArrayList EnemySpawnExitsInSomeRange = new ArrayList();
+	
+	for (int i = 0; i < iAreaCount; i++)
+	{	
+		NavArea area = view_as<NavArea>(LoadFromAddress(TheNavAreas + view_as<Address>(4 * i), NumberType_Int32));
+		if(area == NavArea_Null)
+			continue;
+		
+		if (GetEnemyTeam(client) == TFTeam_Blue && !HasTFAttributes(area, BLUE_SPAWN_ROOM|SPAWN_ROOM_EXIT))
+			continue;
+			
+		if (GetEnemyTeam(client) == TFTeam_Red && !HasTFAttributes(area, RED_SPAWN_ROOM|SPAWN_ROOM_EXIT))
+			continue;
+		
+		EnemySpawnExits.Push(area);
+	}
+	
+	if(EnemySpawnExits.Length <= 0)
+	{
+		delete EnemySpawnExits;
+		return NavArea_Null;
+	}
+	
+	NavArea RandomEnemySpawnExit = EnemySpawnExits.Get(GetRandomInt(0, EnemySpawnExits.Length - 1));
+	
+	float vecExitCenter[3];
+	RandomEnemySpawnExit.GetCenter(vecExitCenter);
+	vecExitCenter[2] += 64.0;
+
+	ArrayList AreasCloser        = new ArrayList();	//Not nescessarily visible but still <= 3000.0
+	ArrayList VisibleAreas       = new ArrayList();
+	ArrayList VisibleAreasCloser = new ArrayList();	//<= 3000.0
+	
+	for (int i = 0; i < iAreaCount; i++)
+	{	
+		NavArea area = view_as<NavArea>(LoadFromAddress(TheNavAreas + view_as<Address>(4 * i), NumberType_Int32));
+		if(area == NavArea_Null)
+			continue;
+		
+		if (HasTFAttributes(area, (BLUE_SPAWN_ROOM|RED_SPAWN_ROOM)))
+			continue;
+			
+		float center[3]; area.GetCenter(center);
+		
+		float flDistance = GetVectorDistance(center, vecExitCenter);
+		
+		if(flDistance <= 2500.0)
+		{
+			AreasCloser.Push(area);
+		}
+		
+		if (!area.IsVisible(vecExitCenter))
+			continue;
+		
+		if(flDistance <= 3000.0) {
+			VisibleAreasCloser.Push(area);
+		} else {
+			VisibleAreas.Push(area);
+		}
+	}
+	
+	PrintToServer("%i VisibleAreas | %i VisibleAreasCloser", VisibleAreas.Length, VisibleAreasCloser.Length);
+	
+	NavArea bestArea = NavArea_Null;
+	
+	if(VisibleAreasCloser.Length > 0) {
+		bestArea = VisibleAreasCloser.Get(GetRandomInt(0, VisibleAreas.Length - 1));
+	} else if(VisibleAreas.Length > 0) {
+		bestArea = VisibleAreas.Get(GetRandomInt(0, VisibleAreas.Length - 1));
+	} else if(AreasCloser.Length > 0) {
+		bestArea = AreasCloser.Get(GetRandomInt(0, AreasCloser.Length - 1));
+	}
+	
+	delete AreasCloser;
+	delete VisibleAreas;
+	delete VisibleAreasCloser;
+		
+	return bestArea;
 }
