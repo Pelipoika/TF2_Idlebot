@@ -103,7 +103,7 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 		{
 			m_ctTeleCooldown[actor] = GetGameTime() + 3.0;
 			
-			ChangeAction(actor, ACTION_MVM_ENGINEER_BUILD_DISPENSER, "Sentry safe - No dispenser - building a dispenser");
+			ChangeAction(actor, ACTION_MVM_ENGINEER_BUILD_DISPENSER, "Sentry safe, No dispenser - building a dispenser");
 			
 			return true;
 		}

@@ -38,8 +38,8 @@ bool CTFBotMoveToFront_OnStart(int actor)
 		if (GetEntProp(holo, Prop_Send, "m_fEffects") & 32)
 			continue;
 		
-		if(GetTeamNumber(holo) == GetTeamNumber(actor))
-			continue;
+		//if(GetTeamNumber(holo) == GetTeamNumber(actor))
+			//continue;
 		
 		float flDistance = GetVectorDistance(WorldSpaceCenter(spawn), WorldSpaceCenter(holo));
 		if (flDistance <= flSmallestDistance && PF_IsPathToVectorPossible(actor, WorldSpaceCenter(holo), NULL_FLOAT))
@@ -93,6 +93,7 @@ bool CTFBotMoveToFront_Update(int actor)
 		return false;
 	}
 	
+	g_bPath[actor] = true;
 	PF_SetGoalVector(actor, m_vecGoalArea[actor]);
 	return true;
 }

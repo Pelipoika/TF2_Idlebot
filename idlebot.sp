@@ -259,7 +259,8 @@ public Action Command_Robot(int client, int args)
 			ReplyToCommand(client, "For RED team only");
 			return Plugin_Handled;
 		}
-	
+		
+		//PickBuildAreaPreRound(client);
 		SetDefender(client, !g_bEmulate[client]);
 	}
 	

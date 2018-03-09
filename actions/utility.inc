@@ -357,11 +357,9 @@ stock NavArea PickBuildArea(int client)
 	JSONObject bombinfo = new JSONObject();
 	
 	if (!GetBombInfo(bombinfo)) 
-	{
-		PrintToServer("!GetBombInfo");
-	
+	{	
 		delete bombinfo;
-		return NavArea_Null;
+		return PickBuildAreaPreRound(client);
 	}
 	
 	float vecTargetPos[3];
@@ -373,7 +371,7 @@ stock NavArea PickBuildArea(int client)
 	NavArea bombArea = TheNavMesh.GetNearestNavArea_Vec(vecTargetPos, false, 90000.0, false, true, TEAM_ANY);
 	if(bombArea == NavArea_Null)
 	{
-		PrintToServer("bombArea IS NULL");
+		//PrintToServer("bombArea IS NULL");
 	
 		delete bombinfo;
 		return NavArea_Null;
@@ -381,7 +379,7 @@ stock NavArea PickBuildArea(int client)
 	
 	if(HasTFAttributes(bombArea, (BLUE_SPAWN_ROOM | RED_SPAWN_ROOM)))
 	{
-		PrintToServer("bombArea IN SPAWN");
+		//PrintToServer("bombArea IN SPAWN");
 	
 		delete bombinfo;
 		return NavArea_Null;
@@ -442,7 +440,7 @@ stock NavArea PickBuildArea(int client)
 		}
 	}
 	
-	PrintToServer("%i / %i areas potentially visible! skipped %i areas", iValidAreas, iAreaCount, iSkippedAreas);
+	//PrintToServer("%i / %i areas potentially visible! skipped %i areas", iValidAreas, iAreaCount, iSkippedAreas);
 	
 	NavArea randomArea = bombArea;
 	
@@ -456,6 +454,73 @@ stock NavArea PickBuildArea(int client)
 	delete SemiGoodAreas;
 	
 	return randomArea;
+}
+
+//Returns a nav area visible to a random enemy respawn room exit.
+stock NavArea PickBuildAreaPreRound(int client)
+{
+	int iAreaCount = LoadFromAddress(navarea_count, NumberType_Int32);
+
+	//Check that this map has any nav areas
+	if ( iAreaCount <= 0 ) {
+		return NavArea_Null;
+	}
+
+	ArrayList EnemySpawnExits = new ArrayList();
+	
+	for (int i = 0; i < iAreaCount; i++)
+	{	
+		NavArea area = view_as<NavArea>(LoadFromAddress(TheNavAreas + view_as<Address>(4 * i), NumberType_Int32));
+		if(area == NavArea_Null)
+			continue;
+		
+		if (GetEnemyTeam(client) == TFTeam_Blue && !HasTFAttributes(area, BLUE_SPAWN_ROOM|SPAWN_ROOM_EXIT))
+			continue;
+			
+		if (GetEnemyTeam(client) == TFTeam_Red && !HasTFAttributes(area, RED_SPAWN_ROOM|SPAWN_ROOM_EXIT))
+			continue;
+		
+		EnemySpawnExits.Push(area);
+	}
+	
+	if(EnemySpawnExits.Length <= 0)
+	{
+		delete EnemySpawnExits;
+		return NavArea_Null;
+	}
+	
+	NavArea RandomEnemySpawnExit = EnemySpawnExits.Get(GetRandomInt(0, EnemySpawnExits.Length - 1));
+	
+	float vecExitCenter[3];
+	RandomEnemySpawnExit.GetCenter(vecExitCenter);
+	vecExitCenter[2] += 64.0;
+
+	ArrayList VisibleAreas = new ArrayList();
+	
+	for (int i = 0; i < iAreaCount; i++)
+	{	
+		NavArea area = view_as<NavArea>(LoadFromAddress(TheNavAreas + view_as<Address>(4 * i), NumberType_Int32));
+		if(area == NavArea_Null)
+			continue;
+		
+		if (HasTFAttributes(area, (BLUE_SPAWN_ROOM|RED_SPAWN_ROOM)))
+			continue;
+		
+		if (!area.IsVisible(vecExitCenter))
+			continue;
+		
+		VisibleAreas.Push(area);
+	}
+	
+	PrintToServer("%i visible areas near exit", VisibleAreas.Length);
+	
+	NavArea bestArea = NavArea_Null;
+	if(VisibleAreas.Length > 0)
+	{
+		bestArea = VisibleAreas.Get(GetRandomInt(0, VisibleAreas.Length - 1));
+	}
+		
+	return bestArea;
 }
 
 //CTFNavArea::IsPotentiallyVisibleToTeam
