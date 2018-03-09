@@ -10,7 +10,7 @@ float m_ctRecomputePathMvMEngiIdle[MAXPLAYERS + 1];
 
 NavArea m_aNestArea[MAXPLAYERS + 1] = {NavArea_Null, ...};
 
-bool CTFBotMvMEngineerIdle_IsPossible(int actor)
+stock bool CTFBotMvMEngineerIdle_IsPossible(int actor)
 {
 	return TF2_GetPlayerClass(actor) == TFClass_Engineer;
 }

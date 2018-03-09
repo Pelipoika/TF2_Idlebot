@@ -14,7 +14,7 @@ int m_hPatient[MAXPLAYERS + 1];
 
 float g_flNextHideSpotComputation[MAXPLAYERS + 1];
 
-bool CTFBotMedicHeal_OnStart(int actor)
+stock bool CTFBotMedicHeal_OnStart(int actor)
 {
 	m_hPatient[actor] = -1;
 	
@@ -253,7 +253,7 @@ stock bool CTFBotMedicHeal_ComputeFollowPosition(int client, float spot[3])
 	return true;
 }
 
-bool CTFBotMedicHeal_IsStable(int client)
+stock bool CTFBotMedicHeal_IsStable(int client)
 {
 	if(GetTimeSinceLastInjury(client, view_as<int>(GetEnemyTeam(client))) < 3.0)
 		return false
@@ -351,7 +351,7 @@ void CTFBotMedicHeal_OnEnd(int actor)
 	g_bUpdateLookingAroundForEnemies[actor] = true;
 }
 
-bool CTFBotMedicHeal_IsPossible(int actor)
+stock bool CTFBotMedicHeal_IsPossible(int actor)
 {
 	if(TF2_GetPlayerClass(actor) != TFClass_Medic)
 		return false;

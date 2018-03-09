@@ -115,20 +115,19 @@ bool CTFBotPurchaseUpgrades_Update(int actor)
 		{
 			g_flNextUpdate[actor] = 0.0;
 			
-			if(TF2_GetPlayerClass(actor) == TFClass_Engineer)
-			{
+			if(TF2_GetPlayerClass(actor) == TFClass_Engineer) {
 				ChangeAction(actor, ACTION_MVM_ENGINEER_IDLE, "Engineer: Start building.");
-			}
-			else if(TF2_GetPlayerClass(actor) == TFClass_Medic)
+			} else if(TF2_GetPlayerClass(actor) == TFClass_Medic) {
 				ChangeAction(actor, ACTION_MEDIC_HEAL, "Medic: Start heal mission.");
-			else if(IsSniperRifle(actor))
+			} else if(IsSniperRifle(actor)) {
 				ChangeAction(actor, ACTION_SNIPER_LURK, "Sniper: Start lurking."); 
-			else
+			} else {
 				ChangeAction(actor, ACTION_MOVE_TO_FRONT, "Finished upgrading; Move to front and press F4"); 
+			}
 			
 			//Engineer presses F4 once done setting up buildings.
-			//if(TF2_GetPlayerClass(actor) != TFClass_Engineer)
-			FakeClientCommand(actor, "tournament_player_readystate 1");
+			if(TF2_GetPlayerClass(actor) != TFClass_Engineer)
+				FakeClientCommand(actor, "tournament_player_readystate 1");
 			
 			delete info;
 			return false;

@@ -108,7 +108,7 @@ void CTFBotMoveToFront_OnEnd(int actor)
 	g_bPath[actor] = false;
 }
 
-bool CTFBotMoveToFront_IsPossible(int actor)
+stock bool CTFBotMoveToFront_IsPossible(int actor)
 {
 	if (!TF2_IsMvM()) 
 		return false;
