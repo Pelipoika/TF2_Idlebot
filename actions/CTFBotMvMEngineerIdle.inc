@@ -430,7 +430,7 @@ stock NavArea PickBuildAreaPreRound(int client)
 	NavArea bestArea = NavArea_Null;
 	
 	if(VisibleAreasCloser.Length > 0) {
-		bestArea = VisibleAreasCloser.Get(GetRandomInt(0, VisibleAreas.Length - 1));
+		bestArea = VisibleAreasCloser.Get(GetRandomInt(0, VisibleAreasCloser.Length - 1));
 	} else if(VisibleAreas.Length > 0) {
 		bestArea = VisibleAreas.Get(GetRandomInt(0, VisibleAreas.Length - 1));
 	} else if(AreasCloser.Length > 0) {
