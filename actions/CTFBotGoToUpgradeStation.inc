@@ -136,6 +136,8 @@ bool CTFBotGoToUpgradeStation_Update(int actor)
 		return false;
 	}
 	
+	g_bPath[actor] = true;
+	
 	return true;
 }
 

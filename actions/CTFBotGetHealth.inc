@@ -117,6 +117,7 @@ bool CTFBotGetHealth_Update(int actor)
 	if(!IsValidHealth(m_hHealth[actor]))
 	{
 		ChangeAction(actor, ACTION_IDLE, "CTFBotGetHealth_Update health is not valid");
+		StartMainAction(actor, true);
 
 		return false;
 	}

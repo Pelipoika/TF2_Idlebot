@@ -53,6 +53,9 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 		m_ctFindNestHint[actor] = GetGameTime() + (GetRandomFloat(1.0, 2.0));
 		
 		m_aNestArea[actor] = PickBuildArea(actor);
+		
+		if(m_aNestArea[actor] != NavArea_Null)
+			g_bPath[actor] = true;
 	}
 	
 	if (m_aNestArea[actor] != NavArea_Null)
@@ -115,10 +118,6 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 		{
 			float dist = GetVectorDistance(GetAbsOrigin(actor), GetAbsOrigin(dispenser));
 			
-			if (dist < 90.0) {
-				g_iAdditionalButtons[actor] |= IN_DUCK;
-			}
-			
 			if (m_ctRecomputePathMvMEngiIdle[actor] < GetGameTime()) 
 			{
 				m_ctRecomputePathMvMEngiIdle[actor] = GetGameTime() + GetRandomFloat(1.0, 2.0);
@@ -128,18 +127,20 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 				NormalizeVector(dir, dir);
 				
 				float goal[3]; goal = GetAbsOrigin(dispenser);
-				goal[0] -= (60.0 * dir[0]);
-				goal[1] -= (60.0 * dir[1]);
-				goal[2] -= (60.0 * dir[2]);
+				goal[0] -= (50.0 * dir[0]);
+				goal[1] -= (50.0 * dir[1]);
+				goal[2] -= (50.0 * dir[2]);
 				
 				PF_SetGoalVector(actor, goal);
 				
-				m_iRouteType[actor] = SAFEST_ROUTE;
+				m_iRouteType[actor] = FASTEST_ROUTE;
 				g_bPath[actor] = true;
 			}
 			
-			if (dist < 75.0) 
+			if (dist < 90.0) 
 			{
+				g_iAdditionalButtons[actor] |= IN_DUCK;
+				
 				EquipWeaponSlot(actor, TFWeaponSlot_Melee);
 				
 				g_bUpdateLookingAroundForEnemies[actor] = false;
@@ -155,10 +156,6 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 	if (sentry != INVALID_ENT_REFERENCE) 
 	{
 		float dist = GetVectorDistance(GetAbsOrigin(actor), GetAbsOrigin(sentry));
-		
-		if (dist < 90.0) {
-			g_iAdditionalButtons[actor] |= IN_DUCK;
-		}
 		
 		if (m_ctRecomputePathMvMEngiIdle[actor] < GetGameTime()) 
 		{
@@ -178,8 +175,10 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 			g_bPath[actor] = true;
 		}
 		
-		if (dist < 75.0) 
+		if (dist < 90.0) 
 		{
+			g_iAdditionalButtons[actor] |= IN_DUCK;
+			
 			EquipWeaponSlot(actor, TFWeaponSlot_Melee);
 			
 			g_bUpdateLookingAroundForEnemies[actor] = false;
@@ -187,11 +186,6 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 			BotAim(actor).AimHeadTowards(WorldSpaceCenter(sentry), CRITICAL, 1.0, "Work on my Sentry");
 			BotAim(actor).PressFireButton();
 		}
-	}
-	
-	if(m_aNestArea[actor] == NavArea_Null)
-	{
-		g_bPath[actor] = false;
 	}
 	
 	return true;
@@ -431,7 +425,7 @@ stock NavArea PickBuildAreaPreRound(int client)
 		}
 	}
 	
-	PrintToServer("%i VisibleAreas | %i VisibleAreasCloser", VisibleAreas.Length, VisibleAreasCloser.Length);
+	PrintToServer("%i VisibleAreas | %i VisibleAreasCloser | %i AreasCloser", VisibleAreas.Length, VisibleAreasCloser.Length, AreasCloser.Length);
 	
 	NavArea bestArea = NavArea_Null;
 	

@@ -814,14 +814,14 @@ stock float[] TF2_GetBombHatchPosition()
 
 public int EquipRequiredWeapon(int client)
 {
-	int iSlot = TFWeaponSlot_Primary;
+	//int iSlot = TFWeaponSlot_Primary;
 
 //	if(IsMeleeOnly)
 //	{
 //		iSlot = TFWeaponSlot_Melee;
 //	}
 	
-	return iSlot;
+	//return iSlot;
 }
 
 stock int GetMaxHealth(int client)

@@ -416,7 +416,7 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 	if(m_ctFire[client]    > GetGameTime()) { iButtons |= IN_ATTACK;  bChanged = true; }
 	if(m_ctAltFire[client] > GetGameTime()) { iButtons |= IN_ATTACK2; bChanged = true; }
 	
-//	EquipRequiredWeapon();
+	//EquipRequiredWeapon();
 	UpdateLookingAroundForEnemies(client);
 	
 	BotAim(client).Upkeep();
