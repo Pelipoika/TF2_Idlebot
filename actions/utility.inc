@@ -413,6 +413,20 @@ stock int TF2_GetObjectCount(int client, TFObjectType type)
 	return iCount;
 }
 
+stock void TF2_DetonateObjectsOfType(int client, TFObjectType type)
+{
+	int iObject = -1;
+	while ((iObject = FindEntityByClassname(iObject, "obj_*")) != -1)
+	{
+		TFObjectType iObjType = TF2_GetObjectType(iObject);
+		if(GetEntPropEnt(iObject, Prop_Send, "m_hBuilder") == client && iObjType == type)
+		{
+			SetVariantInt(5000);
+			AcceptEntityInput(iObject, "RemoveHealth", client);
+		}
+	}
+}
+
 stock void SnapEyeAngles(int client, float viewAngles[3])
 {
 	SDKCall(g_hSnapEyeAngles, client, viewAngles);

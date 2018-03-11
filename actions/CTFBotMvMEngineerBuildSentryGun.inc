@@ -21,16 +21,6 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 		return false;
 	}
 	
-	//Bail.
-	if(CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(actor))
-	{
-		m_aNestArea[actor] = PickBuildArea(actor);
-		FakeClientCommand(actor, "destroy 2");
-		
-		//ChangeAction(actor, ACTION_MVM_ENGINEER_IDLE, "The spot we were planning to build at is now too far back.");
-		return true;
-	}
-	
 	float areaCenter[3];
 	m_aNestArea[actor].GetCenter(areaCenter);
 	
@@ -75,7 +65,6 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 		
 		if(!IsValidEntity(objBeingBuilt))
 			return false;
-					
 	
 		bool m_bPlacementOK = !!GetEntData(objBeingBuilt, FindSendPropInfo("CObjectSentrygun", "m_iKills") - 4);
 		

@@ -1,10 +1,12 @@
 
-float m_ctSentrySafe[MAXPLAYERS + 1];               // +0x4814
-float m_ctSentryCooldown[MAXPLAYERS + 1];           // +0x4820
-float m_ctTeleCooldown[MAXPLAYERS + 1];             // +0x482c
+float m_ctSentrySafe[MAXPLAYERS + 1];
+float m_ctSentryCooldown[MAXPLAYERS + 1];
 
-float m_ctFindNestHint[MAXPLAYERS + 1];             // +0x4838
-float m_ctAdvanceNestSpot[MAXPLAYERS + 1];          // +0x4844
+float m_ctDispenserSafe[MAXPLAYERS + 1]; 
+float m_ctDispenserCooldown[MAXPLAYERS + 1];
+
+float m_ctFindNestHint[MAXPLAYERS + 1]; 
+float m_ctAdvanceNestSpot[MAXPLAYERS + 1]; 
 
 float m_ctRecomputePathMvMEngiIdle[MAXPLAYERS + 1];
 
@@ -19,8 +21,16 @@ bool CTFBotMvMEngineerIdle_OnStart(int actor)
 {
 	//g_bUpdateLookingAroundForEnemies[actor] = false;
 	
-	m_ctFindNestHint[actor] = 0.0;
-	m_ctRecomputePathMvMEngiIdle[actor] = 0.0;
+	m_ctRecomputePathMvMEngiIdle[actor] = -1.0;
+	
+	m_ctSentrySafe[actor] = -1.0;
+	m_ctSentryCooldown[actor] = -1.0;
+	
+	m_ctDispenserSafe[actor] = -1.0;
+	m_ctDispenserCooldown[actor] = -1.0;
+
+	m_ctFindNestHint[actor] = -1.0;
+	m_ctAdvanceNestSpot[actor] = -1.0;
 	
 	return true;
 }
@@ -32,23 +42,26 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 	{
 		m_aNestArea[actor] = PickBuildArea(actor);
 		
-		FakeClientCommand(actor, "destroy 2");
-		
-		//RIGHT NOW
-		m_ctFindNestHint[actor] = GetGameTime();
+		TF2_DetonateObjectsOfType(actor, TFObject_Sentry);
+		TF2_DetonateObjectsOfType(actor, TFObject_Dispenser);
 		
 		PrintToServer("ADVANCE");
+		
+		//RIGHT NOW
+		CTFBotMvMEngineerIdle_OnStart(actor);
 	}
-			
+	
 	int sentry = TF2_GetObject(actor, TFObject_Sentry);
+	int dispenser = TF2_GetObject(actor, TFObject_Dispenser);
+	
 	if ((m_aNestArea[actor] == NavArea_Null || bShouldAdvance) || sentry == INVALID_ENT_REFERENCE)
-	{
+	{	
+		if(m_aNestArea[actor] != NavArea_Null)
+			g_bPath[actor] = true;
+		
 		//HasStarted && !IsElapsed
 		if (m_ctFindNestHint[actor] > 0.0 && m_ctFindNestHint[actor] > GetGameTime()) 
 		{
-			if(m_aNestArea[actor] != NavArea_Null)
-				g_bPath[actor] = true;
-			
 			return false;
 		}
 		
@@ -62,7 +75,8 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 	{
 		if (sentry != INVALID_ENT_REFERENCE)
 		{
-			if(GetEntProp(sentry, Prop_Send, "m_iMaxHealth") >= GetEntProp(sentry, Prop_Send, "m_iHealth") && !GetEntProp(sentry, Prop_Send, "m_bBuilding")
+			if(GetEntProp(sentry, Prop_Send, "m_iHealth") >= GetEntProp(sentry, Prop_Send, "m_iMaxHealth") 
+			&& !GetEntProp(sentry, Prop_Send, "m_bBuilding")
 			&& GetEntProp(sentry, Prop_Send, "m_iUpgradeLevel") >= 3
 			&& GetEntProp(sentry, Prop_Send, "m_iAmmoShells") > 0)
 			{
@@ -80,41 +94,39 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 				m_ctSentryCooldown[actor] = GetGameTime() + 3.0;
 
 				ChangeAction(actor, ACTION_MVM_ENGINEER_BUILD_SENTRYGUN, "No sentry - building a new one");
-				FakeClientCommand(actor, "destroy 0");
 				
 				return true;
 			}
-		/*	else 
-			{
-				return ActionResult<CTFBot>::SuspendFor(new CTFBotRetreatToCover(1.0), "Lost my sentry - retreat!");
-			}*/
-		}
-	}	
-	
-	//TODO: 
-	//https://github.com/sigsegv-mvm/mvm-reversed/blob/master/server/tf/bot/behavior/engineer/mvm_engineer/tf_bot_mvm_engineer_idle.cpp#L150-L200
-	int dispenser = TF2_GetObject(actor, TFObject_Dispenser);
-	if (m_aNestArea[actor] != NavArea_Null)
-	{
-		//Won't build a dispenser unless sentry is safe.
-		if(m_ctSentrySafe[actor] < GetGameTime())
-		{
-			m_ctTeleCooldown[actor] = GetGameTime() + 3.0;
 		}
 		
-		if(m_ctTeleCooldown[actor] < GetGameTime() && dispenser == INVALID_ENT_REFERENCE)
+		if (dispenser != INVALID_ENT_REFERENCE)
 		{
-			m_ctTeleCooldown[actor] = GetGameTime() + 3.0;
+			//sentry is not safe.
+			if(m_ctSentrySafe[actor] < GetGameTime())
+			{
+				m_ctDispenserCooldown[actor] = GetGameTime() + 3.0;
+			}
 			
-			ChangeAction(actor, ACTION_MVM_ENGINEER_BUILD_DISPENSER, "Sentry safe, No dispenser - building a dispenser");
-			
-			return true;
+			//m_ctDispenserCooldown[actor] = GetGameTime() + 3.0;	
+		}
+		else 
+		{
+			/* do not have a dispenser; retreat for a few seconds if we had a
+			 * dispenser before this; then build a new dispenser */
+			if (m_ctDispenserCooldown[actor] < GetGameTime()) 
+			{
+				m_ctDispenserCooldown[actor] = GetGameTime() + 3.0;
+
+				ChangeAction(actor, ACTION_MVM_ENGINEER_BUILD_DISPENSER, "Sentry safe, No dispenser - building one");
+				
+				return true;
+			}
 		}
 	}
 	
-	if (dispenser != INVALID_ENT_REFERENCE && m_ctTeleCooldown[actor] < GetGameTime())
+	if (dispenser != INVALID_ENT_REFERENCE)
 	{
-		if(GetEntProp(dispenser, Prop_Send, "m_iUpgradeLevel") < 3 || GetEntProp(dispenser, Prop_Send, "m_iMaxHealth") < GetEntProp(dispenser, Prop_Send, "m_iHealth"))
+		if(m_ctSentrySafe[actor] > GetGameTime() && GetEntProp(dispenser, Prop_Send, "m_iHealth") < GetEntProp(dispenser, Prop_Send, "m_iMaxHealth"))
 		{
 			float dist = GetVectorDistance(GetAbsOrigin(actor), GetAbsOrigin(dispenser));
 			
@@ -234,6 +246,13 @@ stock bool CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(int actor)
 	
 	float m_flBombTargetDistance = view_as<float>(LoadFromAddress(view_as<Address>(m_aNestArea[actor]) + view_as<Address>(g_iBombTargetDistance), NumberType_Int32));
 	
+	//No point in advancing now.
+	if (m_flBombTargetDistance <= 1000.0)
+	{
+		delete bombinfo;
+		return false;
+	}
+	
 	bool bigger = (m_flBombTargetDistance > bombinfo.GetFloat("hatch_dist_back"));
 	
 	//PrintToServer("m_flBombTargetDistance %f > bombinfo.hatch_dist_back %f = %s", m_flBombTargetDistance, bombinfo.GetFloat("hatch_dist_back"), bigger ? "Yes" : "No");
@@ -242,9 +261,6 @@ stock bool CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(int actor)
 	return bigger;
 }
 
-//BUG
-//Traceray doesn't penetrate spawnroom doors, thus not finding any visible areas 
-//mvm_bigrock 
 stock NavArea PickBuildArea(int client)
 {
 	int iAreaCount = LoadFromAddress(navarea_count, NumberType_Int32);
@@ -267,29 +283,25 @@ stock NavArea PickBuildArea(int client)
 	vecTargetPos[1] = bombinfo.GetFloat("closest_pos_y");
 	vecTargetPos[2] = bombinfo.GetFloat("closest_pos_z");
 	
-	//GetNearestNavArea_Vec(const float pos[3], bool anyZ = false, float maxDist = 10000.0, bool checkLOS = false, bool checkGround = true, int team = TEAM_ANY);
 	NavArea bombArea = TheNavMesh.GetNearestNavArea_Vec(vecTargetPos, false, 90000.0, false, true, TEAM_ANY);
 	if(bombArea == NavArea_Null)
 	{
-		//PrintToServer("bombArea IS NULL");
-	
 		delete bombinfo;
 		return NavArea_Null;
 	}
 	
 	if(HasTFAttributes(bombArea, (BLUE_SPAWN_ROOM | RED_SPAWN_ROOM)))
 	{
-		//PrintToServer("bombArea IN SPAWN");
-	
 		delete bombinfo;
 		return NavArea_Null;
 	}
 
-	int iValidAreas = 0;
-	int iSkippedAreas = 0;
-	
-	ArrayList ForwardAreas = new ArrayList();
-	ArrayList SemiGoodAreas = new ArrayList();
+	//Areas forward of the bomb within some distance and visible to bomb.
+	ArrayList ForwardVisibleAreas = new ArrayList();
+	//Areas forward of the bomb but not necessarily visible.
+	ArrayList ForwardAreas        = new ArrayList();
+	//Areas visible to the bomb but not nescessarily forward of it.
+	ArrayList VisibleAreasAround  = new ArrayList();
 	
 	for (int i = 0; i < iAreaCount; i++)
 	{	
@@ -308,55 +320,51 @@ stock NavArea PickBuildArea(int client)
 		float m_flBombTargetDistanceAtArea = view_as<float>(LoadFromAddress(view_as<Address>(area)     + view_as<Address>(g_iBombTargetDistance), NumberType_Int32));
 		float m_flBombTargetDistanceAtBomb = view_as<float>(LoadFromAddress(view_as<Address>(bombArea) + view_as<Address>(g_iBombTargetDistance), NumberType_Int32));
 		
+		if(m_flBombTargetDistanceAtArea < 300.0)
+			continue;
+		
 		float center[3];
 		area.GetCenter(center);
 		center[2] += 60.0;
 		
 		float flDistance = GetVectorDistance(center, vecTargetPos);
 		
-		//Skip areas too close and too far
-		if(flDistance <= 750.0)
+		if(flDistance < 1400.0)
 		{
-			SemiGoodAreas.Push(area);
+			bool bForwardOfBomb     = (m_flBombTargetDistanceAtArea < m_flBombTargetDistanceAtBomb);
+			bool bAreaVisibleToBomb = area.IsVisible(center);
 		
-			iSkippedAreas++;
-			continue;
-		}
-		
-		bool bForwardOfBomb = (m_flBombTargetDistanceAtArea < m_flBombTargetDistanceAtBomb);
-		if(!bForwardOfBomb)
-		{
-			SemiGoodAreas.Push(area);
-		
-			iSkippedAreas++;
-			continue;
-		}
-		
-		if(flDistance >= 1300.0)
-		{
-			iSkippedAreas++;
-			continue;
-		}
-		
-		if (IsLineOfFireClear(center, vecTargetPos))
-		{
-			iValidAreas++;
-			ForwardAreas.Push(area);
+			if(bForwardOfBomb)
+			{
+				if(bAreaVisibleToBomb)
+				{
+					ForwardVisibleAreas.Push(area);
+				}
+				else
+				{
+					ForwardAreas.Push(area);
+				}
+			}
+			else if(bAreaVisibleToBomb)
+			{
+				VisibleAreasAround.Push(area);
+			}
 		}
 	}
 	
-	//PrintToServer("%i / %i areas potentially visible! skipped %i areas", iValidAreas, iAreaCount, iSkippedAreas);
+	PrintToServer("%i ForwardVisibleAreas | %i ForwardAreas | %i VisibleAreasAroundBomb", ForwardVisibleAreas.Length, ForwardAreas.Length, VisibleAreasAround.Length);
 	
-	NavArea randomArea = bombArea;
+	NavArea randomArea = NavArea_Null;
 	
-	if(ForwardAreas.Length > 0)
-		randomArea = ForwardAreas.Get(GetRandomInt(0, ForwardAreas.Length - 1));
-	else if(SemiGoodAreas.Length > 0)
-		randomArea = SemiGoodAreas.Get(GetRandomInt(0, SemiGoodAreas.Length - 1));
+	if(ForwardVisibleAreas.Length > 0)     randomArea = ForwardVisibleAreas.Get(GetRandomInt(0, ForwardVisibleAreas.Length - 1));
+	else if(ForwardAreas.Length > 0)       randomArea =        ForwardAreas.Get(GetRandomInt(0, ForwardAreas.Length        - 1));
+	else if(VisibleAreasAround.Length > 0) randomArea =  VisibleAreasAround.Get(GetRandomInt(0, VisibleAreasAround.Length  - 1));
 	
 	delete bombinfo;
+	
+	delete ForwardVisibleAreas;
 	delete ForwardAreas;
-	delete SemiGoodAreas;
+	delete VisibleAreasAround;
 	
 	return randomArea;
 }

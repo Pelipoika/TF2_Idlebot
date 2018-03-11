@@ -143,6 +143,9 @@ void CTFBotPurchaseUpgrades_OnEnd(int actor)
 {
 	KV_MvM_UpgradesDone(actor);
 	
+	TF2_DetonateObjectsOfType(actor, TFObject_Sentry);
+	TF2_DetonateObjectsOfType(actor, TFObject_Dispenser);
+	
 	g_bUpdateLookingAroundForEnemies[actor] = true;
 }
 
