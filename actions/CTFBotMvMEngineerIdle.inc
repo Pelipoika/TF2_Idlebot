@@ -242,6 +242,9 @@ stock bool CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(int actor)
 	return bigger;
 }
 
+//BUG
+//Traceray doesn't penetrate spawnroom doors, thus not finding any visible areas 
+//mvm_bigrock 
 stock NavArea PickBuildArea(int client)
 {
 	int iAreaCount = LoadFromAddress(navarea_count, NumberType_Int32);
@@ -295,6 +298,11 @@ stock NavArea PickBuildArea(int client)
 			continue;
 		
 		if (HasTFAttributes(area, (BLUE_SPAWN_ROOM | RED_SPAWN_ROOM)))
+			continue;
+		
+		//TODO
+		//Better solution because this will break on all non mvm maps.
+		if(!HasTFAttributes(area, BOMB_DROP))
 			continue;
 		
 		float m_flBombTargetDistanceAtArea = view_as<float>(LoadFromAddress(view_as<Address>(area)     + view_as<Address>(g_iBombTargetDistance), NumberType_Int32));
@@ -404,6 +412,11 @@ stock NavArea PickBuildAreaPreRound(int client)
 			continue;
 		
 		if (HasTFAttributes(area, (BLUE_SPAWN_ROOM|RED_SPAWN_ROOM)))
+			continue;
+			
+		//TODO
+		//Better solution because this will break on all non mvm maps.
+		if(!HasTFAttributes(area, BOMB_DROP))
 			continue;
 			
 		float center[3]; area.GetCenter(center);

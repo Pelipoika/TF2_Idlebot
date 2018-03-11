@@ -73,6 +73,10 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 	{
 		int objBeingBuilt = GetEntPropEnt(GetActiveWeapon(actor), Prop_Send, "m_hObjectBeingBuilt");
 		
+		if(!IsValidEntity(objBeingBuilt))
+			return false;
+					
+	
 		bool m_bPlacementOK = !!GetEntData(objBeingBuilt, FindSendPropInfo("CObjectSentrygun", "m_iKills") - 4);
 		
 		BotAim(actor).PressFireButton();
