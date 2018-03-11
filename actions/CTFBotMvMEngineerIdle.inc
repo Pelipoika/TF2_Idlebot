@@ -39,13 +39,16 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 		
 		PrintToServer("ADVANCE");
 	}
-	
+			
 	int sentry = TF2_GetObject(actor, TFObject_Sentry);
 	if ((m_aNestArea[actor] == NavArea_Null || bShouldAdvance) || sentry == INVALID_ENT_REFERENCE)
 	{
 		//HasStarted && !IsElapsed
 		if (m_ctFindNestHint[actor] > 0.0 && m_ctFindNestHint[actor] > GetGameTime()) 
 		{
+			if(m_aNestArea[actor] != NavArea_Null)
+				g_bPath[actor] = true;
+			
 			return false;
 		}
 		
@@ -53,9 +56,6 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 		m_ctFindNestHint[actor] = GetGameTime() + (GetRandomFloat(1.0, 2.0));
 		
 		m_aNestArea[actor] = PickBuildArea(actor);
-		
-		if(m_aNestArea[actor] != NavArea_Null)
-			g_bPath[actor] = true;
 	}
 	
 	if (m_aNestArea[actor] != NavArea_Null)
@@ -393,7 +393,7 @@ stock NavArea PickBuildAreaPreRound(int client)
 	RandomEnemySpawnExit.GetCenter(vecExitCenter);
 	vecExitCenter[2] += 64.0;
 
-	ArrayList AreasCloser        = new ArrayList();	//Not nescessarily visible but still <= 3000.0
+	ArrayList AreasCloser        = new ArrayList();	//Not necessarily visible but still <= 3000.0
 	ArrayList VisibleAreas       = new ArrayList();
 	ArrayList VisibleAreasCloser = new ArrayList();	//<= 3000.0
 	

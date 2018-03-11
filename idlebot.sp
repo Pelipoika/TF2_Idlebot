@@ -1304,6 +1304,11 @@ public float PluginBot_PathCost(int bot_entidx, NavArea area, NavArea from_area,
 public void PluginBot_PathFail(int bot_entidx)
 {
 	ChangeAction(bot_entidx, ACTION_IDLE, "Path construction failed.");
+	
+	float goal[3];
+	PF_GetGoalVector(bot_entidx, goal);
+	PrintToServer("   > TO %f %f %f", goal[0], goal[1], goal[2]);
+	
 	m_aNestArea[bot_entidx] = NavArea_Null;
 }
 

@@ -29,5 +29,6 @@ Currently can only play MvM
 | CTFBotSniperLurk | Hang around sniper advantage positions            | Done |
 | CTFBotMedicHeal | Search and heal players W.I.P                      | W.I.P Basic target healing done |
 | CTFBotSpyInfiltrate | Disguise, Sap, Stab, Hide                      | W.I.P |
-| CTFBotMvMEngineerIdle | Construct and maintaint a sentry nest.       | Can build a sentry and advance when target is too far away |
-| CTFBotMvMEngineerBuildSentryGun | Build at sentrygun at a hint       | Done |
+| CTFBotMvMEngineerIdle | Construct and maintaint a sentry nest.       | Done |
+| CTFBotMvMEngineerBuildSentryGun | Build at sentrygun near the bomb   | Done |
+| CTFBotMvMEngineerBuildDispenser | Build at dispenser near the sentry | Done |
