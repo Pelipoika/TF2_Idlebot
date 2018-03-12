@@ -330,7 +330,7 @@ int CTFBotMedicHeal_SelectPatient(int actor, int old_patient)
 			continue;
 		
 		//Ignore unpathable 
-		if (!PF_IsPathToEntityPossible(actor, i, NULL_FLOAT))
+		if (!PF_IsPathToEntityPossible(actor, i))
 			continue;
 		
 		playerarray[playercount] = i;

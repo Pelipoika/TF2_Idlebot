@@ -37,7 +37,7 @@ bool CTFBotAttack_Update(int actor)
 		g_flRevalidateTarget[actor] = GetGameTime() + 2.0;
 	
 		//Need new target.
-		if(!PF_IsPathToEntityPossible(actor, m_hAttackTarget[actor], NULL_FLOAT))
+		if(!PF_IsPathToEntityPossible(actor, m_hAttackTarget[actor]))
 		{
 			m_hAttackTarget[actor] = -1;
 			CTFBotAttack_OnStart(actor);
@@ -111,7 +111,7 @@ int CTFBotAttack_SelectRandomReachableEnemy(int actor)
 			continue;
 		
 		//Ignore unpathable 
-		if (!PF_IsPathToEntityPossible(actor, i, NULL_FLOAT))
+		if (!PF_IsPathToEntityPossible(actor, i))
 			continue;
 			
 		playerarray[playercount] = i;

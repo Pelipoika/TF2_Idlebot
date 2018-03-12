@@ -17,7 +17,7 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 {
 	if (m_aNestArea[actor] == NavArea_Null) 
 	{
-		ChangeAction(actor, ACTION_IDLE, "No hint entity");
+		ChangeAction(actor, ACTION_MVM_ENGINEER_IDLE, "No hint entity");
 		return false;
 	}
 	

@@ -42,7 +42,7 @@ bool CTFBotMoveToFront_OnStart(int actor)
 			//continue;
 		
 		float flDistance = GetVectorDistance(WorldSpaceCenter(spawn), WorldSpaceCenter(holo));
-		if (flDistance <= flSmallestDistance && PF_IsPathToVectorPossible(actor, WorldSpaceCenter(holo), NULL_FLOAT))
+		if (flDistance <= flSmallestDistance && PF_IsPathToVectorPossible(actor, WorldSpaceCenter(holo)))
 		{
 			iBestEnt = holo;
 			flSmallestDistance = flDistance;

@@ -169,7 +169,7 @@ int FindClosestUpgradeStation(int actor)
 		TR_TraceRay(center, WorldSpaceCenter(i), MASK_PLAYERSOLID, RayType_EndPoint);
 		TR_GetEndPosition(center);
 		
-		if(!PF_IsPathToVectorPossible(actor, center, NULL_FLOAT))
+		if(!PF_IsPathToVectorPossible(actor, center))
 			continue;
 		
 		stations[stationcount] = i;

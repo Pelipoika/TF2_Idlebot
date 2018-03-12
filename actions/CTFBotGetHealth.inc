@@ -122,6 +122,12 @@ bool CTFBotGetHealth_Update(int actor)
 		return false;
 	}
 	
+	//Drop our building or we cant defend ourselves
+	if(GetEntProp(actor, Prop_Send, "m_bCarryingObject"))
+	{
+		BotAim(actor).PressFireButton();
+	}
+	
 	PF_SetGoalVector(actor, WorldSpaceCenter(m_hHealth[actor]));
 	
 	return true;

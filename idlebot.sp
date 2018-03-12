@@ -586,7 +586,7 @@ bool l_is_above_ground(int actor, float min_height)
 	float to[3]; to = GetAbsOrigin(actor);
 	to[2] -= min_height;
 	
-	return !PF_IsPotentiallyTraversable(actor, from, to, IMMEDIATELY, NULL_FLOAT);
+	return !PF_IsPotentiallyTraversable(actor, from, to, IMMEDIATELY);
 }
 
 stock void StartMainAction(int client, bool pretend = false)
@@ -1107,7 +1107,7 @@ stock void Dodge(int actor)
 		strafe_left[1] += 25.0 * side_dir[1];
 		strafe_left[2] += 0.0;
 		
-		if (!PF_HasPotentialGap(actor, GetAbsOrigin(actor), strafe_left, NULL_FLOAT)) 
+		if (!PF_HasPotentialGap(actor, GetAbsOrigin(actor), strafe_left)) 
 		{
 			g_flAdditionalVelocity[actor][1] = -500.0;
 			m_ctVelocityLeft[actor] = GetGameTime() + 0.5;
@@ -1120,7 +1120,7 @@ stock void Dodge(int actor)
 		strafe_right[1] += 25.0 * side_dir[1];
 		strafe_right[2] += 0.0;
 		
-		if (!PF_HasPotentialGap(actor, GetAbsOrigin(actor), strafe_right, NULL_FLOAT)) 
+		if (!PF_HasPotentialGap(actor, GetAbsOrigin(actor), strafe_right)) 
 		{
 			g_flAdditionalVelocity[actor][1] = 500.0;
 			m_ctVelocityRight[actor] = GetGameTime() + 0.5;

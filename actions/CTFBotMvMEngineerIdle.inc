@@ -78,10 +78,12 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 	if(g_bGoingToGrabBuilding[actor])
 	{
 		int building = EntRefToEntIndex(m_hBuildingToGrab[actor]);
-		if(building == INVALID_ENT_REFERENCE || m_aNestArea[actor] == NavArea_Null)
+		if(building == INVALID_ENT_REFERENCE)
 		{
 			g_bGoingToGrabBuilding[actor] = false;
 			m_hBuildingToGrab[actor] = INVALID_ENT_REFERENCE;
+			
+			PrintToServer("g_bGoingToGrabBuilding : building %i | m_aNestArea %x", building, m_aNestArea[actor]);
 			
 			TF2_DetonateObjectsOfType(actor, TFObject_Sentry);
 			TF2_DetonateObjectsOfType(actor, TFObject_Dispenser);
@@ -96,7 +98,7 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 		{
 			float flDistanceToBuilding = GetVectorDistance(GetAbsOrigin(actor), GetAbsOrigin(building));
 			
-			if(flDistanceToBuilding < 70.0)
+			if(flDistanceToBuilding < 90.0)
 			{
 				BotAim(actor).AimHeadTowards(WorldSpaceCenter(building), CRITICAL, 1.0, "Grab building");
 				BotAim(actor).PressAltFireButton();
@@ -121,7 +123,6 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 					if(flDistanceToGoal < 70.0)
 					{
 						//Try placing building when closer than 70 hu
-					
 						int objBeingBuilt = GetEntPropEnt(actor, Prop_Send, "m_hCarriedObject");
 						
 						if(!IsValidEntity(objBeingBuilt))
@@ -198,27 +199,31 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 			}
 		}
 		
-		if (dispenser != INVALID_ENT_REFERENCE)
+		//Don't build a dispenser if we don't have a sentry...
+		if(sentry != INVALID_ENT_REFERENCE)
 		{
-			//sentry is not safe.
-			if(m_ctSentrySafe[actor] < GetGameTime())
+			if (dispenser != INVALID_ENT_REFERENCE)
 			{
-				m_ctDispenserCooldown[actor] = GetGameTime() + 3.0;
-			}
-			
-			//m_ctDispenserCooldown[actor] = GetGameTime() + 3.0;	
-		}
-		else 
-		{
-			/* do not have a dispenser; retreat for a few seconds if we had a
-			 * dispenser before this; then build a new dispenser */
-			if (m_ctDispenserCooldown[actor] < GetGameTime()) 
-			{
-				m_ctDispenserCooldown[actor] = GetGameTime() + 3.0;
-
-				ChangeAction(actor, ACTION_MVM_ENGINEER_BUILD_DISPENSER, "Sentry safe, No dispenser - building one");
+				//sentry is not safe.
+				if(m_ctSentrySafe[actor] < GetGameTime())
+				{
+					m_ctDispenserCooldown[actor] = GetGameTime() + 3.0;
+				}
 				
-				return true;
+				//m_ctDispenserCooldown[actor] = GetGameTime() + 3.0;	
+			}
+			else 
+			{
+				/* do not have a dispenser; retreat for a few seconds if we had a
+				 * dispenser before this; then build a new dispenser */
+				if (m_ctDispenserCooldown[actor] < GetGameTime()) 
+				{
+					m_ctDispenserCooldown[actor] = GetGameTime() + 3.0;
+	
+					ChangeAction(actor, ACTION_MVM_ENGINEER_BUILD_DISPENSER, "Sentry safe, No dispenser - building one");
+					
+					return true;
+				}
 			}
 		}
 	}
@@ -242,7 +247,14 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 				goal[1] -= (50.0 * dir[1]);
 				goal[2] -= (50.0 * dir[2]);
 				
-				PF_SetGoalVector(actor, goal);
+				if (PF_IsPathToVectorPossible(actor, goal, _))
+				{
+					PF_SetGoalVector(actor, goal);
+				}
+				else
+				{
+					PF_SetGoalEntity(actor, sentry);
+				}
 				
 				m_iRouteType[actor] = FASTEST_ROUTE;
 				g_bPath[actor] = true;
@@ -280,7 +292,14 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 			goal[1] -= (50.0 * dir[1]);
 			goal[2] -= (50.0 * dir[2]);
 			
-			PF_SetGoalVector(actor, goal);
+			if (PF_IsPathToVectorPossible(actor, goal))
+			{
+				PF_SetGoalVector(actor, goal);
+			}
+			else
+			{
+				PF_SetGoalEntity(actor, sentry);
+			}
 			
 			m_iRouteType[actor] = SAFEST_ROUTE;
 			g_bPath[actor] = true;
@@ -431,7 +450,7 @@ stock NavArea PickBuildArea(int client)
 		if(flDistance < 1400.0)
 		{
 			bool bForwardOfBomb     = (m_flBombTargetDistanceAtArea < m_flBombTargetDistanceAtBomb);
-			bool bAreaVisibleToBomb = area.IsVisible(center);
+			bool bAreaVisibleToBomb = area.IsVisible(vecTargetPos);
 		
 			if(bForwardOfBomb)
 			{
