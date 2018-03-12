@@ -389,8 +389,11 @@ stock int TF2_GetObject(int client, TFObjectType type)
 	while ((iObject = FindEntityByClassname(iObject, "obj_*")) != -1)
 	{
 		TFObjectType iObjType = TF2_GetObjectType(iObject);
-		if(GetEntPropEnt(iObject, Prop_Send, "m_hBuilder") == client && iObjType == type && !GetEntProp(iObject, Prop_Send, "m_bPlacing"))
-		{
+		
+		if(GetEntPropEnt(iObject, Prop_Send, "m_hBuilder") == client && iObjType == type 
+		&& !GetEntProp(iObject, Prop_Send, "m_bPlacing")
+		&& !GetEntProp(iObject, Prop_Send, "m_bDisposableBuilding"))
+		{			
 			return iObject;
 		}
 	}

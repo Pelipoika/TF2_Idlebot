@@ -12,6 +12,11 @@ float m_ctRecomputePathMvMEngiIdle[MAXPLAYERS + 1];
 
 NavArea m_aNestArea[MAXPLAYERS + 1] = {NavArea_Null, ...};
 
+
+bool g_bGoingToGrabBuilding[MAXPLAYERS + 1];
+int m_hBuildingToGrab[MAXPLAYERS + 1];
+
+
 stock bool CTFBotMvMEngineerIdle_IsPossible(int actor)
 {
 	return TF2_GetPlayerClass(actor) == TFClass_Engineer;
@@ -19,7 +24,10 @@ stock bool CTFBotMvMEngineerIdle_IsPossible(int actor)
 
 bool CTFBotMvMEngineerIdle_OnStart(int actor)
 {
-	//g_bUpdateLookingAroundForEnemies[actor] = false;
+	m_hBuildingToGrab[actor] = INVALID_ENT_REFERENCE;
+	g_bGoingToGrabBuilding[actor] = false;
+	
+	
 	
 	m_ctRecomputePathMvMEngiIdle[actor] = -1.0;
 	
@@ -32,33 +40,124 @@ bool CTFBotMvMEngineerIdle_OnStart(int actor)
 	m_ctFindNestHint[actor] = -1.0;
 	m_ctAdvanceNestSpot[actor] = -1.0;
 	
+	g_bPath[actor] = true;
+	
 	return true;
 }
 
 bool CTFBotMvMEngineerIdle_Update(int actor)
 {
+	int sentry    = TF2_GetObject(actor, TFObject_Sentry);
+	int dispenser = TF2_GetObject(actor, TFObject_Dispenser);
+
 	bool bShouldAdvance = CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(actor);
-	if(bShouldAdvance)
+	if(bShouldAdvance && !g_bGoingToGrabBuilding[actor])
 	{
 		m_aNestArea[actor] = PickBuildArea(actor);
 		
-		TF2_DetonateObjectsOfType(actor, TFObject_Sentry);
+		//TF2_DetonateObjectsOfType(actor, TFObject_Sentry);
 		TF2_DetonateObjectsOfType(actor, TFObject_Dispenser);
 		
 		PrintToServer("ADVANCE");
 		
 		//RIGHT NOW
 		CTFBotMvMEngineerIdle_OnStart(actor);
+		
+		if (sentry != INVALID_ENT_REFERENCE)
+		{
+			g_bGoingToGrabBuilding[actor] = true;
+			
+			m_hBuildingToGrab[actor] = EntIndexToEntRef(sentry);
+			
+			PF_SetGoalEntity(actor, sentry);
+		}
+		
+		m_aNestArea[actor] = PickBuildArea(actor);
 	}
 	
-	int sentry = TF2_GetObject(actor, TFObject_Sentry);
-	int dispenser = TF2_GetObject(actor, TFObject_Dispenser);
+	if(g_bGoingToGrabBuilding[actor])
+	{
+		int building = EntRefToEntIndex(m_hBuildingToGrab[actor]);
+		if(building == INVALID_ENT_REFERENCE || m_aNestArea[actor] == NavArea_Null)
+		{
+			g_bGoingToGrabBuilding[actor] = false;
+			m_hBuildingToGrab[actor] = INVALID_ENT_REFERENCE;
+			
+			TF2_DetonateObjectsOfType(actor, TFObject_Sentry);
+			TF2_DetonateObjectsOfType(actor, TFObject_Dispenser);
+			
+			g_bPath[actor] = false;
+			return false;
+		}
+		
+		g_bUpdateLookingAroundForEnemies[actor] = false;
+		
+		if(!GetEntProp(actor, Prop_Send, "m_bCarryingObject"))
+		{
+			float flDistanceToBuilding = GetVectorDistance(GetAbsOrigin(actor), GetAbsOrigin(building));
+			
+			if(flDistanceToBuilding < 70.0)
+			{
+				BotAim(actor).AimHeadTowards(WorldSpaceCenter(building), CRITICAL, 1.0, "Grab building");
+				BotAim(actor).PressAltFireButton();
+				
+				//PrintToServer("Grab");
+			}
+		}
+		else
+		{
+			if(m_aNestArea[actor] != NavArea_Null)
+			{
+				float center[3]; m_aNestArea[actor].GetCenter(center);
+				PF_SetGoalVector(actor, center);
+				
+				float flDistanceToGoal = GetVectorDistance(GetAbsOrigin(actor), center);
+				
+				if(flDistanceToGoal < 200.0)
+				{	
+					//Crouch when closer than 200 hu
+					g_iAdditionalButtons[actor] |= IN_DUCK;
+					
+					if(flDistanceToGoal < 70.0)
+					{
+						//Try placing building when closer than 70 hu
+					
+						int objBeingBuilt = GetEntPropEnt(actor, Prop_Send, "m_hCarriedObject");
+						
+						if(!IsValidEntity(objBeingBuilt))
+							return false;
+						
+						bool m_bPlacementOK = !!GetEntData(objBeingBuilt, FindSendPropInfo("CObjectSentrygun", "m_iKills") - 4);
+						
+						BotAim(actor).PressFireButton();
+						
+						if(!m_bPlacementOK && BotAim(actor).IsHeadAimingOnTarget() && BotAim(actor).GetHeadSteadyDuration() > 0.6 )
+						{
+							//That spot was no good.
+							//Time to pick a new spot.
+							m_aNestArea[actor] = PickBuildArea(actor);
+						}
+						else
+						{
+							g_bGoingToGrabBuilding[actor] = false;
+							m_hBuildingToGrab[actor] = INVALID_ENT_REFERENCE;
+							
+							g_bPath[actor] = false;
+						}
+					}
+				}
+				
+				//PrintToServer("Travel");
+			}
+		}
+		
+		g_bPath[actor] = true;
+		
+		return false;
+	}
 	
 	if ((m_aNestArea[actor] == NavArea_Null || bShouldAdvance) || sentry == INVALID_ENT_REFERENCE)
-	{	
-		if(m_aNestArea[actor] != NavArea_Null)
-			g_bPath[actor] = true;
-		
+	{
 		//HasStarted && !IsElapsed
 		if (m_ctFindNestHint[actor] > 0.0 && m_ctFindNestHint[actor] > GetGameTime()) 
 		{
@@ -124,9 +223,9 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 		}
 	}
 	
-	if (dispenser != INVALID_ENT_REFERENCE)
+	if (dispenser != INVALID_ENT_REFERENCE && m_ctSentrySafe[actor] > GetGameTime())
 	{
-		if(m_ctSentrySafe[actor] > GetGameTime() && GetEntProp(dispenser, Prop_Send, "m_iHealth") < GetEntProp(dispenser, Prop_Send, "m_iMaxHealth"))
+		if(GetEntProp(dispenser, Prop_Send, "m_iUpgradeLevel") < 3 || GetEntProp(dispenser, Prop_Send, "m_iHealth") < GetEntProp(dispenser, Prop_Send, "m_iMaxHealth"))
 		{
 			float dist = GetVectorDistance(GetAbsOrigin(actor), GetAbsOrigin(dispenser));
 			

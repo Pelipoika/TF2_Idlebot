@@ -52,8 +52,6 @@ bool CTFBotMvMEngineerBuildDispenser_Update(int actor)
 			//Fuck em up.
 			//EquipWeaponSlot(actor, TFWeaponSlot_Melee);
 		//}
-	
-		g_bUpdateLookingAroundForEnemies[actor] = true;
 		
 		return false;
 	}
