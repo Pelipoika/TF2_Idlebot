@@ -437,13 +437,12 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 		{
 			AddVectors(g_vecCurrentGoal[client], vecDir, g_vecCurrentGoal[client]);
 		}
-		
 	
 		float flDistance = GetVectorDistance(g_vecCurrentGoal[client], WorldSpaceCenter(client));
 		if(flDistance > 10.0)
 		{
 			TF2_MoveTo(client, g_vecCurrentGoal[client], fVel, fAng);
-				
+			
 			bChanged = true;
 		}
 	}

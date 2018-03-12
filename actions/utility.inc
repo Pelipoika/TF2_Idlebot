@@ -55,9 +55,6 @@ Handle g_hGetAmmoCount;
 Handle g_hGetItemSchema;
 Handle g_hGetAttributeDefinitionByName;
 
-Handle g_hIsStaleNest;
-Handle g_hGetSentryHint;
-
 //CTFGameRules
 Handle g_hCanUpgradeWithAttrib;
 Handle g_hGetCostForUpgrade;
@@ -210,23 +207,9 @@ void InitGamedata()
 	PrepSDKCall_AddParameter(SDKType_String, SDKPass_Pointer);
 	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);	//Returns address of CEconItemAttributeDefinition
 	if ((g_hGetAttributeDefinitionByName = EndPrepSDKCall()) == null) SetFailState("Failed to create SDKCall for CEconItemSchema::GetAttributeDefinitionByName signature!"); 
-	
-	
-	//Random 
-	
-	//bool CTFBotHintEngineerNest::IsStaleNest() const
-	StartPrepSDKCall(SDKCall_Entity);
-	PrepSDKCall_SetFromConf(hConf, SDKConf_Signature, "CTFBotHintEngineerNest::IsStaleNest");
-	PrepSDKCall_SetReturnInfo(SDKType_Bool, SDKPass_ByValue);	//Returns true/false
-	if ((g_hIsStaleNest = EndPrepSDKCall()) == null) SetFailState("Failed to create SDKCall for IsStaleNest signature!"); 
-	
-	//CTFBotHintSentrygun *CTFBotHintEngineerNest::GetSentryHint() const
-	StartPrepSDKCall(SDKCall_Entity);
-	PrepSDKCall_SetFromConf(hConf, SDKConf_Signature, "CTFBotHintEngineerNest::GetSentryHint");
-	PrepSDKCall_SetReturnInfo(SDKType_CBaseEntity, SDKPass_Pointer);
-	if ((g_hGetSentryHint = EndPrepSDKCall()) == null) SetFailState("Failed to create SDKCall for GetSentryHint signature!"); 
 
-	
+
+
 	g_MannVsMachineUpgrades = GameConfGetAddress(hConf, "MannVsMachineUpgrades");
 	PrintToServer("Found \"g_MannVsMachineUpgrades\" @ 0x%X", g_MannVsMachineUpgrades);
 
@@ -354,16 +337,6 @@ stock bool IsPotentiallyVisibleToTeam(NavArea area, int team)
 	int count = LoadFromAddress(edi, NumberType_Int32);
 	
 	return team <= 3 && count > 0;
-}
-
-stock bool IsStaleNest(int nest)
-{
-	return SDKCall(g_hIsStaleNest, nest);
-}
-
-stock int GetSentryHint(int nest)
-{
-	return SDKCall(g_hGetSentryHint, nest);
 }
 
 stock float[] GetTurretAngles(int sentry)
