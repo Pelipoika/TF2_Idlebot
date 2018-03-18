@@ -43,7 +43,59 @@ bool CTFBotMvMEngineerBuildDispenser_Update(int actor)
 		//Look in "random" directions in an attempt to find a place to fit a dispenser.
 		g_bUpdateLookingAroundForEnemies[actor] = true;
 		
+	//	if(g_flNextLookTime[actor] > GetGameTime())
+	//		return false;
+		
+	//	g_flNextLookTime[actor] = GetGameTime() + GetRandomFloat(0.3, 1.0);
+		
+		float flRetreatRange = 100.0;
+		
+		NavArea lastArea = PF_GetLastKnownArea(actor);
+		if(lastArea == NavArea_Null)
+			return false;	
+		
+		int iTeamNum = GetClientTeam(actor);
+								
+		int eax = (iTeamNum + iTeamNum * 4); //eax
+		int edi = view_as<int>(lastArea) + eax * 4 + 364;  //edi
+		
+		eax = edi + 0xC; // +12
+		
+		int connections = LoadFromAddress(view_as<Address>(eax), NumberType_Int32);
+		
+		if(connections > 0)
+		{
+			float vecRandomPoint[3];
+			NavArea navArea = NavArea_Null;
+			
+			for (int i = 0; i <= 20; i++)
+			{
+				int iRandomArea = (4 * GetRandomInt(0, connections - 1));
+				
+				Address areas = view_as<Address>(LoadFromAddress(view_as<Address>(eax + 4), NumberType_Int32));
+				navArea = view_as<NavArea>(LoadFromAddress(areas + view_as<Address>(iRandomArea), NumberType_Int32));
+				
+				if(navArea == NavArea_Null)
+					continue;
+				
+				navArea.GetRandomPoint(vecRandomPoint);
+				vecRandomPoint[2] += 18.0;
+				
+				float to[3]; SubtractVectors(GetAbsOrigin(actor), vecRandomPoint, to);
+				if(GetVectorLength(to, true) > flRetreatRange * flRetreatRange)
+				{
+					if (IsLineOfFireClear(GetEyePosition(actor), vecRandomPoint))
+					{
+						break;
+					}
+				}
+			}
+			
+			BotAim(actor).AimHeadTowards(vecRandomPoint, OVERRIDE_ALL, 1.0, "Looking toward team invasion areas in an attempt to find a spot for dispenser");
+		}
+		
 		g_iAdditionalButtons[actor] |= IN_DUCK;
+		
 		
 		//BotAim(actor).AimHeadTowards(areaCenter, OVERRIDE_ALL, 0.1, "Placing sentry");
 	}
