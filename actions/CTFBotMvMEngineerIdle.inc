@@ -53,8 +53,6 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 	bool bShouldAdvance = CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(actor);
 	if(bShouldAdvance && !g_bGoingToGrabBuilding[actor])
 	{
-		m_aNestArea[actor] = PickBuildArea(actor);
-		
 		//TF2_DetonateObjectsOfType(actor, TFObject_Sentry);
 		TF2_DetonateObjectsOfType(actor, TFObject_Dispenser);
 		
@@ -63,7 +61,9 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 		//RIGHT NOW
 		CTFBotMvMEngineerIdle_OnStart(actor);
 		
-		if (sentry != INVALID_ENT_REFERENCE)
+		m_aNestArea[actor] = PickBuildArea(actor);
+		
+		if (sentry != INVALID_ENT_REFERENCE && m_aNestArea[actor] != NavArea_Null)
 		{
 			g_bGoingToGrabBuilding[actor] = true;
 			
@@ -71,8 +71,6 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 			
 			PF_SetGoalEntity(actor, sentry);
 		}
-		
-		m_aNestArea[actor] = PickBuildArea(actor);
 	}
 	
 	if(g_bGoingToGrabBuilding[actor])

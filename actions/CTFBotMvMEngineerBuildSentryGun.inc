@@ -21,6 +21,14 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 		return false;
 	}
 	
+	if(CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(actor))
+	{
+		//And you.
+		
+		ChangeAction(actor, ACTION_MVM_ENGINEER_IDLE, "No sentry");
+		return false;
+	}
+	
 	float areaCenter[3];
 	m_aNestArea[actor].GetCenter(areaCenter);
 	

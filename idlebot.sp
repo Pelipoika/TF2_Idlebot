@@ -612,12 +612,13 @@ stock void StartMainAction(int client, bool pretend = false)
 			ChangeAction(client, ACTION_COLLECT_MONEY, "CTFBotCollectMoney is possible");
 			m_iRouteType[client] = FASTEST_ROUTE;
 		}
-		else if(!IsStandingAtUpgradeStation(client) && !GameRules_GetProp("m_bPlayerReady", 1, client)
-			&& g_iCurrentAction[client] != ACTION_MOVE_TO_FRONT 
-			&& g_iCurrentAction[client] != ACTION_MVM_ENGINEER_IDLE
-			&& g_iCurrentAction[client] != ACTION_MVM_ENGINEER_BUILD_SENTRYGUN
-			&& g_iCurrentAction[client] != ACTION_MVM_ENGINEER_BUILD_DISPENSER)
-		{		
+		else if(!IsStandingAtUpgradeStation(client) 
+			&& !GameRules_GetProp("m_bPlayerReady", 1, client)
+			&& g_iCurrentAction[client] != ACTION_MOVE_TO_FRONT)
+		{
+			//g_iCurrentAction[client] != ACTION_MVM_ENGINEER_BUILD_SENTRYGUN
+			//g_iCurrentAction[client] != ACTION_MVM_ENGINEER_BUILD_DISPENSER
+			
 			ChangeAction(client, ACTION_GOTO_UPGRADE, "!IsStandingAtUpgradeStation && RoundState_BetweenRounds");
 			m_iRouteType[client] = DEFAULT_ROUTE;
 		}
