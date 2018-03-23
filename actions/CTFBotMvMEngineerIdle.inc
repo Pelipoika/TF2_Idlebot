@@ -214,7 +214,7 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 			{
 				/* do not have a dispenser; retreat for a few seconds if we had a
 				 * dispenser before this; then build a new dispenser */
-				if (m_ctDispenserCooldown[actor] < GetGameTime()) 
+				if (m_ctDispenserCooldown[actor] < GetGameTime() && m_ctSentrySafe[actor] > GetGameTime())
 				{
 					m_ctDispenserCooldown[actor] = GetGameTime() + 3.0;
 	
