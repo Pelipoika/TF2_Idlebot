@@ -28,12 +28,21 @@ bool CTFBotMvMEngineerBuildDispenser_Update(int actor)
 		ChangeAction(actor, ACTION_MVM_ENGINEER_IDLE, "No sentry");
 		return false;
 	}
+	else
+	{
+		//sentry is not safe.
+		if(m_ctSentrySafe[actor] < GetGameTime())
+		{
+			ChangeAction(actor, ACTION_MVM_ENGINEER_IDLE, "Sentry not safe");
+			return false;
+		}
+	}
 	
 	if(CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(actor))
 	{
 		//Fuck you too.
 		
-		ChangeAction(actor, ACTION_MVM_ENGINEER_IDLE, "No sentry");
+		ChangeAction(actor, ACTION_MVM_ENGINEER_IDLE, "Need to advance nest");
 		return false;
 	}
 	
