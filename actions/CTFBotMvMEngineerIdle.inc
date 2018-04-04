@@ -169,6 +169,9 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 		m_aNestArea[actor] = PickBuildArea(actor);
 	}
 	
+	if(bShouldAdvance)
+		return true;
+	
 	if (m_aNestArea[actor] != NavArea_Null)
 	{
 		if (sentry != INVALID_ENT_REFERENCE)
