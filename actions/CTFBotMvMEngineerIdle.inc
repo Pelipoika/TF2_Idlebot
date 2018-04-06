@@ -471,7 +471,7 @@ stock NavArea PickBuildArea(int client)
 		}
 	}
 	
-	PrintToServer("%i ForwardVisibleAreas | %i ForwardAreas | %i VisibleAreasAroundBomb", ForwardVisibleAreas.Length, ForwardAreas.Length, VisibleAreasAround.Length);
+	PrintToServer("PickBuildArea %i ForwardVisibleAreas | %i ForwardAreas | %i VisibleAreasAroundBomb", ForwardVisibleAreas.Length, ForwardAreas.Length, VisibleAreasAround.Length);
 	
 	NavArea randomArea = NavArea_Null;
 	
@@ -498,22 +498,42 @@ stock NavArea PickBuildAreaPreRound(int client)
 		return NavArea_Null;
 	}
 
-	ArrayList EnemySpawnExits = new ArrayList();
-	//ArrayList EnemySpawnExitsInSomeRange = new ArrayList();
+	ArrayList EnemySpawnExits = new ArrayList();	
 	
+	//Collect enemy exit areas after spawn door.
 	for (int i = 0; i < iAreaCount; i++)
 	{	
 		NavArea area = view_as<NavArea>(LoadFromAddress(TheNavAreas + view_as<Address>(4 * i), NumberType_Int32));
 		if(area == NavArea_Null)
 			continue;
 		
+		//Not on enemy team
 		if (GetEnemyTeam(client) == TFTeam_Blue && !HasTFAttributes(area, BLUE_SPAWN_ROOM|SPAWN_ROOM_EXIT))
 			continue;
-			
+		
+		//Not on enemy team		
 		if (GetEnemyTeam(client) == TFTeam_Red && !HasTFAttributes(area, RED_SPAWN_ROOM|SPAWN_ROOM_EXIT))
 			continue;
 		
-		EnemySpawnExits.Push(area);
+		//Check spawn exit connections 
+		for (NavDirType dir = NORTH; dir < NUM_DIRECTIONS; dir++)
+		{
+			int iConnectionCount = area.GetAdjacentCount(dir);
+			
+			//Only connections with BOMB_DROP attribute are considered good.
+			for (int iConnection = 0; iConnection < iConnectionCount; iConnection++)
+			{				
+				NavArea areaInDir = area.GetAdjacentArea(dir, iConnection);
+				
+				if(areaInDir == NavArea_Null)
+					continue;
+				
+				if(!HasTFAttributes(areaInDir, BOMB_DROP))
+					continue;
+				
+				EnemySpawnExits.Push(areaInDir);
+			}
+		}
 	}
 	
 	if(EnemySpawnExits.Length <= 0)
@@ -526,7 +546,9 @@ stock NavArea PickBuildAreaPreRound(int client)
 	
 	float vecExitCenter[3];
 	RandomEnemySpawnExit.GetCenter(vecExitCenter);
-	vecExitCenter[2] += 64.0;
+	vecExitCenter[2] += 45.0;
+	
+	PrintToServer("%f %f %f", vecExitCenter[0], vecExitCenter[1], vecExitCenter[2]);
 
 	ArrayList AreasCloser        = new ArrayList();	//Not necessarily visible but still <= 3000.0
 	ArrayList VisibleAreas       = new ArrayList();
@@ -550,8 +572,7 @@ stock NavArea PickBuildAreaPreRound(int client)
 		
 		float flDistance = GetVectorDistance(center, vecExitCenter);
 		
-		if(flDistance <= 2500.0)
-		{
+		if(flDistance <= 2500.0) {
 			AreasCloser.Push(area);
 		}
 		
@@ -565,7 +586,7 @@ stock NavArea PickBuildAreaPreRound(int client)
 		}
 	}
 	
-	PrintToServer("%i VisibleAreas | %i VisibleAreasCloser | %i AreasCloser", VisibleAreas.Length, VisibleAreasCloser.Length, AreasCloser.Length);
+	PrintToServer("PickBuildAreaPreRound %i VisibleAreas | %i VisibleAreasCloser | %i AreasCloser", VisibleAreas.Length, VisibleAreasCloser.Length, AreasCloser.Length);
 	
 	NavArea bestArea = NavArea_Null;
 	
