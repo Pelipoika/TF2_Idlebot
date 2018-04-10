@@ -638,7 +638,7 @@ stock void StartMainAction(int client, bool pretend = false)
 			low_health = true;
 		}
 	
-		if (low_health && CTFBotGetHealth_IsPossible(client))
+		if (low_health && CTFBotGetHealth_IsPossible(client) && !IsInvulnerable(client))
 		{
 			ChangeAction(client, ACTION_GET_HEALTH, "Getting health");
 			m_iRouteType[client] = SAFEST_ROUTE;
@@ -818,6 +818,8 @@ stock void StartNewAction(int client, int new_action)
 
 stock bool RunCurrentAction(int client)
 {
+	StuckMonitor(client);
+
 	//Update
 	switch(g_iCurrentAction[client])
 	{
@@ -1128,8 +1130,102 @@ stock void Dodge(int actor)
 	}
 }
 
+// stuck monitoring
+bool m_isStuck[MAXPLAYERS + 1];					// if true, we are stuck
+float m_stuckTimer[MAXPLAYERS + 1];				// how long we've been stuck
+float m_stuckPos[MAXPLAYERS + 1][3];			// where we got stuck
+float m_moveRequestTimer[MAXPLAYERS + 1];
+
+#define STUCK_RADIUS 100.0
+
+//Stuck check
+stock void StuckMonitor(int client)
+{
+	// a timer is needed to smooth over a few frames of inactivity due to state changes, etc.
+	// we only want to detect idle situations when the bot really doesn't "want" to move.
+	const float idleTime = 0.25;
+	if ( (GetGameTime() - m_moveRequestTimer[client]) > idleTime )
+	{
+		// we have no desire to move, and therefore cannot emit stuck events
+		// prepare our internal state for when the bot starts to move next
+		m_stuckPos[client] = GetAbsOrigin(client);
+		m_stuckTimer[client] = GetGameTime();
+
+		return;
+	}
+	
+	if ( IsStuck(client) )
+	{
+		// we are/were stuck - have we moved enough to consider ourselves "dislodged"
+		if ( GetVectorDistance(GetAbsOrigin(client), m_stuckPos[client]) > STUCK_RADIUS )
+		{
+			// we've just become un-stuck
+			ClearStuckStatus(client, "UN-STUCK" );
+		}
+	}
+	else
+	{
+		// we're not stuck - yet
+		if ( GetVectorDistance(GetAbsOrigin(client), m_stuckPos[client]) > STUCK_RADIUS )
+		{
+			// we have moved - reset anchor
+			m_stuckPos[client] = GetAbsOrigin(client);
+			m_stuckTimer[client] = GetGameTime();
+		}
+		else
+		{
+			const float flDesiredSpeed = 300.0;
+		
+			// within stuck range of anchor. if we've been here too long, we're stuck
+			float minMoveSpeed = 0.1 * flDesiredSpeed + 0.1;
+			float escapeTime = STUCK_RADIUS / minMoveSpeed;
+			
+			if ( (GetGameTime() - m_stuckTimer[client]) > escapeTime )
+			{
+				// we have taken too long - we're stuck
+				m_isStuck[client] = true;
+				
+				PrintToServer("StuckMonitor WE ARE STUCK");
+				
+				if(GetEntityFlags(client) & FL_ONGROUND)
+				{
+					g_iAdditionalButtons[client] |= IN_JUMP;
+				}
+			}
+		}
+	}
+}
+
+//Reset stuck status to un-stuck
+stock void ClearStuckStatus( int client, const char[] reason )
+{
+	if ( IsStuck(client) )
+	{
+		m_isStuck[client] = false;
+	}
+
+	// always reset stuck monitoring data in case we cleared preemptively are were not yet stuck
+	m_stuckPos[client] = GetAbsOrigin(client);
+	m_stuckTimer[client] = GetGameTime();
+	
+	PrintToServer("ClearStuckStatus \"%s\"", reason);
+}
+
+stock bool IsStuck( int client )
+{
+	return m_isStuck[client];
+}
+
+stock float GetStuckDuration( int client )
+{
+	return IsStuck(client) ? (GetGameTime() - m_stuckTimer[client]) : 0.0;
+}
+
+
 public void PluginBot_Approach(int bot_entidx, const float vec[3])
 {
+	m_moveRequestTimer[bot_entidx] = GetGameTime();
+	
 	g_vecCurrentGoal[bot_entidx] = vec;
 	
 	float nothing[3];
@@ -1350,3 +1446,4 @@ public void PluginBot_MoveToSuccess(int bot_entidx, Address path)
 	g_bRetreat[bot_entidx] = false;
 	g_bPath[bot_entidx] = false;
 }
+

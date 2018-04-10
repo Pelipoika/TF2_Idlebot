@@ -507,11 +507,11 @@ stock NavArea PickBuildAreaPreRound(int client)
 		if(area == NavArea_Null)
 			continue;
 		
-		//Not on enemy team
+		//Area not on enemy team
 		if (GetEnemyTeam(client) == TFTeam_Blue && !HasTFAttributes(area, BLUE_SPAWN_ROOM|SPAWN_ROOM_EXIT))
 			continue;
 		
-		//Not on enemy team		
+		//Area not on enemy team		
 		if (GetEnemyTeam(client) == TFTeam_Red && !HasTFAttributes(area, RED_SPAWN_ROOM|SPAWN_ROOM_EXIT))
 			continue;
 		

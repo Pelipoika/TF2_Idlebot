@@ -44,6 +44,11 @@ bool CTFBotMedicHeal_Update(int actor)
 	if(m_hPatient[actor] <= 0)
 		return false;
 	
+	if(GetClientHealth(actor) <= CTFBotMedicHeal_GetUberHealthThreshold())
+	{
+		BotAim(actor).PressAltFireButton();
+	}
+	
 	int hPatient = 0;
 	
 	bool bVisibleToEnemy = (CTFBotMedicHeal_IsVisibleToEnemy(actor, WorldSpaceCenter(actor)) || CTFBotMedicHeal_IsVisibleToEnemy(actor, GetEyePosition(actor)));
@@ -292,6 +297,11 @@ bool CTFBotMedicHeal_IsVisibleToEnemy(int client, float position[3])
 	}
 	
 	return false;
+}
+
+int CTFBotMedicHeal_GetUberHealthThreshold()
+{
+	return 50;
 }
 
 int CTFBotMedicHeal_SelectPatient(int actor, int old_patient)
