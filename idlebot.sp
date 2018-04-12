@@ -1190,6 +1190,7 @@ stock void StuckMonitor(int client)
 				if(GetEntityFlags(client) & FL_ONGROUND)
 				{
 					g_iAdditionalButtons[client] |= IN_JUMP;
+					ClearStuckStatus(client, "JUMPED" );
 				}
 			}
 		}
