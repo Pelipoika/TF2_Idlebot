@@ -829,9 +829,6 @@ stock bool RunCurrentAction(int client)
 		SetEntProp(client, Prop_Data, "m_nOldButtons", (nOldButtons &= ~(IN_JUMP|IN_DUCK)));
 	
 		g_iAdditionalButtons[client] |= IN_JUMP;
-		
-		PrintToServer("SET IN_JUMP");
-		//ClearStuckStatus(client, "JUMPED" );
 	}
 
 	//Update

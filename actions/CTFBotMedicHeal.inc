@@ -44,7 +44,8 @@ bool CTFBotMedicHeal_Update(int actor)
 	if(m_hPatient[actor] <= 0)
 		return false;
 	
-	if(GetClientHealth(actor) <= CTFBotMedicHeal_GetUberHealthThreshold())
+	if(GetClientHealth(actor) <= CTFBotMedicHeal_GetUberHealthThreshold() 
+	|| GetClientHealth(m_hPatient[actor]) <= CTFBotMedicHeal_GetUberHealthThreshold())
 	{
 		BotAim(actor).PressAltFireButton();
 	}
@@ -60,10 +61,7 @@ bool CTFBotMedicHeal_Update(int actor)
 		hPatient = GetEntPropEnt(GetActiveWeapon(actor), Prop_Send, "m_hHealingTarget");
 	}
 	
-	if(flDistanceToPatient > 500.0)
-		EquipWeaponSlot(actor, TFWeaponSlot_Primary);
-	else
-		EquipWeaponSlot(actor, TFWeaponSlot_Secondary);
+	EquipWeaponSlot(actor, flDistanceToPatient > 500.0 ? TFWeaponSlot_Primary : TFWeaponSlot_Secondary);
 	
 	//PrintToServer("bVisibleToEnemy %i distance %f", bVisibleToEnemy, flDistanceToPatient);
 	
@@ -113,7 +111,7 @@ bool CTFBotMedicHeal_Update(int actor)
 		{
 			BotAim(actor).AimHeadTowardsEntity(m_hPatient[actor], OVERRIDE_ALL, 1.0, "Look at our desired patient");
 			
-			if(flDistanceToPatient < 350.0)
+			if(flDistanceToPatient < 400.0)
 			{
 				if(!g_bMedigunAutoHeal[actor] || (hPatient != m_hPatient[actor] && BotAim(actor).IsHeadAimingOnTarget()))
 					BotAim(actor).PressFireButton();
