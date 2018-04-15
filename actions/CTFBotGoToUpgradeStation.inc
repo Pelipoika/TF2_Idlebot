@@ -1,8 +1,6 @@
 
 int g_iStation[MAXPLAYERS + 1];
 
-float m_ctUpgradeTimeout[MAXPLAYERS + 1];
-
 bool CTFBotGoToUpgradeStation_OnStart(int actor)
 {
 	g_iStation[actor] = FindClosestUpgradeStation(actor);
@@ -13,8 +11,6 @@ bool CTFBotGoToUpgradeStation_OnStart(int actor)
 	}
 	
 	g_bUpdateLookingAroundForEnemies[actor] = false;
-	
-	m_ctUpgradeTimeout[actor] = GetGameTime() + 40.0;
 	
 	BotAim(actor).ReleaseFireButton();
 	EquipWeaponSlot(actor, TFWeaponSlot_Melee);
@@ -74,9 +70,9 @@ bool CTFBotGoToUpgradeStation_OnStart(int actor)
 
 bool CTFBotGoToUpgradeStation_Update(int actor)
 {
-	if (m_ctUpgradeTimeout[actor] < GetGameTime())
+	if (GetStuckDuration(actor) > 10.0)
 	{
-		PrintToServer("[%8.3f] CTFBotGoToUpgradeStation(#%d): Timeout elapsed!", GetGameTime(), actor);
+		PrintToServer("[%8.3f] CTFBotGoToUpgradeStation(#%d): Stuck!", GetGameTime(), actor);
 		
 		//Try jump
 		g_iAdditionalButtons[actor] |= IN_JUMP;
@@ -115,8 +111,6 @@ bool CTFBotGoToUpgradeStation_Update(int actor)
 				TeleportEntity(actor, center, NULL_VECTOR, NULL_VECTOR);
 			}
 		}
-		
-		m_ctUpgradeTimeout[actor] = GetGameTime() + 30.0;
 		
 		return false;
 	}

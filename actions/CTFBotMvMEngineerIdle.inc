@@ -338,6 +338,7 @@ stock bool IsBaseObject(int entity)
 
 stock void CTFBotMvMEngineerIdle_OnEnd(int actor)
 {
+	EquipWeaponSlot(actor, TFWeaponSlot_Primary);
 	//Something here so we don't get a compile warning
 }
 
