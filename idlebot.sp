@@ -819,6 +819,13 @@ stock void StartNewAction(int client, int new_action)
 stock bool RunCurrentAction(int client)
 {
 	StuckMonitor(client);
+	
+	//Keep jumping while stuck
+	if(IsStuck(client) && GetEntityFlags(client) & FL_ONGROUND)
+	{
+		g_iAdditionalButtons[client] |= IN_JUMP;
+		//ClearStuckStatus(client, "JUMPED" );
+	}
 
 	//Update
 	switch(g_iCurrentAction[client])
@@ -1186,12 +1193,6 @@ stock void StuckMonitor(int client)
 				m_isStuck[client] = true;
 				
 				PrintToServer("StuckMonitor WE ARE STUCK");
-				
-				if(GetEntityFlags(client) & FL_ONGROUND)
-				{
-					g_iAdditionalButtons[client] |= IN_JUMP;
-					ClearStuckStatus(client, "JUMPED" );
-				}
 			}
 		}
 	}

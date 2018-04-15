@@ -57,7 +57,7 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 		if(range_to_hint > 300.0)
 		{
 			//Fuck em up.
-			EquipWeaponSlot(actor, TFWeaponSlot_Melee);
+			EquipWeaponSlot(actor, TFWeaponSlot_Primary);
 		}
 	
 		g_bUpdateLookingAroundForEnemies[actor] = true;
