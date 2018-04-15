@@ -111,7 +111,10 @@ bool CTFBotMvMEngineerBuildDispenser_Update(int actor)
 			BotAim(actor).AimHeadTowards(vecRandomPoint, OVERRIDE_ALL, 1.0, "Looking toward team invasion areas in an attempt to find a spot for dispenser");
 		}
 		
-		g_iAdditionalButtons[actor] |= IN_DUCK;
+		if(!IsStuck(actor))
+		{
+			g_iAdditionalButtons[actor] |= IN_DUCK;
+		}
 		
 		
 		//BotAim(actor).AimHeadTowards(areaCenter, OVERRIDE_ALL, 0.1, "Placing sentry");

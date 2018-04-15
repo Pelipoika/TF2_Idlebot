@@ -116,7 +116,10 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 				if(flDistanceToGoal < 200.0)
 				{	
 					//Crouch when closer than 200 hu
-					g_iAdditionalButtons[actor] |= IN_DUCK;
+					if(!IsStuck(actor))
+					{
+						g_iAdditionalButtons[actor] |= IN_DUCK;
+					}
 					
 					if(flDistanceToGoal < 70.0)
 					{
@@ -263,7 +266,10 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 			
 			if (dist < 90.0) 
 			{
-				g_iAdditionalButtons[actor] |= IN_DUCK;
+				if(!IsStuck(actor))
+				{
+					g_iAdditionalButtons[actor] |= IN_DUCK;
+				}
 				
 				EquipWeaponSlot(actor, TFWeaponSlot_Melee);
 				
@@ -308,7 +314,10 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 		
 		if (dist < 90.0) 
 		{
-			g_iAdditionalButtons[actor] |= IN_DUCK;
+			if(!IsStuck(actor))
+			{
+				g_iAdditionalButtons[actor] |= IN_DUCK;
+			}
 			
 			EquipWeaponSlot(actor, TFWeaponSlot_Melee);
 			

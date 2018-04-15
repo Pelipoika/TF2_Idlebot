@@ -775,19 +775,19 @@ stock void StopCurrentAction(int client)
 {
 	switch(g_iCurrentAction[client])
 	{
-		case ACTION_MARK_GIANT:         CTFBotMarkGiant_OnEnd(client);
-		case ACTION_COLLECT_MONEY:      CTFBotCollectMoney_OnEnd(client);
-		case ACTION_UPGRADE:            CTFBotPurchaseUpgrades_OnEnd(client);
-		case ACTION_GOTO_UPGRADE:       CTFBotGoToUpgradeStation_OnEnd(client);
-		case ACTION_ATTACK:             CTFBotAttack_OnEnd(client);
-		case ACTION_GET_AMMO:           CTFBotGetAmmo_OnEnd(client);
-		case ACTION_GET_HEALTH:         CTFBotGetHealth_OnEnd(client);
-		case ACTION_MOVE_TO_FRONT:      CTFBotMoveToFront_OnEnd(client);
-		case ACTION_USE_ITEM:           CTFBotUseItem_OnEnd(client);
-		case ACTION_SNIPER_LURK:        CTFBotSniperLurk_OnEnd(client);
-		case ACTION_MEDIC_HEAL:         CTFBotMedicHeal_OnEnd(client);
-		case ACTION_MELEE_ATTACK:       CTFBotMeleeAttack_OnEnd(client);
-		case ACTION_MVM_ENGINEER_IDLE:  CTFBotMvMEngineerIdle_OnEnd(client);
+		case ACTION_MARK_GIANT:                   CTFBotMarkGiant_OnEnd(client);
+		case ACTION_COLLECT_MONEY:                CTFBotCollectMoney_OnEnd(client);
+		case ACTION_UPGRADE:                      CTFBotPurchaseUpgrades_OnEnd(client);
+		case ACTION_GOTO_UPGRADE:                 CTFBotGoToUpgradeStation_OnEnd(client);
+		case ACTION_ATTACK:                       CTFBotAttack_OnEnd(client);
+		case ACTION_GET_AMMO:                     CTFBotGetAmmo_OnEnd(client);
+		case ACTION_GET_HEALTH:                   CTFBotGetHealth_OnEnd(client);
+		case ACTION_MOVE_TO_FRONT:                CTFBotMoveToFront_OnEnd(client);
+		case ACTION_USE_ITEM:                     CTFBotUseItem_OnEnd(client);
+		case ACTION_SNIPER_LURK:                  CTFBotSniperLurk_OnEnd(client);
+		case ACTION_MEDIC_HEAL:                   CTFBotMedicHeal_OnEnd(client);
+		case ACTION_MELEE_ATTACK:                 CTFBotMeleeAttack_OnEnd(client);
+		case ACTION_MVM_ENGINEER_IDLE:            CTFBotMvMEngineerIdle_OnEnd(client);
 		case ACTION_MVM_ENGINEER_BUILD_SENTRYGUN: CTFBotMvMEngineerBuildSentryGun_OnEnd(client);
 		case ACTION_MVM_ENGINEER_BUILD_DISPENSER: CTFBotMvMEngineerBuildDispenser_OnEnd(client);
 	}
@@ -797,20 +797,20 @@ stock void StartNewAction(int client, int new_action)
 {
 	switch(new_action)
 	{
-		case ACTION_IDLE:               g_bPath[client] = false;
-		case ACTION_MARK_GIANT:         g_bStartedAction[client] = CTFBotMarkGiant_OnStart(client);
-		case ACTION_COLLECT_MONEY:      g_bStartedAction[client] = CTFBotCollectMoney_OnStart(client);
-		case ACTION_UPGRADE:            g_bStartedAction[client] = CTFBotPurchaseUpgrades_OnStart(client);
-		case ACTION_GOTO_UPGRADE:       g_bStartedAction[client] = CTFBotGoToUpgradeStation_OnStart(client);
-		case ACTION_ATTACK:             g_bStartedAction[client] = CTFBotAttack_OnStart(client);
-		case ACTION_GET_AMMO:           g_bStartedAction[client] = CTFBotGetAmmo_OnStart(client);
-		case ACTION_GET_HEALTH:         g_bStartedAction[client] = CTFBotGetHealth_OnStart(client);
-		case ACTION_MOVE_TO_FRONT:      g_bStartedAction[client] = CTFBotMoveToFront_OnStart(client);
-		case ACTION_USE_ITEM:           g_bStartedAction[client] = CTFBotUseItem_OnStart(client);
-		case ACTION_SNIPER_LURK:        g_bStartedAction[client] = CTFBotSniperLurk_OnStart(client);
-		case ACTION_MEDIC_HEAL:         g_bStartedAction[client] = CTFBotMedicHeal_OnStart(client);
-		case ACTION_MELEE_ATTACK:       g_bStartedAction[client] = CTFBotMeleeAttack_OnStart(client);
-		case ACTION_MVM_ENGINEER_IDLE:  g_bStartedAction[client] = CTFBotMvMEngineerIdle_OnStart(client);
+		case ACTION_IDLE:                         g_bPath[client] = false;
+		case ACTION_MARK_GIANT:                   g_bStartedAction[client] = CTFBotMarkGiant_OnStart(client);
+		case ACTION_COLLECT_MONEY:                g_bStartedAction[client] = CTFBotCollectMoney_OnStart(client);
+		case ACTION_UPGRADE:                      g_bStartedAction[client] = CTFBotPurchaseUpgrades_OnStart(client);
+		case ACTION_GOTO_UPGRADE:                 g_bStartedAction[client] = CTFBotGoToUpgradeStation_OnStart(client);
+		case ACTION_ATTACK:                       g_bStartedAction[client] = CTFBotAttack_OnStart(client);
+		case ACTION_GET_AMMO:                     g_bStartedAction[client] = CTFBotGetAmmo_OnStart(client);
+		case ACTION_GET_HEALTH:                   g_bStartedAction[client] = CTFBotGetHealth_OnStart(client);
+		case ACTION_MOVE_TO_FRONT:                g_bStartedAction[client] = CTFBotMoveToFront_OnStart(client);
+		case ACTION_USE_ITEM:                     g_bStartedAction[client] = CTFBotUseItem_OnStart(client);
+		case ACTION_SNIPER_LURK:                  g_bStartedAction[client] = CTFBotSniperLurk_OnStart(client);
+		case ACTION_MEDIC_HEAL:                   g_bStartedAction[client] = CTFBotMedicHeal_OnStart(client);
+		case ACTION_MELEE_ATTACK:                 g_bStartedAction[client] = CTFBotMeleeAttack_OnStart(client);
+		case ACTION_MVM_ENGINEER_IDLE:            g_bStartedAction[client] = CTFBotMvMEngineerIdle_OnStart(client);
 		case ACTION_MVM_ENGINEER_BUILD_SENTRYGUN: g_bStartedAction[client] = CTFBotMvMEngineerBuildSentryGun_OnStart(client);	
 		case ACTION_MVM_ENGINEER_BUILD_DISPENSER: g_bStartedAction[client] = CTFBotMvMEngineerBuildDispenser_OnStart(client);	
 	}
@@ -823,26 +823,33 @@ stock bool RunCurrentAction(int client)
 	//Keep jumping while stuck
 	if(IsStuck(client) && GetEntityFlags(client) & FL_ONGROUND)
 	{
+		//Can't jump if we just hold space
+		//This fixes that.
+		int nOldButtons = GetEntProp(client, Prop_Data, "m_nOldButtons");
+		SetEntProp(client, Prop_Data, "m_nOldButtons", (nOldButtons &= ~(IN_JUMP|IN_DUCK)));
+	
 		g_iAdditionalButtons[client] |= IN_JUMP;
+		
+		PrintToServer("SET IN_JUMP");
 		//ClearStuckStatus(client, "JUMPED" );
 	}
 
 	//Update
 	switch(g_iCurrentAction[client])
 	{
-		case ACTION_MARK_GIANT:         g_bStartedAction[client] = CTFBotMarkGiant_Update(client);
-		case ACTION_COLLECT_MONEY:      g_bStartedAction[client] = CTFBotCollectMoney_Update(client);
-		case ACTION_UPGRADE:            g_bStartedAction[client] = CTFBotPurchaseUpgrades_Update(client);
-		case ACTION_GOTO_UPGRADE:       g_bStartedAction[client] = CTFBotGoToUpgradeStation_Update(client);
-		case ACTION_ATTACK:             g_bStartedAction[client] = CTFBotAttack_Update(client);
-		case ACTION_GET_AMMO:           g_bStartedAction[client] = CTFBotGetAmmo_Update(client);
-		case ACTION_MOVE_TO_FRONT:      g_bStartedAction[client] = CTFBotMoveToFront_Update(client);
-		case ACTION_GET_HEALTH:         g_bStartedAction[client] = CTFBotGetHealth_Update(client);
-		case ACTION_USE_ITEM:           g_bStartedAction[client] = CTFBotUseItem_Update(client);
-		case ACTION_SNIPER_LURK:        g_bStartedAction[client] = CTFBotSniperLurk_Update(client);
-		case ACTION_MEDIC_HEAL:         g_bStartedAction[client] = CTFBotMedicHeal_Update(client);
-		case ACTION_MELEE_ATTACK:       g_bStartedAction[client] = CTFBotMeleeAttack_Update(client);
-		case ACTION_MVM_ENGINEER_IDLE:  g_bStartedAction[client] = CTFBotMvMEngineerIdle_Update(client);	
+		case ACTION_MARK_GIANT:                   g_bStartedAction[client] = CTFBotMarkGiant_Update(client);
+		case ACTION_COLLECT_MONEY:                g_bStartedAction[client] = CTFBotCollectMoney_Update(client);
+		case ACTION_UPGRADE:                      g_bStartedAction[client] = CTFBotPurchaseUpgrades_Update(client);
+		case ACTION_GOTO_UPGRADE:                 g_bStartedAction[client] = CTFBotGoToUpgradeStation_Update(client);
+		case ACTION_ATTACK:                       g_bStartedAction[client] = CTFBotAttack_Update(client);
+		case ACTION_GET_AMMO:                     g_bStartedAction[client] = CTFBotGetAmmo_Update(client);
+		case ACTION_MOVE_TO_FRONT:                g_bStartedAction[client] = CTFBotMoveToFront_Update(client);
+		case ACTION_GET_HEALTH:                   g_bStartedAction[client] = CTFBotGetHealth_Update(client);
+		case ACTION_USE_ITEM:                     g_bStartedAction[client] = CTFBotUseItem_Update(client);
+		case ACTION_SNIPER_LURK:                  g_bStartedAction[client] = CTFBotSniperLurk_Update(client);
+		case ACTION_MEDIC_HEAL:                   g_bStartedAction[client] = CTFBotMedicHeal_Update(client);
+		case ACTION_MELEE_ATTACK:                 g_bStartedAction[client] = CTFBotMeleeAttack_Update(client);
+		case ACTION_MVM_ENGINEER_IDLE:            g_bStartedAction[client] = CTFBotMvMEngineerIdle_Update(client);	
 		case ACTION_MVM_ENGINEER_BUILD_SENTRYGUN: g_bStartedAction[client] = CTFBotMvMEngineerBuildSentryGun_Update(client);	
 		case ACTION_MVM_ENGINEER_BUILD_DISPENSER: g_bStartedAction[client] = CTFBotMvMEngineerBuildDispenser_Update(client);	
 	}

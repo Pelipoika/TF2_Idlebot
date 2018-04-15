@@ -42,7 +42,10 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 		
 		g_bUpdateLookingAroundForEnemies[actor] = false;
 		
-		g_iAdditionalButtons[actor] |= IN_DUCK;
+		if(!IsStuck(actor))
+		{
+			g_iAdditionalButtons[actor] |= IN_DUCK;
+		}
 		
 		BotAim(actor).AimHeadTowards(areaCenter, OVERRIDE_ALL, 0.1, "Placing sentry");
 	}
