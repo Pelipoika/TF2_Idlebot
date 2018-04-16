@@ -240,11 +240,14 @@ void CollectUpgrades(int client)
 	}
 	else
 	{	
-		//Demoknight doesn't buy primary weapon upgrades.
-		if(bDemoKnight || TF2_GetPlayerClass(client) == TFClass_Sniper)
-			iArraySlots.Push(TF_LOADOUT_SLOT_MELEE);
-		else
+		if(TF2_GetPlayerClass(client) == TFClass_Sniper)
+		{
 			iArraySlots.Push(TF_LOADOUT_SLOT_PRIMARY);
+			iArraySlots.Push(TF_LOADOUT_SLOT_MELEE);
+		}
+
+		//Demoknight doesn't buy primary weapon upgrades.
+		iArraySlots.Push(bDemoKnight ? TF_LOADOUT_SLOT_MELEE : TF_LOADOUT_SLOT_PRIMARY);
 	
 		if(IsValidEntity(GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary)))
 		{
