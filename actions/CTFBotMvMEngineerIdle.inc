@@ -530,6 +530,7 @@ stock NavArea PickBuildAreaPreRound(int client)
 		{
 			int iConnectionCount = area.GetAdjacentCount(dir);
 			
+			//No connections
 			if(iConnectionCount == 0)
 				continue;
 			
