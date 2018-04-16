@@ -432,6 +432,7 @@ stock NavArea PickBuildArea(int client)
 	//Areas visible to the bomb but not nescessarily forward of it.
 	ArrayList VisibleAreasAround  = new ArrayList();
 	
+	//Loop all nav areas
 	for (int i = 0; i < iAreaCount; i++)
 	{	
 		NavArea area = view_as<NavArea>(LoadFromAddress(TheNavAreas + view_as<Address>(4 * i), NumberType_Int32));
@@ -449,12 +450,10 @@ stock NavArea PickBuildArea(int client)
 		float m_flBombTargetDistanceAtArea = view_as<float>(LoadFromAddress(view_as<Address>(area)     + view_as<Address>(g_iBombTargetDistance), NumberType_Int32));
 		float m_flBombTargetDistanceAtBomb = view_as<float>(LoadFromAddress(view_as<Address>(bombArea) + view_as<Address>(g_iBombTargetDistance), NumberType_Int32));
 		
-		if(m_flBombTargetDistanceAtArea < 300.0)
-			continue;
-		
 		float center[3];
 		area.GetCenter(center);
 		center[2] += 60.0;
+		vecTargetPos[2] += 60.0;
 		
 		float flDistance = GetVectorDistance(center, vecTargetPos);
 		
@@ -462,21 +461,23 @@ stock NavArea PickBuildArea(int client)
 		{
 			bool bForwardOfBomb     = (m_flBombTargetDistanceAtArea < m_flBombTargetDistanceAtBomb);
 			bool bAreaVisibleToBomb = area.IsVisible(vecTargetPos);
-		
-			if(bForwardOfBomb)
-			{
-				if(bAreaVisibleToBomb)
-				{
-					ForwardVisibleAreas.Push(area);
-				}
-				else
-				{
-					ForwardAreas.Push(area);
-				}
-			}
-			else if(bAreaVisibleToBomb)
-			{
+			
+			if(bAreaVisibleToBomb)
 				VisibleAreasAround.Push(area);
+			
+			if(m_flBombTargetDistanceAtArea < 300.0)
+				continue;
+			
+			if(!bForwardOfBomb)
+				continue;
+			
+			if(bAreaVisibleToBomb)
+			{
+				ForwardVisibleAreas.Push(area);
+			}
+			else
+			{
+				ForwardAreas.Push(area);
 			}
 		}
 	}
