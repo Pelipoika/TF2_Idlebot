@@ -354,7 +354,7 @@ stock bool CTFBotMvMEngineerIdle_ShouldAdvanceNestSpot(int actor)
 	}
 	
 	int obj = TF2_GetObject(actor, TFObject_Sentry);
-	if (obj != INVALID_ENT_REFERENCE &&	GetEntProp(obj, Prop_Send, "m_iHealth") < GetEntProp(obj, Prop_Send, "m_iMaxHealth"))
+	if (obj != INVALID_ENT_REFERENCE && GetEntProp(obj, Prop_Send, "m_iHealth") < GetEntProp(obj, Prop_Send, "m_iMaxHealth"))
 	{
 		m_ctAdvanceNestSpot[actor] = GetGameTime() + 5.0;
 		return false;
@@ -521,7 +521,7 @@ stock NavArea PickBuildAreaPreRound(int client)
 		if (GetEnemyTeam(client) == TFTeam_Blue && !HasTFAttributes(area, BLUE_SPAWN_ROOM|SPAWN_ROOM_EXIT))
 			continue;
 		
-		//Area not on enemy team		
+		//Area not on enemy team
 		if (GetEnemyTeam(client) == TFTeam_Red && !HasTFAttributes(area, RED_SPAWN_ROOM|SPAWN_ROOM_EXIT))
 			continue;
 		
@@ -530,9 +530,12 @@ stock NavArea PickBuildAreaPreRound(int client)
 		{
 			int iConnectionCount = area.GetAdjacentCount(dir);
 			
+			if(iConnectionCount == 0)
+				continue;
+			
 			//Only connections with BOMB_DROP attribute are considered good.
-			for (int iConnection = 0; iConnection < iConnectionCount; iConnection++)
-			{				
+			for (int iConnection = 1; iConnection <= iConnectionCount; iConnection++)
+			{
 				NavArea areaInDir = area.GetAdjacentArea(dir, iConnection);
 				
 				if(areaInDir == NavArea_Null)

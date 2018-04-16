@@ -213,6 +213,21 @@ public void OnPluginStart()
 public void OnMapStart()
 {
 	InitGamedata();
+	
+	
+	
+	//DELETE
+	NavArea area = PickBuildAreaPreRound(1);
+	
+	PrintToServer("PickBuildAreaPreRound");
+	
+	float vecExitCenter[3];
+	area.GetCenter(vecExitCenter);
+	vecExitCenter[2] += 45.0;
+	
+	PrintToServer("   area %f %f %f", vecExitCenter[0], vecExitCenter[1], vecExitCenter[2]);
+	
+	TeleportEntity(1, vecExitCenter, NULL_VECTOR, NULL_VECTOR);
 }
 
 public void OnClientPutInServer(int client)
