@@ -98,6 +98,8 @@ bool CTFBotMvMEngineerIdle_Update(int actor)
 			
 			if(flDistanceToBuilding < 90.0)
 			{
+				EquipWeaponSlot(actor, TFWeaponSlot_Melee);
+			
 				BotAim(actor).AimHeadTowards(WorldSpaceCenter(building), CRITICAL, 1.0, "Grab building");
 				BotAim(actor).PressAltFireButton();
 				

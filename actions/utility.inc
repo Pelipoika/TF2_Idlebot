@@ -528,11 +528,11 @@ methodmap CMannVsMachineUpgradeManager < CMannVsMachineUpgrades
 
 stock int GetHealerByIndex(int client, int index)
 {
-	int iShared = FindSendPropInfo("CTFPlayer", "m_Shared");
-
-	Address m_Shared = GetEntityAddress(client) + view_as<Address>(iShared);
-	Address aHealers = view_as<Address>(Dereference(m_Shared, 0x194));
+	int m_aHealers = FindSendPropInfo("CTFPlayer", "m_nNumHealers") + 12;
 	
+	Address m_Shared = GetEntityAddress(client) + view_as<Address>(m_aHealers);
+	Address aHealers = view_as<Address>(ReadInt(m_Shared));
+
 	return ReadInt(Transpose(aHealers, (index * 0x24))) & 0xFFF;
 }
 
