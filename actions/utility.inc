@@ -536,6 +536,22 @@ stock int GetHealerByIndex(int client, int index)
 	return ReadInt(Transpose(aHealers, (index * 0x24))) & 0xFFF;
 }
 
+stock int GetLastDamageType(int client)
+{
+	int m_LastDamageType = FindSendPropInfo("CTFPlayer", "m_flMvMLastDamageTime") + 20;
+	return ReadInt(GetEntityAddress(client) + view_as<Address>(m_LastDamageType));
+}
+
+stock bool IsVaccinator(int client)
+{
+	return GetActiveWeapon(client) != INVALID_ENT_REFERENCE && GetEntProp(GetActiveWeapon(client), Prop_Send, "m_iItemDefinitionIndex") == 998;
+}
+
+stock int GetResistType(int client)
+{
+	return GetEntProp(GetActiveWeapon(client), Prop_Send, "m_nChargeResistType");
+}
+
 stock bool HasDemoShieldEquipped(int client)
 {	
 	return !!GetEntProp(client, Prop_Send, "m_bShieldEquipped");

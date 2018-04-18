@@ -14,11 +14,14 @@ int m_hPatient[MAXPLAYERS + 1];
 
 float g_flNextHideSpotComputation[MAXPLAYERS + 1];
 
+float g_flReloadRapeCooldown[MAXPLAYERS + 1];
+
 stock bool CTFBotMedicHeal_OnStart(int actor)
 {
 	m_hPatient[actor] = -1;
 	
 	g_flNextHideSpotComputation[actor] = -1.0;
+	g_flReloadRapeCooldown[actor] = -1.0;
 	
 	QueryClientConVar(actor, "tf_medigun_autoheal", OnMedigunModeGet, GetClientUserId(actor));
 	
@@ -59,6 +62,34 @@ bool CTFBotMedicHeal_Update(int actor)
 	if(IsWeapon(actor, TF_WEAPON_MEDIGUN)) 
 	{
 		hPatient = GetEntPropEnt(GetActiveWeapon(actor), Prop_Send, "m_hHealingTarget");
+	}
+	
+	//Cycle resistances
+	if(g_flReloadRapeCooldown[actor] <= GetGameTime() && IsVaccinator(actor) && hPatient != INVALID_ENT_REFERENCE)
+	{
+		//Vaccinator current resistance type.
+		int iResistType = GetResistType(actor);
+		
+		//Patients last taken damage type.
+		int iLastDmgType = GetLastDamageType(hPatient);
+		
+		if(iLastDmgType & DMG_BULLET     && iResistType != 0) 
+		{
+			PrintToServer("DMG_BULLET PLEASE %i %i", iLastDmgType, iResistType);
+			BotAim(actor).PressReloadButton();
+		}
+		else if(iLastDmgType & DMG_BLAST && iResistType != 1) 
+		{
+			PrintToServer("DMG_BLAST PLEASE %i %i", iLastDmgType, iResistType);
+			BotAim(actor).PressReloadButton();
+		}
+		else if(iLastDmgType & DMG_BURN  && iResistType != 2)
+		{
+			PrintToServer("DMG_BURN PLEASE %i %i", iLastDmgType, iResistType);
+			BotAim(actor).PressReloadButton();
+		}
+		
+		g_flReloadRapeCooldown[actor] = GetGameTime() + GetRandomFloat(0.5, 0.75);
 	}
 	
 	EquipWeaponSlot(actor, flDistanceToPatient > 500.0 ? TFWeaponSlot_Primary : TFWeaponSlot_Secondary);
