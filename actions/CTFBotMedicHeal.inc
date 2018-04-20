@@ -47,8 +47,8 @@ bool CTFBotMedicHeal_Update(int actor)
 	if(m_hPatient[actor] <= 0)
 		return false;
 	
-	if(GetClientHealth(actor) <= CTFBotMedicHeal_GetUberHealthThreshold() 
-	|| GetClientHealth(m_hPatient[actor]) <= CTFBotMedicHeal_GetUberHealthThreshold())
+	if(GetClientHealth(actor) <= CTFBotMedicHeal_GetUberHealthThreshold(actor) 
+	|| GetClientHealth(m_hPatient[actor]) <= CTFBotMedicHeal_GetUberHealthThreshold(actor))
 	{
 		BotAim(actor).PressAltFireButton();
 	}
@@ -328,9 +328,9 @@ bool CTFBotMedicHeal_IsVisibleToEnemy(int client, float position[3])
 	return false;
 }
 
-int CTFBotMedicHeal_GetUberHealthThreshold()
+int CTFBotMedicHeal_GetUberHealthThreshold(int actor)
 {
-	return 50;
+	return IsVaccinator(actor) ? (RoundToFloor(GetMaxHealth(actor) / 1.3)) : 50;
 }
 
 int CTFBotMedicHeal_SelectPatient(int actor, int old_patient)
@@ -388,6 +388,8 @@ void CTFBotMedicHeal_OnEnd(int actor)
 {
 	m_hPatient[actor] = -1;
 	g_bUpdateLookingAroundForEnemies[actor] = true;
+	
+	EquipWeaponSlot(actor, TFWeaponSlot_Primary);
 }
 
 stock bool CTFBotMedicHeal_IsPossible(int actor)
