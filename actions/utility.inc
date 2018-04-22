@@ -1969,7 +1969,7 @@ stock char[] GetClassName(int entity)
 
 stock float GetPercentInvisible(int client)
 {
-	int offset = FindSendPropInfo("CTFPlayer", "m_Shared") + (81 * 4);
+	int offset = FindSendPropInfo("CTFPlayer", "m_flInvisChangeCompleteTime") - 8;
 	return GetEntDataFloat(client, offset);
 }
 
