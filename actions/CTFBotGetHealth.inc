@@ -2,8 +2,8 @@ int m_hHealth[MAXPLAYERS + 1];
 
 bool CTFBotGetHealth_IsPossible(int actor)
 {
-//	if (GetEntProp(actor, Prop_Send, "m_nNumHealers") > 0)
-//		return false;
+	if (IsHealedByMedic(actor) || IsInvulnerable(actor))
+		return false;
 	
 	float health_ratio = view_as<float>(GetClientHealth(actor)) / view_as<float>(GetMaxHealth(actor));
 	float ratio = clamp((health_ratio - FindConVar("tf_bot_health_critical_ratio").FloatValue) / (FindConVar("tf_bot_health_ok_ratio").FloatValue - FindConVar("tf_bot_health_critical_ratio").FloatValue), 0.0, 1.0);

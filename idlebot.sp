@@ -241,7 +241,6 @@ public void OnClientPutInServer(int client)
 	
 	CTFBotMarkGiant_OnEnd(client);
 	CTFBotCollectMoney_OnEnd(client);
-//	CTFBotPurchaseUpgrades_OnEnd(client);
 	CTFBotGoToUpgradeStation_OnEnd(client);
 	CTFBotAttack_OnEnd(client);
 	CTFBotGetAmmo_OnEnd(client);
@@ -260,7 +259,6 @@ public Action Command_Robot(int client, int args)
 			return Plugin_Handled;
 		}
 		
-		//PickBuildAreaPreRound(client);
 		SetDefender(client, !g_bEmulate[client]);
 	}
 	
@@ -703,7 +701,7 @@ stock void StartMainAction(int client, bool pretend = false)
 				}
 				case TFClass_Engineer:
 				{
-					if(g_iCurrentAction[client] == ACTION_GET_AMMO && !CTFBotMvMEngineerBuildSentryGun_IsPossible(client) && !CTFBotMvMEngineerBuildDispenser_IsPossible(client))
+					if(g_iCurrentAction[client] == ACTION_GET_AMMO && !CTFBotMvMEngineerBuildSentryGun_IsPossible(client) || !CTFBotMvMEngineerBuildDispenser_IsPossible(client))
 					{
 						return;
 					}

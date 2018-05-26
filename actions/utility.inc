@@ -262,12 +262,12 @@ stock bool GetBombInfo(JSONObject info)
 		NavArea area = view_as<NavArea>(LoadFromAddress(TheNavAreas + view_as<Address>(4 * i), NumberType_Int32));
 		
 		//Skip spawn areas
-		if (HasTFAttributes(area, (BLUE_SPAWN_ROOM | RED_SPAWN_ROOM))) {
+		if (HasTFAttributes(area, (BLUE_SPAWN_ROOM)) || HasTFAttributes(area, (BLUE_SPAWN_ROOM))) {
 			//PrintToServer("Skip spawn area.. #%i", area.GetID());
 			continue;
 		}
 		
-		float m_flBombTargetDistance = view_as<float>(LoadFromAddress(view_as<Address>(area) + view_as<Address>(g_iBombTargetDistance), NumberType_Int32));
+		float m_flBombTargetDistance = GetBombTargetDistance(area);
 		
 		hatch_dist = Max(Max(m_flBombTargetDistance, hatch_dist), 0.0);
 	}
@@ -300,10 +300,10 @@ stock bool GetBombInfo(JSONObject info)
 		if(area == NavArea_Null)
 			continue;
 			
-		if (HasTFAttributes(area, (BLUE_SPAWN_ROOM | RED_SPAWN_ROOM)))
+		if (HasTFAttributes(area, (BLUE_SPAWN_ROOM)) || HasTFAttributes(area, (BLUE_SPAWN_ROOM)))
 			continue;
 		
-		float m_flBombTargetDistance = view_as<float>(LoadFromAddress(view_as<Address>(area) + view_as<Address>(g_iBombTargetDistance), NumberType_Int32));
+		float m_flBombTargetDistance = GetBombTargetDistance(area);
 		
 		if (m_flBombTargetDistance < hatch_dist) 
 		{
@@ -327,6 +327,13 @@ stock bool GetBombInfo(JSONObject info)
 	
 	return (closest_flag != INVALID_ENT_REFERENCE);
 }
+
+stock float GetBombTargetDistance(NavArea area)
+{
+	float m_flBombTargetDistance = view_as<float>(LoadFromAddress(view_as<Address>(area) + view_as<Address>(g_iBombTargetDistance), NumberType_Int32));
+	return m_flBombTargetDistance;
+}
+
 
 //CTFNavArea::IsPotentiallyVisibleToTeam
 stock bool IsPotentiallyVisibleToTeam(NavArea area, int team)
@@ -524,6 +531,22 @@ methodmap CMannVsMachineUpgradeManager < CMannVsMachineUpgrades
 		
 		return view_as<CMannVsMachineUpgrades>(pUpgrades + view_as<Address>(index * CMannVsMachineUpgrades_Size));
 	}
+}
+
+stock bool IsHealedByMedic(int client)
+{
+	for (int i = 0; i < GetEntProp(client, Prop_Send, "m_nNumHealers"); i++)
+	{
+		int iHealerIndex = GetHealerByIndex(client, i);
+		
+		//Not a player.
+		if(!IsValidClientIndex(iHealerIndex))
+			continue;
+		
+		return true;
+	}
+	
+	return false;
 }
 
 stock int GetHealerByIndex(int client, int index)

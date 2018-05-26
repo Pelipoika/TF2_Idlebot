@@ -55,7 +55,7 @@ bool CTFBotMedicHeal_Update(int actor)
 	
 	int hPatient = 0;
 	
-	bool bVisibleToEnemy = (CTFBotMedicHeal_IsVisibleToEnemy(actor, WorldSpaceCenter(actor)) || CTFBotMedicHeal_IsVisibleToEnemy(actor, GetEyePosition(actor)));
+	bool bVisibleToEnemy = false; //(CTFBotMedicHeal_IsVisibleToEnemy(actor, WorldSpaceCenter(actor)) || CTFBotMedicHeal_IsVisibleToEnemy(actor, GetEyePosition(actor)));
 	
 	float flDistanceToPatient = GetVectorDistance(GetAbsOrigin(actor), GetAbsOrigin(m_hPatient[actor]));
 	
@@ -75,17 +75,17 @@ bool CTFBotMedicHeal_Update(int actor)
 		
 		if(iLastDmgType & DMG_BULLET     && iResistType != 0) 
 		{
-			PrintToServer("DMG_BULLET PLEASE %i %i", iLastDmgType, iResistType);
+			//PrintToServer("DMG_BULLET PLEASE %i %i", iLastDmgType, iResistType);
 			BotAim(actor).PressReloadButton();
 		}
 		else if(iLastDmgType & DMG_BLAST && iResistType != 1) 
 		{
-			PrintToServer("DMG_BLAST PLEASE %i %i", iLastDmgType, iResistType);
+			//PrintToServer("DMG_BLAST PLEASE %i %i", iLastDmgType, iResistType);
 			BotAim(actor).PressReloadButton();
 		}
 		else if(iLastDmgType & DMG_BURN  && iResistType != 2)
 		{
-			PrintToServer("DMG_BURN PLEASE %i %i", iLastDmgType, iResistType);
+			//PrintToServer("DMG_BURN PLEASE %i %i", iLastDmgType, iResistType);
 			BotAim(actor).PressReloadButton();
 		}
 		
@@ -107,10 +107,7 @@ bool CTFBotMedicHeal_Update(int actor)
 			{			
 				PF_SetGoalVector(actor, vecBestHideSpot);
 				
-				if(GetVectorDistance(GetAbsOrigin(actor), vecBestHideSpot) < 60.0)
-					g_bPath[actor] = false;
-				else
-					g_bPath[actor] = true;
+				g_bPath[actor] = GetVectorDistance(GetAbsOrigin(actor), vecBestHideSpot) > 60.0;
 			}
 			
 			g_flNextHideSpotComputation[actor] = GetGameTime() + GetRandomFloat(0.5, 3.0);
@@ -336,7 +333,7 @@ int CTFBotMedicHeal_GetUberHealthThreshold(int actor)
 int CTFBotMedicHeal_SelectPatient(int actor, int old_patient)
 {
 	if(IsValidClientIndex(old_patient) && IsPlayerAlive(old_patient) 
-	&& GetClientTeam(old_patient) == GetClientTeam(actor))
+		&& GetClientTeam(old_patient) == GetClientTeam(actor))
 		return old_patient;
 
 	int playerarray[MAXPLAYERS+1];
