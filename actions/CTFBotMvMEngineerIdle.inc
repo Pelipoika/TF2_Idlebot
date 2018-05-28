@@ -593,13 +593,7 @@ stock NavArea PickBuildAreaPreRound(int client)
 	
 	//Random valid exit point.
 	NavArea RandomEnemySpawnExit = EnemySpawnExits.Get(GetRandomInt(0, EnemySpawnExits.Length - 1));
-	
-	//Base distance we will move on from.
-	//float flBaseDistanceToBombTarget = GetBombTargetDistance(RandomEnemySpawnExit);
-	
-	//DEBUG
-	//float center[3]; RandomEnemySpawnExit.GetCenter(center); PrintToServer("%f %f %f", center[0], center[1], center[2]);
-	
+
 	//Search outward of the random exit untill we are some distance away.
 	float vecExitCenter[3];
 	RandomEnemySpawnExit.GetCenter(vecExitCenter);
@@ -629,18 +623,16 @@ stock NavArea PickBuildAreaPreRound(int client)
 		
 		float flDistance = GetVectorDistance(center, vecExitCenter);
 		
-		if(flDistance > (SentryRange / 2) && flDistance <= SentryRange * 1.1)
-		{
-			VisibleAreasAfterSentryRange.Push(area);
-			//g_hAreasToDraw.Push(area);
-		}
-		
 		if(flDistance <= SentryRange) {
 			AreasCloser.Push(area);
 		}
 		
 		if (!area.IsVisible(vecExitCenter)) {
 			continue;
+		}
+		
+		if(flDistance > (SentryRange * 0.8) && flDistance <= SentryRange * 1.1)	{
+			VisibleAreasAfterSentryRange.Push(area);
 		}
 		
 		if(flDistance <= SentryRange) {
@@ -650,22 +642,17 @@ stock NavArea PickBuildAreaPreRound(int client)
 		VisibleAreas.Push(area);
 	}
 	
-	//PrintToServer("PickBuildAreaPreRound %i VisibleAreas | %i VisibleAreasAfterSentryRange | %i AreasCloser", VisibleAreas.Length, VisibleAreasAfterSentryRange.Length, AreasCloser.Length);
+	PrintToServer("PickBuildAreaPreRound %i VisibleAreas | %i VisibleAreasAfterSentryRange | %i AreasCloser", VisibleAreas.Length, VisibleAreasAfterSentryRange.Length, AreasCloser.Length);
 	
 	NavArea bestArea = NavArea_Null;
 	
-	if(VisibleAreasAfterSentryRange.Length > 0) {
-		bestArea = VisibleAreasAfterSentryRange.Get(GetRandomInt(0, VisibleAreasAfterSentryRange.Length - 1));
-	} else if(VisibleAreas.Length > 0) {
-		bestArea = VisibleAreas.Get(GetRandomInt(0, VisibleAreas.Length - 1));
-	} else if(AreasCloser.Length > 0) {
-		bestArea = AreasCloser.Get(GetRandomInt(0, AreasCloser.Length - 1));
-	}
+	if(VisibleAreasAfterSentryRange.Length > 0) bestArea = VisibleAreasAfterSentryRange.Get(GetRandomInt(0, VisibleAreasAfterSentryRange.Length - 1));
+	else if(VisibleAreas.Length > 0)            bestArea =                 VisibleAreas.Get(GetRandomInt(0, VisibleAreas.Length                 - 1));
+	else if(AreasCloser.Length > 0)             bestArea =                  AreasCloser.Get(GetRandomInt(0, AreasCloser.Length                  - 1));
 	
 	delete AreasCloser;
 	delete VisibleAreas;
 	delete VisibleAreasAfterSentryRange;
 	
-	//DrawArea(bestArea, false, 6.0);
 	return bestArea;
 }
