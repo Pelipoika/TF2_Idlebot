@@ -1194,7 +1194,7 @@ stock void StuckMonitor(int client)
 				// we have taken too long - we're stuck
 				m_isStuck[client] = true;
 				
-				PrintToServer("StuckMonitor WE ARE STUCK");
+				PrintToServer("StuckMonitor STUCK");
 			}
 		}
 	}
@@ -1212,7 +1212,7 @@ stock void ClearStuckStatus( int client, const char[] reason )
 	m_stuckPos[client] = GetAbsOrigin(client);
 	m_stuckTimer[client] = GetGameTime();
 	
-	PrintToServer("ClearStuckStatus \"%s\"", reason);
+	//PrintToServer("ClearStuckStatus \"%s\"", reason);
 }
 
 stock bool IsStuck( int client )
@@ -1228,6 +1228,9 @@ stock float GetStuckDuration( int client )
 
 public void PluginBot_Approach(int bot_entidx, const float vec[3])
 {
+	if(TF2_IsPlayerInCondition(bot_entidx, TFCond_Taunting))
+		return;
+
 	m_moveRequestTimer[bot_entidx] = GetGameTime();
 	
 	g_vecCurrentGoal[bot_entidx] = vec;
@@ -1259,22 +1262,20 @@ public bool PluginBot_IsEntityTraversable(int bot_entidx, int other_entidx)
 
 public void PluginBot_Jump(int bot_entidx, const float vecPos[3], const float dir[2])
 {
-	//float watchForClimbRange = 75.0;
-	//if (PF_IsDiscontinuityAhead(bot_entidx, CLIMB_UP, watchForClimbRange))
-	//{
-	
-	//If no target, stop pressing M2 so we can jump if we are heavy and spun up.
-	if(m_hAimTarget[bot_entidx] <= 0)
+	float watchForClimbRange = 75.0;
+	if (PF_IsDiscontinuityAhead(bot_entidx, CLIMB_UP, watchForClimbRange))
 	{
-		BotAim(bot_entidx).ReleaseAltFireButton();
+		//If no target, stop pressing M2 so we can jump if we are heavy and spun up.
+		if(m_hAimTarget[bot_entidx] <= 0)
+		{
+			BotAim(bot_entidx).ReleaseAltFireButton();
+		}
+		
+		if(GetEntityFlags(bot_entidx) & FL_ONGROUND)
+		{
+			g_iAdditionalButtons[bot_entidx] |= IN_JUMP;
+		}
 	}
-	
-	if(GetEntityFlags(bot_entidx) & FL_ONGROUND)
-	{
-		g_iAdditionalButtons[bot_entidx] |= IN_JUMP;
-	}
-	
-	//}
 }
 
 public float PluginBot_PathCost(int bot_entidx, NavArea area, NavArea from_area, float length)
@@ -1446,6 +1447,8 @@ public void PluginBot_MoveToSuccess(int bot_entidx, Address path)
 		return;
 	ChangeAction(bot_entidx, ACTION_IDLE, "PluginBot_MoveToSuccess: Reached path goal.");
 	*/
+	
+	ClearStuckStatus(bot_entidx, "Arrived at goal");
 	
 	g_bRetreat[bot_entidx] = false;
 	g_bPath[bot_entidx] = false;
