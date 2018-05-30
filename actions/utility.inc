@@ -592,7 +592,7 @@ stock float GetNextThink(int entity, const char[] szContext)
 
 stock void TF2_MoveTo(int client, float flGoal[3], float fVel[3], float fAng[3])
 {
-	float flPos[3];
+/*	float flPos[3];
 	GetClientAbsOrigin(client, flPos);
 
 	float newmove[3];
@@ -607,7 +607,53 @@ stock void TF2_MoveTo(int client, float flGoal[3], float fVel[3], float fAng[3])
 	fVel[1] = sin * newmove[0] + cos * newmove[1];
 	
 	NormalizeVector(fVel, fVel);
-	ScaleVector(fVel, 450.0);
+	ScaleVector(fVel, 450.0);*/
+	
+	//WASD Movement
+	float forward3D[3];
+	EyeVectors(client, forward3D);
+	
+	float vForward[3];
+	vForward[0] = forward3D[0];
+	vForward[1] = forward3D[1];
+	NormalizeVector(vForward, vForward);
+		
+	float right[3] 
+	right[0] = vForward[1];
+	right[1] = -vForward[0];
+
+	float to[3]; 
+	SubtractVectors(flGoal, GetAbsOrigin(client), to);
+
+	/*float goalDistance = */
+	NormalizeVector(to, to);
+
+	float ahead = GetVectorDotProduct(to, vForward);
+	float side  = GetVectorDotProduct(to, right);
+	
+	const float epsilon = 0.25;
+
+	if ( ahead > epsilon )
+	{
+		fVel[0] = 450.0;
+		//PressForwardButton();
+	}
+	else if ( ahead < -epsilon )
+	{
+		fVel[0] = -450.0;
+		//PressBackwardButton();
+	}
+
+	if ( side <= -epsilon )
+	{
+		fVel[1] = -450.0;
+		//PressLeftButton();
+	}
+	else if ( side >= epsilon )
+	{
+		fVel[1] = 450.0;
+		//PressRightButton();
+	}
 }
 
 stock float[] PredictSubjectPosition(int bot, int subject)

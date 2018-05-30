@@ -59,22 +59,25 @@ char g_szBotModels[][] =
 
 #include <actions/CTFBotAim>
 
-#define ACTION_IDLE 0
-#define ACTION_ATTACK 1
-#define ACTION_MARK_GIANT 2
-#define ACTION_COLLECT_MONEY 3
-#define ACTION_GOTO_UPGRADE 4
-#define ACTION_UPGRADE 5
-#define ACTION_GET_AMMO 6
-#define ACTION_MOVE_TO_FRONT 7
-#define ACTION_GET_HEALTH 8
-#define ACTION_USE_ITEM 9
-#define ACTION_SNIPER_LURK 10
-#define ACTION_MEDIC_HEAL 11
-#define ACTION_MELEE_ATTACK 12
-#define ACTION_MVM_ENGINEER_IDLE 13
-#define ACTION_MVM_ENGINEER_BUILD_SENTRYGUN 14
-#define ACTION_MVM_ENGINEER_BUILD_DISPENSER 15
+enum //ACTION
+{
+	ACTION_IDLE = 0,
+	ACTION_ATTACK,
+	ACTION_MARK_GIANT,
+	ACTION_COLLECT_MONEY,
+	ACTION_GOTO_UPGRADE,
+	ACTION_UPGRADE,
+	ACTION_GET_AMMO,
+	ACTION_MOVE_TO_FRONT,
+	ACTION_GET_HEALTH,
+	ACTION_USE_ITEM,
+	ACTION_SNIPER_LURK,
+	ACTION_MEDIC_HEAL,
+	ACTION_MELEE_ATTACK,
+	ACTION_MVM_ENGINEER_IDLE,
+	ACTION_MVM_ENGINEER_BUILD_SENTRYGUN,
+	ACTION_MVM_ENGINEER_BUILD_DISPENSER
+};
 
 #include <actions/utility>
 
@@ -357,7 +360,7 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 {
 	if(client <= 0)
 		return Plugin_Handled;
-
+		
 	//AvoidPlayers(client, fVel[0], fVel[1]);
 	
 	if(!IsClientConnected(client) || IsFakeClient(client))
@@ -399,7 +402,6 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 	if(g_iAdditionalButtons[client] != 0)
 	{
 		iButtons |= g_iAdditionalButtons[client];
-		g_iAdditionalButtons[client] = 0;
 		bChanged = true;
 	}
 	
@@ -441,6 +443,8 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 		{
 			TF2_MoveTo(client, g_vecCurrentGoal[client], fVel, fAng);
 			
+			//PrintCenterText(client, "%f %f", fVel[0], fVel[1]);
+			
 			bChanged = true;
 		}
 	}
@@ -457,6 +461,11 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 		fVel[1] += g_flAdditionalVelocity[client][1];
 		bChanged = true;
 	}
+	
+	ShowKeys(client, fVel);
+	
+	g_iAdditionalButtons[client] = 0;
+	
 	
 	return bChanged ? Plugin_Changed : Plugin_Continue;
 }
@@ -889,6 +898,77 @@ stock bool RunCurrentAction(int client)
 	return g_bStartedAction[client];
 }
 
+stock void ShowKeys(int client, float fVel[3])
+{
+	char sOutput[256];
+	
+	int iButtons = g_iAdditionalButtons[client];
+	
+	if(m_ctReload[client]  > GetGameTime()) { iButtons |= IN_RELOAD;  }
+	if(m_ctFire[client]    > GetGameTime()) { iButtons |= IN_ATTACK;  }
+	if(m_ctAltFire[client] > GetGameTime()) { iButtons |= IN_ATTACK2; }
+	
+	if (fVel[0] > 0) iButtons |= IN_FORWARD;
+	if (fVel[0] < 0) iButtons |= IN_BACK;
+	
+	if (fVel[1] < 0) iButtons |= IN_MOVELEFT;
+	if (fVel[1] > 0) iButtons |= IN_MOVERIGHT;
+	
+	
+	// Is he pressing "w"?
+	if(iButtons & IN_FORWARD)
+		Format(sOutput, sizeof(sOutput), "     W     ");
+	else
+		Format(sOutput, sizeof(sOutput), "     -     ");
+	
+	// Is he pressing "space"?
+	if(iButtons & IN_JUMP)
+		Format(sOutput, sizeof(sOutput), "%s     JUMP\n", sOutput);
+	else
+		Format(sOutput, sizeof(sOutput), "%s     _   \n", sOutput);
+	
+	// Is he pressing "a"?
+	if(iButtons & IN_MOVELEFT)
+		Format(sOutput, sizeof(sOutput), "%s  A", sOutput);
+	else
+		Format(sOutput, sizeof(sOutput), "%s  -", sOutput);
+		
+	// Is he pressing "s"?
+	if(iButtons & IN_BACK)
+		Format(sOutput, sizeof(sOutput), "%s  S", sOutput);
+	else
+		Format(sOutput, sizeof(sOutput), "%s  -", sOutput);
+		
+	// Is he pressing "d"?
+	if(iButtons & IN_MOVERIGHT)
+		Format(sOutput, sizeof(sOutput), "%s  D", sOutput);
+	else
+		Format(sOutput, sizeof(sOutput), "%s  -", sOutput);
+	
+	// Is he pressing "ctrl"?
+	if(iButtons & IN_DUCK)
+		Format(sOutput, sizeof(sOutput), "%s       DUCK\n", sOutput);
+	else
+		Format(sOutput, sizeof(sOutput), "%s       _   \n", sOutput);
+		
+	// Is he pressing "mouse1"?
+	if(iButtons & IN_ATTACK)
+		Format(sOutput, sizeof(sOutput), "%sMOUSE1", sOutput);
+	else
+		Format(sOutput, sizeof(sOutput), "%s_     ", sOutput);
+	
+	// Is he pressing "mouse1"?
+	if(iButtons & IN_ATTACK2)
+		Format(sOutput, sizeof(sOutput), "%s  MOUSE2", sOutput);
+	else
+		Format(sOutput, sizeof(sOutput), "%s  _     ", sOutput);
+	
+	Handle hBuffer = StartMessageOne("KeyHintText", client);
+	BfWriteByte(hBuffer, 1);
+	BfWriteString(hBuffer, sOutput);
+	EndMessage();
+}
+
 stock void UpdateLookingAroundForEnemies(int client)
 {
 	if(!g_bUpdateLookingAroundForEnemies[client])
@@ -1262,20 +1342,20 @@ public bool PluginBot_IsEntityTraversable(int bot_entidx, int other_entidx)
 
 public void PluginBot_Jump(int bot_entidx, const float vecPos[3], const float dir[2])
 {
-	float watchForClimbRange = 75.0;
-	if (PF_IsDiscontinuityAhead(bot_entidx, CLIMB_UP, watchForClimbRange))
+	//const float watchForClimbRange = 75.0;
+	//if (PF_IsDiscontinuityAhead(bot_entidx, CLIMB_UP, watchForClimbRange))
+	//{
+	//If no target, stop pressing M2 so we can jump if we are heavy and spun up.
+	if(m_hAimTarget[bot_entidx] <= 0)
 	{
-		//If no target, stop pressing M2 so we can jump if we are heavy and spun up.
-		if(m_hAimTarget[bot_entidx] <= 0)
-		{
-			BotAim(bot_entidx).ReleaseAltFireButton();
-		}
-		
-		if(GetEntityFlags(bot_entidx) & FL_ONGROUND)
-		{
-			g_iAdditionalButtons[bot_entidx] |= IN_JUMP;
-		}
+		BotAim(bot_entidx).ReleaseAltFireButton();
 	}
+	
+	if(GetEntityFlags(bot_entidx) & FL_ONGROUND)
+	{
+		g_iAdditionalButtons[bot_entidx] |= IN_JUMP;
+	}
+	//}
 }
 
 public float PluginBot_PathCost(int bot_entidx, NavArea area, NavArea from_area, float length)
