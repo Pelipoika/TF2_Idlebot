@@ -402,6 +402,7 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 	if(g_iAdditionalButtons[client] != 0)
 	{
 		iButtons |= g_iAdditionalButtons[client];
+		g_iAdditionalButtons[client] = 0;
 		bChanged = true;
 	}
 	
@@ -462,10 +463,7 @@ public Action OnPlayerRunCmd(int client, int &iButtons, int &iImpulse, float fVe
 		bChanged = true;
 	}
 	
-	ShowKeys(client, fVel);
-	
-	g_iAdditionalButtons[client] = 0;
-	
+	ShowKeys(client, fVel);	
 	
 	return bChanged ? Plugin_Changed : Plugin_Continue;
 }
@@ -495,7 +493,8 @@ stock bool OpportunisticallyUseWeaponAbilities(int client)
 			BotAim(client).PressAltFireButton();
 		}
 	}
-	else if(HasParachuteEquipped(client))
+	
+	if(HasParachuteEquipped(client))
 	{
 		bool burning = TF2_IsPlayerInCondition(client, TFCond_OnFire);
 		float health_ratio = view_as<float>(GetClientHealth(client)) / view_as<float>(GetMaxHealth(client));
@@ -619,8 +618,7 @@ stock void StartMainAction(int client, bool pretend = false)
 			ChangeAction(client, ACTION_COLLECT_MONEY, "CTFBotCollectMoney is possible");
 			m_iRouteType[client] = FASTEST_ROUTE;
 		}
-		else if(!IsStandingAtUpgradeStation(client) 
-			&& !GameRules_GetProp("m_bPlayerReady", 1, client)
+		else if(!IsStandingAtUpgradeStation(client) && !GameRules_GetProp("m_bPlayerReady", 1, client)
 			&& g_iCurrentAction[client] != ACTION_MOVE_TO_FRONT)
 		{
 			//g_iCurrentAction[client] != ACTION_MVM_ENGINEER_BUILD_SENTRYGUN
@@ -836,6 +834,8 @@ stock bool RunCurrentAction(int client)
 		SetEntProp(client, Prop_Data, "m_nOldButtons", (nOldButtons &= ~(IN_JUMP|IN_DUCK)));
 	
 		g_iAdditionalButtons[client] |= IN_JUMP;
+		
+		TF2_RemoveCondition(client, TFCond_Taunting);
 	}
 
 	//Update

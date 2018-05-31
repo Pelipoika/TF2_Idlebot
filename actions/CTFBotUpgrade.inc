@@ -215,22 +215,13 @@ void CollectUpgrades(int client)
 		
 	CTFPlayerUpgrades[client] = new JSONArray();
 	
-	
-/*	int iArraySlots[] = 
-	{
-		-1,
-		TF_LOADOUT_SLOT_PRIMARY,
-		TF_LOADOUT_SLOT_SECONDARY,
-	//	TF_LOADOUT_SLOT_MELEE,
-	//	TF_LOADOUT_SLOT_BUILDING,
-	//	TF_LOADOUT_SLOT_PDA
-	};*/
-	
 	ArrayList iArraySlots = new ArrayList();
 	iArraySlots.Push(-1);	//Always buy player upgrades
 	
-	bool bDemoKnight = (HasDemoShieldEquipped(client) && (!IsValidEntity(GetPlayerWeaponSlot(client, TFWeaponSlot_Primary)) || HasParachuteEquipped(client)));
+	bool bDemoKnight = (!IsCombatWeapon_Index(GetPlayerWeaponSlot(client, TFWeaponSlot_Primary)));
 	bool bEngineer = (TF2_GetPlayerClass(client) == TFClass_Engineer);
+	
+	//PrintToServer("%N bDemoKnight %i", client, bDemoKnight);
 	
 	if(bEngineer)
 	{
@@ -239,7 +230,7 @@ void CollectUpgrades(int client)
 		iArraySlots.Push(TF_LOADOUT_SLOT_PDA);
 	}
 	else
-	{	
+	{
 		if(TF2_GetPlayerClass(client) == TFClass_Sniper)
 		{
 			iArraySlots.Push(TF_LOADOUT_SLOT_PRIMARY);
@@ -249,7 +240,7 @@ void CollectUpgrades(int client)
 		//Demoknight doesn't buy primary weapon upgrades.
 		iArraySlots.Push(bDemoKnight ? TF_LOADOUT_SLOT_MELEE : TF_LOADOUT_SLOT_PRIMARY);
 	
-		if(IsValidEntity(GetPlayerWeaponSlot(client, TFWeaponSlot_Secondary)))
+		if(HasDemoShieldEquipped(client))
 		{
 			iArraySlots.Push(TF_LOADOUT_SLOT_SECONDARY);
 		}
@@ -265,10 +256,6 @@ void CollectUpgrades(int client)
 			
 			if (upgrades.m_iUIGroup() == 1 && slot != -1) 
 				continue;
-			
-			/* Blacklist */
-	//		if(StrEqual(upgrades.m_szAttribute(), "increased jump height"))
-	//			continue;
 			
 			CEconItemAttributeDefinition attr = GetAttributeDefinitionByName(upgrades.m_szAttribute());
 			if(attr.Address == Address_Null)
@@ -292,7 +279,7 @@ void CollectUpgrades(int client)
 	
 	delete iArraySlots;
 	
-/*	PrintToServer("Unsorted upgrades for #%d \"%N\": %i total\n", client, client, CTFPlayerUpgrades[client].Length);
+	/*PrintToServer("Unsorted upgrades for #%d \"%N\": %i total\n", client, client, CTFPlayerUpgrades[client].Length);
 	PrintToServer("%3s %4s %-5s %-8s\n", "#", "SLOT", "INDEX", "PRIORITY");
 	
 	for (int i = 0; i < CTFPlayerUpgrades[client].Length; i++) 
@@ -302,8 +289,8 @@ void CollectUpgrades(int client)
 		PrintToServer("%3d %4d %-5d %-8d", i, UpgradeInfo.GetInt("slot"), UpgradeInfo.GetInt("index"), UpgradeInfo.GetInt("priority"));
 		
 		delete UpgradeInfo;
-	}
-	*/
+	}*/
+	
 	
 	//NEW!
 	JSONArray new_json = new JSONArray();
@@ -354,21 +341,35 @@ void CollectUpgrades(int client)
 		CTFPlayerUpgrades[client].Remove(index);
 	}
     
-	//PrintToServer("Preferred upgrades for #%d \"%N\"\n", client, client);
-	//PrintToServer("%3s %4s %4s %5s %-64s\n", "#", "SLOT", "COST", "INDEX", "ATTRIBUTE");
+    /*
+    Ô£à19X | Battlefield Duck bDemoKnight 1
+	Preferred upgrades for #3 "Ô£à19X | Battlefield Duck"
+	
+	#   SLOT COST INDEX ATTRIBUTE
+	
+	  0   -1  150    58 dmg taken from crit reduced
+	  1   -1  300    56 dmg taken from blast reduced
+	  2    2  200     4 melee attack rate bonus
+	  3    2  350    36 critboost on kill
+	  4   -1  300    57 dmg taken from bullets reduced
+	  5    2  100    11 heal on kill
+	  6   -1  150    55 dmg taken from fire reduced
+  
+	PrintToServer("Preferred upgrades for #%d \"%N\"\n", client, client);
+	PrintToServer("%3s %4s %4s %5s %-64s\n", "#", "SLOT", "COST", "INDEX", "ATTRIBUTE");
 	
 	for (int i = 0; i < new_json.Length; i++) 
 	{
 		JSONObject info = view_as<JSONObject>(new_json.Get(i));
 		CTFPlayerUpgrades[client].Push(info);
 		
-		//CMannVsMachineUpgradeManager manager = CMannVsMachineUpgradeManager();
-		//int cost = SDKCall(g_hGetCostForUpgrade, manager.GetUpgradeByIndex(info.GetInt("index")), info.GetInt("slot"), info.GetInt("pclass"), client);
-		//PrintToServer("%3d %4d %4d %5d %-64s", i, info.GetInt("slot"), cost, info.GetInt("index"), manager.GetUpgradeByIndex(info.GetInt("index")).m_szAttribute());
+		CMannVsMachineUpgradeManager manager = CMannVsMachineUpgradeManager();
+		int cost = SDKCall(g_hGetCostForUpgrade, manager.GetUpgradeByIndex(info.GetInt("index")), info.GetInt("slot"), info.GetInt("pclass"), client);
+		PrintToServer("%3d %4d %4d %5d %-64s", i, info.GetInt("slot"), cost, info.GetInt("index"), manager.GetUpgradeByIndex(info.GetInt("index")).m_szAttribute());
 		
 		delete info;
 	}
-	
+	*/
 	delete new_json;
 }
 

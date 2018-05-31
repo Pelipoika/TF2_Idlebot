@@ -968,7 +968,7 @@ stock NavArea PickBuildArea(int client, float SentryRange = 1300.0)
 		
 		if(m_flBombTargetDistanceAtBomb > m_flBombTargetDistanceAtArea)
 		{
-			if(flAreaDistanceToBomb <= SentryRange * 1.25 && bAreaVisibleToBomb)
+			if(flAreaDistanceToBomb <= SentryRange * GetRandomFloat(0.8, 1.75) && bAreaVisibleToBomb)
 			{
 				ForwardVisibleAreas.Push(area);
 			}
@@ -1432,6 +1432,12 @@ stock bool IsContinuousFireWeapon(int client)
 stock bool IsCombatWeapon(int client)
 {
 	int iWeapon = GetActiveWeapon(client);
+    
+	return IsCombatWeapon_Index(iWeapon);
+}
+
+stock bool IsCombatWeapon_Index(int iWeapon)
+{
 	if(!IsValidEntity(iWeapon))
 		return false;
 
@@ -1448,6 +1454,7 @@ stock bool IsCombatWeapon(int client)
 		case TF_WEAPON_LUNCHBOX:             return false;
 		case TF_WEAPON_BUFF_ITEM:            return false;
 		case TF_WEAPON_PUMPKIN_BOMB:         return false;
+		case TF_WEAPON_PARACHUTE:            return false;
     }
     
 	return true;
