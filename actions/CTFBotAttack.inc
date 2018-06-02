@@ -18,6 +18,8 @@ bool CTFBotAttack_OnStart(int actor)
 	
 	g_flRevalidateTarget[actor] = GetGameTime() + 3.0;
 	
+	g_bUpdateLookingAroundForEnemies[actor] = true;
+	
 	return true;
 }
 

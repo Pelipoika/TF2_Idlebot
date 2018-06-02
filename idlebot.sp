@@ -7,6 +7,10 @@
 #include <PathFollower_Nav>
 #include <ripext>
 
+#undef REQUIRE_PLUGIN
+#include <FillUserInfo>
+#define REQUIRE_PLUGIN
+
 #pragma newdecls required
 
 bool g_bEmulate[MAXPLAYERS + 1];
@@ -99,99 +103,6 @@ enum //ACTION
 
 Handle g_hHudInfo;
 
-//TODO
-//https://github.com/danielmm8888/TF2Classic/blob/d070129a436a8a070659f0267f6e63564a519a47/src/game/shared/tf/tf_gamemovement.cpp#L171-L174
-//tf_solidobjects
-//https://github.com/danielmm8888/TF2Classic/blob/d070129a436a8a070659f0267f6e63564a519a47/src/game/shared/tf/tf_gamemovement.cpp#L953
-//https://github.com/sigsegv-mvm/mvm-reversed/blob/b2a43a54093fca4e16068e64e567b871bd7d875e/server/tf/bot/behavior/tf_bot_behavior.cpp#L270-L301
-//Reverse CTFBotVision AFTER you have implemented IVision into extension
-//FIX Engineer not building anything after map change
-
-//CTFNavMesh stuff, maybe put in PathFollower_Nav
-//
-//	364 windows | 368 linux
-//		CUtlVector<CTFNavArea *> m_InvasionAreas[4];
-//
-//	548 windows | 552 linux
-//		m_flBombTargetDistance 
-//
-
-//What is 544 l
-//	mark
-//	Appears in CTFNavArea::IsTFMarked and 
-//	is compared agains CTFNavArea::m_masterTFMark
-
-//What is 468 l
-//	Appears in CTFNavArea::IsPotentiallyVisibleToTeam
-
-//What is 348 w or 352 l
-//	Appears at the start of 
-//	CTFNavArea::CollectPriorIncursionAreas 
-//	AND CTFNavArea::CollectNextIncursionAreas
-//	I think 352 is GetNextIncursionArea
-
-//452 l = m_nAttributes
-
-//What is 456 l and 448 l
-//	Both appear in CTFNavArea::AddPotentiallyVisibleActor
-
-//Some CombatIntensity shit 
-//https://mxr.alliedmods.net/hl2sdk-sdk2013/source/game/shared/util_shared.h#531
-//l 536 = IntervalTimer m_timestamp
-//l 540 = IntervalTimer m_startTime
-
-//CTFNavArea::OnCombat doesnt make sense
-//	m_timestamp = Min(tf_nav_combat_build_rate + m_timestamp, 1.0);
-//
-//CTFNavArea::GetCombatIntensity
-//	if(m_startTime > 0.0)
-//	{
-//		return Max(m_timestamp - ((GetGameTime() - m_startTime) * tf_nav_combat_decay_rate), 0.0);
-//	}
-
-//CTFNavMesh offsets organized
-//	float unknown;										l 352	
-//	float unknown; 										l 356	
-//	float m_flIncursionDistanceRed; 					l 360	tf_nav_show_incursion_distance 
-//	float m_flIncursionDistanceBlu;						l 364	tf_nav_show_incursion_distance 
-//	CUtlVector<CTFNavArea *> m_InvasionAreas[4];		l 368	
-//	CUtlVector<CBaseCombatCharacter *> m_PVActors[4];	l 448	CTFNavArea::AddPotentiallyVisibleActor
-//	TFNavAttributeType m_nAttributes;					l 452	
-//	CTFNavArea::AddPotentiallyVisibleActor 				l 456	
-//	CTFNavArea::IsPotentiallyVisibleToTeam				l 468
-//															l 452
-//															l 456
-//															l 460
-//															l 464
-//															l 468
-//															l 472
-//															l 476
-//															l 480
-//															l 484
-//															l 488
-//															l 492
-//															l 496
-//															l 500
-//
-//	IntervalTimer m_timestamp							l 536	GetCombatIntensity
-//	IntervalTimer m_startTime							l 540	GetCombatIntensity
-//	CTFNavArea::IsTFMarked mark 						l 544
-//	m_flBombTargetDistance						 		l 552	tf_nav_show_bomb_target_distance
-//size 0x238 w
-
-//Reverse void CTFBotTacticalMonitor::AvoidBumpingEnemies                    DONE
-//Reverse void CTFBotEngineerMoveToBuild::SelectBuildLocation(CTFBot *actor) WIP
-//Reverse void CTFBotEngineerMoveToBuild::CollectBuildAreas(CTFBot *actor)   WIP
-//Reverse void CTFBot::EquipBestWeaponForThreat(CKnownEntity const*)         WIP
-//	Mainly for soldiers shotgun handling
-//	Seems to just switch to shotgun if target is closer than 750.0 units
-//	and ran out of rocketlauncher ammo
-//	switches back once shotgun is empty
-
-//Figure out what "tf_bot_mvm_show_engineer_hint_region" is doing
-//	https://gist.github.com/sigsegv-mvm/a1f103ae79bbb0a5c5ff7dcd4a378958
-//	Engineer bots use BombInfo to determine if they should advance their buildings
-
 public Plugin myinfo = 
 {
 	name = "[TF2] MvM AFK Bot",
@@ -211,6 +122,14 @@ public void OnPluginStart()
 	g_hHudInfo = CreateHudSynchronizer();
 	
 	InitTFBotAim();
+}
+
+bool bCanFakePing = false;
+public void OnAllPluginsLoaded()
+{
+	bCanFakePing = LibraryExists("FillUserInfo");
+	
+	PrintToServer("[IdleBOT] bCanFakePing = %i", bCanFakePing);
 }
 
 public void OnMapStart()
@@ -301,6 +220,11 @@ stock bool SetDefender(int client, bool bEnabled)
 			PF_StopPathing(client);
 			PF_Destroy(client);
 		}
+		
+		if(bCanFakePing)
+		{
+			FillUserInfo_ToggleBOT(client, false);
+		}
 	}
 	else if(!g_bEmulate[client])
 	{
@@ -322,6 +246,11 @@ stock bool SetDefender(int client, bool bEnabled)
 			
 			PF_EnableCallback(client, PFCB_OnActorEmoted, PluginBot_OnActorEmoted);
 			//PF_EnableCallback(client, PFCB_PathSuccess, PluginBot_PathSuccess);
+		}
+		
+		if(bCanFakePing)
+		{
+			FillUserInfo_ToggleBOT(client, true);
 		}
 		
 		BotAim(client).Reset();
@@ -1534,3 +1463,89 @@ public void PluginBot_MoveToSuccess(int bot_entidx, Address path)
 	g_bPath[bot_entidx] = false;
 }
 
+
+//TODO
+//https://github.com/danielmm8888/TF2Classic/blob/d070129a436a8a070659f0267f6e63564a519a47/src/game/shared/tf/tf_gamemovement.cpp#L171-L174
+//https://github.com/sigsegv-mvm/mvm-reversed/blob/b2a43a54093fca4e16068e64e567b871bd7d875e/server/tf/bot/behavior/tf_bot_behavior.cpp#L270-L301
+//Reverse CTFBotVision AFTER you have implemented IVision into extension
+
+//CTFNavMesh stuff, maybe put in PathFollower_Nav
+//
+//	364 windows | 368 linux
+//		CUtlVector<CTFNavArea *> m_InvasionAreas[4];
+//
+//	548 windows | 552 linux
+//		m_flBombTargetDistance 
+//
+
+//What is 544 l
+//	mark
+//	Appears in CTFNavArea::IsTFMarked and 
+//	is compared agains CTFNavArea::m_masterTFMark
+
+//What is 468 l
+//	Appears in CTFNavArea::IsPotentiallyVisibleToTeam
+
+//What is 348 w or 352 l
+//	Appears at the start of 
+//	CTFNavArea::CollectPriorIncursionAreas 
+//	AND CTFNavArea::CollectNextIncursionAreas
+//	I think 352 is GetNextIncursionArea
+
+//452 l = m_nAttributes
+
+//What is 456 l and 448 l
+//	Both appear in CTFNavArea::AddPotentiallyVisibleActor
+
+//Some CombatIntensity shit 
+//https://mxr.alliedmods.net/hl2sdk-sdk2013/source/game/shared/util_shared.h#531
+//l 536 = IntervalTimer m_timestamp
+//l 540 = IntervalTimer m_startTime
+
+//CTFNavArea::OnCombat doesnt make sense
+//	m_timestamp = Min(tf_nav_combat_build_rate + m_timestamp, 1.0);
+//
+//CTFNavArea::GetCombatIntensity
+//	if(m_startTime > 0.0)
+//	{
+//		return Max(m_timestamp - ((GetGameTime() - m_startTime) * tf_nav_combat_decay_rate), 0.0);
+//	}
+
+//CTFNavMesh offsets organized
+//	float unknown;										l 352	
+//	float unknown; 										l 356	
+//	float m_flIncursionDistanceRed; 					l 360	tf_nav_show_incursion_distance 
+//	float m_flIncursionDistanceBlu;						l 364	tf_nav_show_incursion_distance 
+//	CUtlVector<CTFNavArea *> m_InvasionAreas[4];		l 368	
+//	CUtlVector<CBaseCombatCharacter *> m_PVActors[4];	l 448	CTFNavArea::AddPotentiallyVisibleActor
+//	TFNavAttributeType m_nAttributes;					l 452	
+//	CTFNavArea::AddPotentiallyVisibleActor 				l 456	
+//	CTFNavArea::IsPotentiallyVisibleToTeam				l 468
+//															l 452
+//															l 456
+//															l 460
+//															l 464
+//															l 468
+//															l 472
+//															l 476
+//															l 480
+//															l 484
+//															l 488
+//															l 492
+//															l 496
+//															l 500
+//
+//	IntervalTimer m_timestamp							l 536	GetCombatIntensity
+//	IntervalTimer m_startTime							l 540	GetCombatIntensity
+//	CTFNavArea::IsTFMarked mark 						l 544
+//	m_flBombTargetDistance						 		l 552	tf_nav_show_bomb_target_distance
+//size 0x238 w
+
+//Reverse void CTFBotTacticalMonitor::AvoidBumpingEnemies                    DONE
+//Reverse void CTFBotEngineerMoveToBuild::SelectBuildLocation(CTFBot *actor) WIP
+//Reverse void CTFBotEngineerMoveToBuild::CollectBuildAreas(CTFBot *actor)   WIP
+//Reverse void CTFBot::EquipBestWeaponForThreat(CKnownEntity const*)         WIP
+//	Mainly for soldiers shotgun handling
+//	Seems to just switch to shotgun if target is closer than 750.0 units
+//	and ran out of rocketlauncher ammo
+//	switches back once shotgun is empty

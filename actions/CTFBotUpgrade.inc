@@ -341,21 +341,7 @@ void CollectUpgrades(int client)
 		CTFPlayerUpgrades[client].Remove(index);
 	}
     
-    /*
-    Ô£à19X | Battlefield Duck bDemoKnight 1
-	Preferred upgrades for #3 "Ô£à19X | Battlefield Duck"
-	
-	#   SLOT COST INDEX ATTRIBUTE
-	
-	  0   -1  150    58 dmg taken from crit reduced
-	  1   -1  300    56 dmg taken from blast reduced
-	  2    2  200     4 melee attack rate bonus
-	  3    2  350    36 critboost on kill
-	  4   -1  300    57 dmg taken from bullets reduced
-	  5    2  100    11 heal on kill
-	  6   -1  150    55 dmg taken from fire reduced
-  
-	PrintToServer("Preferred upgrades for #%d \"%N\"\n", client, client);
+	PrintToServer("\nPreferred upgrades for #%d \"%N\"\n", client, client);
 	PrintToServer("%3s %4s %4s %5s %-64s\n", "#", "SLOT", "COST", "INDEX", "ATTRIBUTE");
 	
 	for (int i = 0; i < new_json.Length; i++) 
@@ -369,7 +355,7 @@ void CollectUpgrades(int client)
 		
 		delete info;
 	}
-	*/
+	
 	delete new_json;
 }
 

@@ -592,23 +592,6 @@ stock float GetNextThink(int entity, const char[] szContext)
 
 stock void TF2_MoveTo(int client, float flGoal[3], float fVel[3], float fAng[3])
 {
-/*	float flPos[3];
-	GetClientAbsOrigin(client, flPos);
-
-	float newmove[3];
-	SubtractVectors(flGoal, flPos, newmove);
-	
-	newmove[1] = -newmove[1];
-	
-	float sin = Sine(fAng[1] * FLOAT_PI / 180.0);
-	float cos = Cosine(fAng[1] * FLOAT_PI / 180.0);						
-	
-	fVel[0] = cos * newmove[0] - sin * newmove[1];
-	fVel[1] = sin * newmove[0] + cos * newmove[1];
-	
-	NormalizeVector(fVel, fVel);
-	ScaleVector(fVel, 450.0);*/
-	
 	//WASD Movement
 	float forward3D[3];
 	EyeVectors(client, forward3D);
@@ -1123,6 +1106,7 @@ stock NavArea PickBuildAreaPreRound(int client, float SentryRange = 1300.0)
 		
 		if(flDistance > (SentryRange * 0.75) && flDistance <= SentryRange * 1.25) {
 			VisibleAreasAfterSentryRange.Push(area);
+			//g_hAreasToDraw.Push(area);
 		}
 		
 		if(flDistance <= SentryRange) {
@@ -1132,7 +1116,7 @@ stock NavArea PickBuildAreaPreRound(int client, float SentryRange = 1300.0)
 		VisibleAreas.Push(area);
 	}
 	
-	PrintToServer("PickBuildAreaPreRound %i VisibleAreas | %i VisibleAreasAfterSentryRange | %i AreasCloser", VisibleAreas.Length, VisibleAreasAfterSentryRange.Length, AreasCloser.Length);
+	//PrintToServer("PickBuildAreaPreRound %i VisibleAreas | %i VisibleAreasAfterSentryRange | %i AreasCloser", VisibleAreas.Length, VisibleAreasAfterSentryRange.Length, AreasCloser.Length);
 	
 	NavArea bestArea = NavArea_Null;
 	
@@ -1144,6 +1128,7 @@ stock NavArea PickBuildAreaPreRound(int client, float SentryRange = 1300.0)
 	delete VisibleAreas;
 	delete VisibleAreasAfterSentryRange;
 	
+	//DrawArea(bestArea, false, 6.0);
 	return bestArea;
 }
 
