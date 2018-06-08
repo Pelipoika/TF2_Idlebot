@@ -2372,10 +2372,12 @@ stock void EquipWeaponSlot(int client, int slot)
 
 stock void EquipWeapon(int client, int weapon)
 {
-	char class[64];
+	char class[80];
 	GetEntityClassname(weapon, class, sizeof(class));
 
-	FakeClientCommand(client, "use %s", class);
+	Format(class, sizeof(class), "use %s", class);
+
+	FakeClientCommandThrottled(client, class);
 //	SetEntPropEnt(client, Prop_Send, "m_hActiveWeapon", weapon);
 }
 
@@ -2467,6 +2469,19 @@ stock int ReadInt(Address pAddr)
     		
     return LoadFromAddress(pAddr, NumberType_Int32);		
 }  
+
+float g_flNextCommand[MAXPLAYERS + 1];
+stock bool FakeClientCommandThrottled(int client, const char[] command)
+{
+	if(g_flNextCommand[client] < GetGameTime())
+		return false;
+	
+	FakeClientCommand(client, command);
+	
+	g_flNextCommand[client] = GetGameTime() + 0.6;
+	
+	return true;
+}
 
 
 //-----------------------------------------------------------------------------

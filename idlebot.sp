@@ -193,8 +193,8 @@ stock bool SetDefender(int client, bool bEnabled)
 
 	if(TF2_GetClientTeam(client) == TFTeam_Unassigned || TF2_GetClientTeam(client) == TFTeam_Spectator)
 	{
-		FakeClientCommand(client, "autoteam");
-		FakeClientCommand(client, "joinclass random");
+		FakeClientCommandThrottled(client, "autoteam");
+		FakeClientCommandThrottled(client, "joinclass random");
 		
 		ShowVGUIPanel(client, "info", _, false);
 		ShowVGUIPanel(client, "class_blue", _, false);
@@ -205,6 +205,7 @@ stock bool SetDefender(int client, bool bEnabled)
 	
 	if(!bEnabled && g_bEmulate[client])
 	{
+		//IDLEBOT OFF
 		SetVariantString("");
 		AcceptEntityInput(client, "SetCustomModel");
 		SetEntProp(client, Prop_Send, "m_bUseClassAnimations", 1);
@@ -221,13 +222,14 @@ stock bool SetDefender(int client, bool bEnabled)
 			PF_Destroy(client);
 		}
 		
-		if(bCanFakePing)
+		if(bCanFakePing && FillUserInfo_IsBOT(client))
 		{
-			FillUserInfo_ToggleBOT(client, false);
+			FillUserInfo_ToggleBOT(client);
 		}
 	}
 	else if(!g_bEmulate[client])
 	{
+		//IDLEBOT ON
 		SendConVarValue(client, FindConVar("sv_client_predict"), "0");
 		SetEntProp(client, Prop_Data, "m_bLagCompensation", false);
 		SetEntProp(client, Prop_Data, "m_bPredictWeapons", false);
@@ -248,9 +250,9 @@ stock bool SetDefender(int client, bool bEnabled)
 			//PF_EnableCallback(client, PFCB_PathSuccess, PluginBot_PathSuccess);
 		}
 		
-		if(bCanFakePing)
+		if(bCanFakePing && !FillUserInfo_IsBOT(client))
 		{
-			FillUserInfo_ToggleBOT(client, true);
+			FillUserInfo_ToggleBOT(client);
 		}
 		
 		BotAim(client).Reset();

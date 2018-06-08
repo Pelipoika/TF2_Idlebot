@@ -55,7 +55,7 @@ bool CTFBotMvMEngineerBuildDispenser_Update(int actor)
 	{
 		//Start building a dispenser
 		if(!IsWeapon(actor, TF_WEAPON_BUILDER))
-			FakeClientCommand(actor, "build 0");
+			FakeClientCommandThrottled(actor, "build 0");
 		
 		//Look in "random" directions in an attempt to find a place to fit a dispenser.
 		g_bUpdateLookingAroundForEnemies[actor] = true;
@@ -98,7 +98,7 @@ bool CTFBotMvMEngineerBuildDispenser_Update(int actor)
 	//DispatchKeyValueVector(sentry, "angles", GetAbsAngles(EntRefToEntIndex(m_hintEntity[actor])));
 	
 	ChangeAction(actor, ACTION_MVM_ENGINEER_IDLE, "Built a dispenser");
-	FakeClientCommand(actor, "tournament_player_readystate 1");
+	FakeClientCommandThrottled(actor, "tournament_player_readystate 1");
 	
 	return true;
 }

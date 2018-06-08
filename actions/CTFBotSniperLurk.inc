@@ -32,7 +32,7 @@ bool CTFBotSniperLurk_OnStart(int actor)
 {
 	EquipWeaponSlot(actor, TFWeaponSlot_Primary);
 
-	FakeClientCommand(actor, "tournament_player_readystate 1");
+	FakeClientCommandThrottled(actor, "tournament_player_readystate 1");
 
 	m_ctPatience[actor] = GetGameTime() + (GetRandomFloat(0.9, 1.1) * tf_bot_sniper_patience_duration);
 	
@@ -127,7 +127,7 @@ bool CTFBotSniperLurk_Update(int actor)
 		{
 			if (CTFBotSniperLurk_FindNewHome(actor)) 
 			{
-				FakeClientCommand(actor, "voicemenu 2 5");
+				FakeClientCommandThrottled(actor, "voicemenu 2 5");
 				
 				m_ctPatience[actor] = GetGameTime() + (GetRandomFloat(0.9, 1.1) * tf_bot_sniper_patience_duration);
 			} 

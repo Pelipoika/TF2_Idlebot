@@ -127,7 +127,7 @@ bool CTFBotPurchaseUpgrades_Update(int actor)
 			
 			//Engineer presses F4 once done setting up buildings.
 	//		if(TF2_GetPlayerClass(actor) != TFClass_Engineer)
-			FakeClientCommand(actor, "tournament_player_readystate 1");
+			FakeClientCommandThrottled(actor, "tournament_player_readystate 1");
 			
 			delete info;
 			return false;

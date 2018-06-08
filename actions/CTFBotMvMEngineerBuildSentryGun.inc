@@ -38,7 +38,7 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 	{
 		//Start building a sentry
 		if(!IsWeapon(actor, TF_WEAPON_BUILDER))
-			FakeClientCommand(actor, "build 2");
+			FakeClientCommandThrottled(actor, "build 2");
 		
 		g_bUpdateLookingAroundForEnemies[actor] = false;
 		
@@ -96,7 +96,7 @@ bool CTFBotMvMEngineerBuildSentryGun_Update(int actor)
 		return false;
 	
 	ChangeAction(actor, ACTION_MVM_ENGINEER_IDLE, "Built a sentry");
-	FakeClientCommand(actor, "tournament_player_readystate 1");
+	FakeClientCommandThrottled(actor, "tournament_player_readystate 1");
 		
 	return true;
 }
