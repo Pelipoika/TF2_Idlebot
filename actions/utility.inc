@@ -2473,12 +2473,12 @@ stock int ReadInt(Address pAddr)
 float g_flNextCommand[MAXPLAYERS + 1];
 stock bool FakeClientCommandThrottled(int client, const char[] command)
 {
-	if(g_flNextCommand[client] < GetGameTime())
+	if(g_flNextCommand[client] > GetGameTime())
 		return false;
 	
 	FakeClientCommand(client, command);
 	
-	g_flNextCommand[client] = GetGameTime() + 0.6;
+	g_flNextCommand[client] = GetGameTime() + 0.4;
 	
 	return true;
 }
