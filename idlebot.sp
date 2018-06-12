@@ -193,8 +193,8 @@ stock bool SetDefender(int client, bool bEnabled)
 
 	if(TF2_GetClientTeam(client) == TFTeam_Unassigned || TF2_GetClientTeam(client) == TFTeam_Spectator)
 	{
-		FakeClientCommandThrottled(client, "autoteam");
-		FakeClientCommandThrottled(client, "joinclass random");
+		FakeClientCommand(client, "autoteam");
+		FakeClientCommand(client, "joinclass random");
 		
 		ShowVGUIPanel(client, "info", _, false);
 		ShowVGUIPanel(client, "class_blue", _, false);
