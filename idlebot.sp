@@ -139,6 +139,8 @@ public void OnMapStart()
 
 public void OnClientPutInServer(int client)
 {
+	g_flNextCommand[client] = GetGameTime();
+	
 	g_iStation[client] = -1;
 	g_bEmulate[client] = false;
 	g_iAdditionalButtons[client] = 0;
