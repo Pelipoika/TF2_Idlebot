@@ -1497,6 +1497,9 @@ stock bool IsSniperRifle(int client)
 
 stock int GetWeaponID(int weapon)
 {
+	if(!IsValidEntity(weapon))
+		return 0;
+	
 	return SDKCall(g_hGetWeaponID, weapon);
 }
 

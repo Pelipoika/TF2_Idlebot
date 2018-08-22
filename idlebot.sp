@@ -1255,7 +1255,7 @@ public void PluginBot_Approach(int bot_entidx, const float vec[3])
 	}
 }
 
-public bool PluginBot_IsEntityTraversable(int bot_entidx, int other_entidx) 
+public bool PluginBot_IsEntityTraversable(int bot_entidx, int other_entidx, TraverseWhenType when) 
 {
 	//Can't walk through our own buildings unfortunately :/
 	if(IsBaseObject(other_entidx) && GetEntPropEnt(other_entidx, Prop_Send, "m_hBuilder") == bot_entidx)
