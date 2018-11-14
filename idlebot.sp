@@ -137,6 +137,14 @@ public void OnMapStart()
 	InitGamedata();
 }
 
+public void TF2_OnWaitingForPlayersEnd()
+{
+	if(!TF2_IsMvM())
+	{
+		SetFailState("[IdleBOT] Disabling for non mvm map");
+	}
+}
+
 public void OnClientPutInServer(int client)
 {
 	g_flNextCommand[client] = GetGameTime();
@@ -1273,7 +1281,7 @@ public bool PluginBot_IsEntityTraversable(int bot_entidx, int other_entidx, Trav
 	return (m_hAttackTarget[bot_entidx] == other_entidx) ? true : false; 
 }
 
-public void PluginBot_Jump(int bot_entidx, const float vecPos[3], const float dir[2])
+public bool PluginBot_Jump(int bot_entidx, float vecPos[3], const float dir[3])
 {
 	//const float watchForClimbRange = 75.0;
 	//if (PF_IsDiscontinuityAhead(bot_entidx, CLIMB_UP, watchForClimbRange))
